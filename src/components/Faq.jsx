@@ -11,7 +11,7 @@ const COLUMNS = [
     ['Are live sessions included?', 'Yes — a weekly outlook, a mid-week review and a Saturday journal clinic. Every session is recorded and added to your library.'],
     ['Can I access the platform on mobile?', 'Yes. The platform works in any modern mobile browser, and your progress, journal and calculators sync across devices.'],
     ['What happens after purchase?', "You'll receive login details by email within minutes, with a short onboarding guide and an invitation to the student community."],
-    ['Is this financial advice?', 'No. Strata provides education only. Nothing here is a recommendation to buy or sell any security. Trading involves risk and you are responsible for your own decisions.'],
+    ['Is this financial advice?', 'No. TradeBit provides education only. Nothing here is a recommendation to buy or sell any security. Trading involves risk and you are responsible for your own decisions.'],
   ],
 ];
 
@@ -40,7 +40,7 @@ export default function Faq() {
         <div className="faq-side">
           <span className="label">FAQ</span>
           <h2 id="faq-t" className="h-m">Questions?<br />Answered.</h2>
-          <p>Still unsure? Write to <a href="mailto:hello@strata.academy">hello@strata.academy</a> — a real person replies within one working day.</p>
+          <p>Still unsure? Write to <a href="mailto:hello@tradebit.academy">hello@tradebit.academy</a> — a real person replies within one working day.</p>
         </div>
         <div className="qa-cols">
           {COLUMNS.map((items, c) => (

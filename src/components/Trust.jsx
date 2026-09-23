@@ -4,7 +4,7 @@ import { html } from '../lib/html.js';
 
 export default function Trust() {
   return (
-    <section className="trust-zone" aria-label="Strata at a glance">
+    <section className="trust-zone" aria-label="TradeBit at a glance">
       <svg className="topo" viewBox="0 0 1440 400" preserveAspectRatio="none" aria-hidden="true" dangerouslySetInnerHTML={html(trustTopo())} />
       <div className="trust rv">
         <svg className="topo-in" viewBox="0 0 1200 300" preserveAspectRatio="none" aria-hidden="true" dangerouslySetInnerHTML={html(trustIn())} />

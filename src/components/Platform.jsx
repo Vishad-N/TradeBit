@@ -56,9 +56,9 @@ export default function Platform() {
         <div className="flt flt2"><i>±</i><div><b>Position size · 42 units</b><span>1% risk on ₹5,00,000</span></div></div>
         <div className="laptop">
           <div className="lid"><div className="screen" ref={lapRef}>
-            <div className="scale-ui ui" style={lapStyle} role="img" aria-label="Strata learning dashboard showing current lesson, course progress, live analysis chart, trading journal, position calculator and community">
+            <div className="scale-ui ui" style={lapStyle} role="img" aria-label="TradeBit learning dashboard showing current lesson, course progress, live analysis chart, trading journal, position calculator and community">
               <aside>
-                <div className="ub"><i></i>STRATA</div>
+                <div className="ub"><i></i>TRADEBIT</div>
                 <div className="ni on"><i></i>Dashboard</div><div className="ni"><i></i>Courses</div><div className="ni"><i></i>Live Analysis</div>
                 <div className="ni"><i></i>Trading Journal</div><div className="ni"><i></i>Calculators</div><div className="ni"><i></i>Community</div><div className="ni"><i></i>Sessions</div>
                 <div className="streak"><small style={{ color: 'rgba(243,244,239,.42)' }}>Journal streak</small><b>21 days</b></div>
@@ -86,7 +86,7 @@ export default function Platform() {
           </div></div>
           <div className="base"></div>
           <div className="phone"><div className="p-screen" ref={phoneRef}>
-            <div className="scale-ui pui" style={phoneStyle} role="img" aria-label="Strata mobile app with upcoming session, chart, journal stats and community">
+            <div className="scale-ui pui" style={phoneStyle} role="img" aria-label="TradeBit mobile app with upcoming session, chart, journal stats and community">
               <div className="hd"><b>Today</b><span style={{ color: '#B8D83D' }}>● Live 8:30</span></div>
               <div className="cd2"><small>Up next</small><div style={{ fontSize: '15px', fontWeight: '600', margin: '6px 0 2px' }}>Weekly Outlook — Session 38</div><div style={{ color: 'rgba(243,244,239,.42)' }}>Starts in 02:14:30</div></div>
               <div className="cd2"><small>NIFTY 50 · 1D</small><svg className="drawn" viewBox="0 0 260 110" dangerouslySetInnerHTML={html(phoneChart())} /></div>

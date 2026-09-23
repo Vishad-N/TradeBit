@@ -17,7 +17,7 @@ export default function VideoModal({ open, onClose }) {
     <div className={open ? 'modal open' : 'modal'} role="dialog" aria-modal="true" aria-label="Overview video" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-box">
         <button ref={closeRef} type="button" className="modal-x" aria-label="Close video" onClick={onClose}>✕</button>
-        <div><p>A 2-minute tour of the Strata method</p><small>Embed your overview video (YouTube, Vimeo or MP4) inside this frame.</small></div>
+        <div><p>A 2-minute tour of the TradeBit method</p><small>Embed your overview video (YouTube, Vimeo or MP4) inside this frame.</small></div>
       </div>
     </div>
   );

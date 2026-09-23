@@ -14,7 +14,7 @@ export default function Nav({ solid, activeHref, menuOpen, onToggleMenu, onClose
     <>
       <header className={solid ? 'nav solid' : 'nav'}>
         <div className="nav-in">
-          <BrandMark aria-label="Strata home" />
+          <BrandMark aria-label="TradeBit home" />
           <nav aria-label="Primary">
             <ul className="links">
               {NAV_LINKS.map(([href, label]) => (

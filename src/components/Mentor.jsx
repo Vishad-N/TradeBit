@@ -50,7 +50,7 @@ export default function Mentor() {
         <blockquote className="quote rv d3">“The market will never be predictable. Your process can be — that's the only edge I've ever trusted.”</blockquote>
         <div className="sign rv d4">
           <svg viewBox="0 0 170 60" fill="none" aria-label="Signature of Arjun Mehra"><path className="dr" d="M6 44 C18 20 30 8 36 14 C42 22 22 46 30 46 C40 46 48 22 56 24 C62 26 52 44 60 44 C70 44 74 26 82 28 C88 30 80 44 90 42 C104 38 110 16 118 18 C126 22 112 46 124 44 C138 40 146 30 164 26" stroke="#151814" strokeWidth="1.8" strokeLinecap="round"/><path className="dr" d="M20 52 H150" stroke="#B8D83D" strokeWidth="2"/></svg>
-          <span className="meta">Arjun Mehra<br />Founder, Strata</span>
+          <span className="meta">Arjun Mehra<br />Founder, TradeBit</span>
         </div>
       </div>
     </section>
