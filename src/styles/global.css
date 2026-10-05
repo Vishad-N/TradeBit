@@ -656,85 +656,94 @@ footer{background:var(--c);color:var(--l-60);border-top:1px solid var(--lime);pa
   .hl::after{transform:scaleX(1)}
 }
 
- / *   - - - - - - - - - -   2 0   ·   F l o a t i n g   S V G s   - - - - - - - - - -   * / 
- . b g - a s s e t   { 
-     p o s i t i o n :   a b s o l u t e ; 
-     p o i n t e r - e v e n t s :   n o n e ; 
-     z - i n d e x :   0 ; 
-     c o l o r :   v a r ( - - l i m e ) ; 
- } 
- . b g - a s s e t - i n n e r   { 
-     a n i m a t i o n :   f l o a t - s l o w   1 2 s   e a s e - i n - o u t   i n f i n i t e ; 
- } 
- @ k e y f r a m e s   f l o a t - s l o w   { 
-     0 % ,   1 0 0 %   {   t r a n s f o r m :   t r a n s l a t e Y ( 0 )   r o t a t e ( 0 d e g ) ;   } 
-     5 0 %   {   t r a n s f o r m :   t r a n s l a t e Y ( - 3 0 p x )   r o t a t e ( 8 d e g ) ;   } 
- } 
- . b g - a s s e t   s v g   { 
-     w i d t h :   1 0 0 % ; 
-     h e i g h t :   1 0 0 % ; 
-     o p a c i t y :   0 . 1 5 ; 
-     f i l t e r :   d r o p - s h a d o w ( 0   0   1 2 p x   v a r ( - - l i m e - 2 0 ) ) ; 
- } 
- 
- / *   B i t c o i n   i n   H e r o   * / 
- . a s s e t - b t c   { 
-     w i d t h :   c l a m p ( 3 0 0 p x ,   4 0 v w ,   8 0 0 p x ) ; 
-     r i g h t :   - 1 5 % ; 
-     t o p :   1 0 % ; 
-     z - i n d e x :   1 ; 
- } 
- 
- / *   E t h e r e u m   i n   M e t h o d   * / 
- . a s s e t - e t h   { 
-     w i d t h :   c l a m p ( 2 0 0 p x ,   3 0 v w ,   5 0 0 p x ) ; 
-     l e f t :   5 0 % ; 
-     m a r g i n - l e f t :   c l a m p ( - 1 5 0 p x ,   - 2 5 v w ,   - 2 5 0 p x ) ; 
-     t o p :   2 0 % ; 
-     z - i n d e x :   0 ; 
- } 
- 
- / *   S o l a n a   i n   L i v e   A n a l y s i s   * / 
- . a s s e t - s o l   { 
-     w i d t h :   c l a m p ( 2 0 0 p x ,   2 5 v w ,   4 0 0 p x ) ; 
-     l e f t :   - 5 % ; 
-     t o p :   4 0 % ; 
-     z - i n d e x :   0 ; 
- } 
- . a s s e t - s o l   . b g - a s s e t - i n n e r   { 
-     a n i m a t i o n - d u r a t i o n :   7 s ; 
- } 
- 
- / *   G o l d   i n   O f f e r   * / 
- . a s s e t - g o l d   { 
-     w i d t h :   c l a m p ( 1 5 0 p x ,   2 0 v w ,   3 0 0 p x ) ; 
-     l e f t :   1 0 % ; 
-     t o p :   6 0 % ; 
-     z - i n d e x :   0 ; 
- } 
- 
- / *   A l t c o i n s   i n   P r o b l e m   * / 
- . a s s e t - a l t   { 
-     w i d t h :   c l a m p ( 3 0 0 p x ,   5 0 v w ,   8 0 0 p x ) ; 
-     r i g h t :   - 5 % ; 
-     t o p :   2 0 % ; 
-     z - i n d e x :   0 ; 
- } 
- . f a d e - s h a p e   { 
-     a n i m a t i o n :   f a d e - s h a p e - a n i m   4 s   i n f i n i t e   a l t e r n a t e ; 
- } 
- . s 1   {   a n i m a t i o n - d e l a y :   0 s ;   } 
- . s 2   {   a n i m a t i o n - d e l a y :   - 1 s ;   } 
- . s 3   {   a n i m a t i o n - d e l a y :   - 2 s ;   } 
- . s 4   {   a n i m a t i o n - d e l a y :   - 3 s ;   } 
- @ k e y f r a m e s   f a d e - s h a p e - a n i m   { 
-     0 %   {   o p a c i t y :   0 . 2 ;   } 
-     1 0 0 %   {   o p a c i t y :   1 ;   } 
- } 
- 
- @ m e d i a   ( m a x - w i d t h :   7 6 8 p x )   { 
-     . b g - a s s e t   s v g   {   o p a c i t y :   0 . 0 8 ;   } 
-     . a s s e t - b t c   {   r i g h t :   - 3 0 % ;   t o p :   5 % ;   } 
- } 
-  
- 
+/* ---------- 20 ï¿½ Floating SVGs ---------- */
+.bg-asset {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  color: var(--lime);
+}
+.bg-asset-inner {
+  animation: float-slow 12s ease-in-out infinite;
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-30px) rotate(8deg); }
+}
+.bg-asset svg {
+  width: 100%;
+  height: 100%;
+  opacity: 0.45;
+  filter: drop-shadow(0 0 16px var(--lime-20));
+}
+
+/* Bitcoin in Hero */
+.asset-btc {
+  width: clamp(300px, 40vw, 800px);
+  right: -15%;
+  top: 10%;
+  z-index: 1;
+}
+
+/* Ethereum in Method */
+.asset-eth {
+  width: clamp(300px, 40vw, 600px);
+  right: -10%;
+  top: 10%;
+  z-index: 0;
+}
+
+/* Solana in Live Analysis */
+.asset-sol {
+  width: clamp(200px, 25vw, 400px);
+  left: -5%;
+  top: 40%;
+  z-index: 0;
+}
+.asset-sol .bg-asset-inner {
+  animation-duration: 7s;
+}
+
+/* Gold in Offer */
+.asset-gold {
+  width: clamp(150px, 20vw, 300px);
+  left: 10%;
+  top: 60%;
+  z-index: 0;
+}
+
+/* Altcoins in Problem */
+.asset-alt {
+  width: clamp(300px, 50vw, 800px);
+  right: -5%;
+  top: 20%;
+  z-index: 0;
+}
+.fade-shape {
+  animation: fade-shape-anim 4s infinite alternate;
+}
+.s1 { animation-delay: 0s; }
+.s2 { animation-delay: -1s; }
+.s3 { animation-delay: -2s; }
+.s4 { animation-delay: -3s; }
+@keyframes fade-shape-anim {
+  0% { opacity: 0.2; }
+  100% { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  /* On mobile, thin lines get obliterated by the background. 
+     We boost opacity heavily and place them at the very top/edges 
+     so they peek out perfectly! */
+  .bg-asset svg { 
+    opacity: 0.85; 
+    filter: drop-shadow(0 0 16px var(--lime-20));
+  }
+  .asset-btc { right: -20%; top: -5%; width: 400px; }
+  .asset-eth { left: -30%; top: 0%; width: 350px; }
+  .asset-sol { right: -30%; top: -2%; width: 300px; }
+  .asset-gold { left: -20%; top: -5%; width: 280px; }
+  .asset-alt { right: -30%; top: 0%; width: 350px; }
+}
+
+
