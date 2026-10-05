@@ -44,24 +44,7 @@ function EntryChart() {
         <g className="grid">
           <path d="M0 50H420M0 110H420M0 170H420M0 230H420M70 0V280M140 0V280M210 0V280M280 0V280M350 0V280" />
         </g>
-        <path className={cx('area', fade)} d={`${PRICE} V280 H10Z`} />
-        <path className={cx('ln draw', drawn && 'in')} pathLength="1" d={PRICE} />
-        <path className={cx('ln2', fade)} d="M10 250 L100 205 L200 150 L300 100 L410 55" />
-        <g className={fade}>
-          <line x1="150" y1="175" x2="150" y2="250" stroke="#A88454" strokeDasharray="3 4" />
-          <circle className="dot" cx="150" cy="175" r="7" />
-          <rect className="tag" x="160" y="150" width="86" height="22" rx="4" />
-          <text className="tagt" x="168" y="165">
-            ENTRY
-          </text>
-          <line x1="150" y1="250" x2="330" y2="250" stroke="#A88454" strokeDasharray="3 4" />
-          <text x="338" y="254">
-            STOP
-          </text>
-          <text x="10" y="290">
-            STRUCTURE · SETUP · RISK
-          </text>
-        </g>
+        <path className={cx('ln draw', drawn && 'in')} pathLength="1" d={PRICE} style={{ strokeWidth: 1 }} />
       </svg>
     </div>
   )
@@ -75,21 +58,17 @@ export default function Hero({ ref }) {
         <Reveal className="glass g3">
           <div className="hgrid">
             <div>
-              <p className="label">Live Trading Masterclass / 01</p>
-              <h1>
-                Master the
+              <p className="label hero-load-label">Live Trading Masterclass / 01</p>
+              <h1 className="hero-load-h1">
+                Master the <em>market.</em>
                 <br />
-                <em>market.</em>
-                <br />
-                Without
-                <br />
-                the noise.
+                Without the noise.
               </h1>
               <p className="lead">
                 A live educational session on market structure, trade selection, risk management and trading
                 discipline, taught as one clear process instead of a pile of indicators.
               </p>
-              <div className="cta-row">
+              <div className="cta-row hero-load-btn">
                 <ReserveButton>Reserve my free seat</ReserveButton>
               </div>
             </div>

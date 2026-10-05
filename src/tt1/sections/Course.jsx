@@ -3,12 +3,12 @@ import Accordion from '../components/Accordion.jsx'
 import SectionHeading from '../components/SectionHeading.jsx'
 
 const MODULES = [
-  { title: 'Trading foundations', body: '[Short description: how markets work, key terms and the tools used throughout the course.]' },
-  { title: 'Market structure', body: '[Short description: reading trends, ranges, swing points and context across timeframes.]' },
-  { title: 'Price action', body: '[Short description: reading candles and levels without a stack of indicators.]' },
-  { title: 'Trade setups', body: '[Short description: defined setups, entry criteria and deciding what to skip.]' },
-  { title: 'Risk management', body: '[Short description: position sizing, stop placement and planning for losing trades.]' },
-  { title: 'Trading psychology', body: '[Short description: discipline, routines and handling emotion under pressure.]' },
+  { title: 'Trading foundations', body: 'How markets work, key terms and the tools used throughout the course.' },
+  { title: 'Market structure', body: 'Reading trends, ranges, swing points and context across timeframes.' },
+  { title: 'Price action', body: 'Reading candles and levels without a stack of indicators.' },
+  { title: 'Trade setups', body: 'Defined setups, entry criteria and deciding what to skip.' },
+  { title: 'Risk management', body: 'Position sizing, stop placement and planning for losing trades.' },
+  { title: 'Trading psychology', body: 'Discipline, routines and handling emotion under pressure.' },
 ]
 
 // Bridge from the free session to the paid course, followed by the curriculum.

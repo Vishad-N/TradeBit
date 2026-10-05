@@ -14,10 +14,10 @@ export default function Framework() {
     <section className="framework">
       <EthereumAsset />
       <div className="wrap">
-        <Reveal className="glass">
+        <div className="fw-content">
           <p className="label">03 / Signature method</p>
           <h2>The framework</h2>
-          <p className="lead">One repeatable sequence, from the big picture to the click of the button.</p>
+          <p className="lead" style={{ color: 'var(--ink)' }}>One repeatable sequence, from the big picture to the click of the button.</p>
           <ol className="steps">
             {STEPS.map(([name, question]) => (
               <li key={name}>
@@ -31,7 +31,7 @@ export default function Framework() {
               <path d="M0 44 L40 36 L70 40 L120 20 L160 28 L220 10 L270 22 L330 8 L400 14" />
             </svg>
           </div>
-        </Reveal>
+        </div>
       </div>
     </section>
   )

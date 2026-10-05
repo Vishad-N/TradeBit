@@ -1,10 +1,11 @@
 import { useRef } from 'react'
 import Snowfall from './components/Snowfall.jsx'
 import StickyCta from './components/StickyCta.jsx'
+import StickyMarginIndex from './components/StickyMarginIndex.jsx'
 import WhatsAppPopup from './components/WhatsAppPopup.jsx'
 import Agenda from './sections/Agenda.jsx'
 import Audience from './sections/Audience.jsx'
-import Authority from './sections/Authority.jsx'
+
 import Compare from './sections/Compare.jsx'
 import Course from './sections/Course.jsx'
 import EventDetails from './sections/EventDetails.jsx'
@@ -15,11 +16,10 @@ import Framework from './sections/Framework.jsx'
 import Header from './sections/Header.jsx'
 import Hero from './sections/Hero.jsx'
 import Learn from './sections/Learn.jsx'
-import Materials from './sections/Materials.jsx'
 import Mentor from './sections/Mentor.jsx'
 import Problem from './sections/Problem.jsx'
 import Registration from './sections/Registration.jsx'
-import Testimonials from './sections/Testimonials.jsx'
+
 
 // Trade Bit — Live Trading Masterclass landing page, served at /tt-1/.
 export default function TradeBitPage() {
@@ -42,13 +42,11 @@ export default function TradeBitPage() {
         {/* Secondary details moved below form */}
         <Framework />
         <Compare />
-        <Authority />
         <Course />
-        <Materials />
-        <Testimonials />
         <FinalCta />
       </main>
       <Footer />
+      <StickyMarginIndex />
       <StickyCta heroRef={heroRef} registerRef={registerRef} />
       <WhatsAppPopup />
     </>
