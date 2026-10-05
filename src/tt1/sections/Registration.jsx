@@ -126,7 +126,6 @@ export default function Registration({ ref }) {
               <p className="label">Registration</p>
               <h2>Reserve your seat.</h2>
               <p className="reg-sub">Live Trading Masterclass</p>
-              <EventMeta items={[EVENT.date, EVENT.time, 'Online']} />
             </div>
             <div>
               <RegistrationForm />

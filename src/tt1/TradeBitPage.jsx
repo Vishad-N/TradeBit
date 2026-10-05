@@ -33,20 +33,19 @@ export default function TradeBitPage() {
       <Header />
       <main id="top">
         <Hero ref={heroRef} />
-        <EventDetails />
         <Problem />
         <Learn />
+        <Mentor />
+        <Agenda />
+        <Registration ref={registerRef} />
+        <Faq />
+        {/* Secondary details moved below form */}
         <Framework />
         <Compare />
-        <Mentor />
         <Authority />
         <Course />
         <Materials />
         <Testimonials />
-        <Audience />
-        <Agenda />
-        <Registration ref={registerRef} />
-        <Faq />
         <FinalCta />
       </main>
       <Footer />

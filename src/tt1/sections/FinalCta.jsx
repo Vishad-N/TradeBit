@@ -19,9 +19,8 @@ export default function FinalCta() {
           the market.<span>Start reading it.</span>
         </Reveal>
         <ReserveButton ref={buttonRef} className={cx('rv', buttonIn && 'in')}>
-          Reserve my seat
+          Reserve my free seat
         </ReserveButton>
-        <EventMeta items={['Live', 'Online', EVENT.date, EVENT.time]} className="shade" />
       </div>
     </section>
   )

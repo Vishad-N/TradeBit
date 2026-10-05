@@ -79,7 +79,7 @@ export default function Hero({ ref }) {
               <h1>
                 Master the
                 <br />
-                <mark>market.</mark>
+                <em>market.</em>
                 <br />
                 Without
                 <br />
@@ -91,7 +91,6 @@ export default function Hero({ ref }) {
               </p>
               <div className="cta-row">
                 <ReserveButton>Reserve my free seat</ReserveButton>
-                <EventMeta items={['Live', 'Online', '90 min', EVENT.date, EVENT.time]} />
               </div>
             </div>
             <EntryChart />

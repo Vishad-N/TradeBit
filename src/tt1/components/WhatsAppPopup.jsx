@@ -10,8 +10,9 @@ export default function WhatsAppPopup() {
           right: 24px;
           width: 60px;
           height: 60px;
-          background-color: #25D366;
-          color: #FFF;
+          background-color: var(--oxblood);
+          color: var(--bone);
+          border: 1px solid var(--brass);
           border-radius: 50%;
           box-shadow: 0 4px 10px rgba(0,0,0,0.3);
           display: flex;
