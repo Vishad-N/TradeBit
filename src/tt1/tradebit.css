@@ -1,0 +1,380 @@
+/* Trade Bit design system — ported verbatim from tradebit_meta_landing.html. Loaded only by the /tt-1 entry. */
+/* =========================================================
+   TRADE BIT — Snowfall + Glassmorphism webinar page
+   1 Tokens · 2 Base · 3 Glass system · 4 Components
+   5 Sections · 6 Motion · 7 Tablet/Desktop
+   ========================================================= */
+
+/* 1. TOKENS ------------------------------------------------ */
+:root{
+  --parchment:#F3EEE5; --bone:#E4DBCD; --ink:#25231F;
+  --oxblood:#651F2D;   --petrol:#496772; --brass:#A88454;
+  --night:#0b0b0a;
+  --f-head:"Cormorant Garamond", Georgia, serif;
+  --f-body:"Manrope", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, monospace;
+  --gutter:16px;
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --line:rgba(255,248,235,.16);
+}
+
+/* 2. BASE -------------------------------------------------- */
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--night);color:var(--parchment);font-family:var(--f-body);font-size:16px;line-height:1.6;overflow-x:hidden;padding-bottom:88px}
+img,svg{display:block;max-width:100%}
+a{color:inherit}
+h1,h2,h3,h4,p{margin:0}
+h1,h2,h3{font-family:var(--f-head);font-weight:700;text-transform:uppercase;line-height:.94;letter-spacing:-.005em}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+
+/* Snowfall: single fixed layer behind everything */
+#snow{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#snow canvas{position:absolute;inset:0;display:block}
+main,header.top,footer{position:relative;z-index:1}
+
+.wrap{width:100%;max-width:1200px;margin:0 auto;padding:0 var(--gutter)}
+section{padding:44px 0}
+.label{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
+h2{font-size:clamp(34px,9.6vw,66px);margin:12px 0 22px}
+.lead{font-size:16.5px;max-width:48ch;color:rgba(243,238,229,.88)}
+.shade{text-shadow:0 2px 24px rgba(0,0,0,.75)}   /* readability for text floating on raw snow */
+
+/* 3. GLASS SYSTEM ------------------------------------------
+   Never nest a blurred glass element inside another one
+   (nested backdrop-filter does not sample the snow). Inner
+   pieces use plain translucent fills instead.            */
+.glass{
+  position:relative;border-radius:22px;
+  border:1px solid rgba(255,248,235,.16);
+  background:rgba(18,18,17,.52);
+  -webkit-backdrop-filter:blur(20px) saturate(125%);
+  backdrop-filter:blur(20px) saturate(125%);
+  box-shadow:0 20px 60px rgba(0,0,0,.22),
+             inset 1px 1px 0 rgba(255,248,235,.18),    /* top/left inner highlight */
+             inset -1px -1px 0 rgba(0,0,0,.28);
+  padding:24px;
+}
+.glass::before{  /* soft sheen reinforcing the glass */
+  content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,248,235,.11),rgba(255,248,235,0) 38%);
+}
+/* Level 1 — subtle, secondary information */
+.g1{background:rgba(255,255,255,.07);border-color:rgba(255,248,235,.12);
+    -webkit-backdrop-filter:blur(16px) saturate(120%);backdrop-filter:blur(16px) saturate(120%);
+    border-radius:18px;box-shadow:0 12px 36px rgba(0,0,0,.16),inset 1px 1px 0 rgba(255,248,235,.12)}
+/* Level 2 — primary content: the base .glass */
+.g2{}
+/* Level 3 — strong: hero + conversion */
+.g3{background:rgba(18,18,17,.62);border-color:rgba(255,248,235,.22);border-radius:28px;
+    -webkit-backdrop-filter:blur(24px) saturate(130%);backdrop-filter:blur(24px) saturate(130%);
+    box-shadow:0 30px 90px rgba(0,0,0,.34),inset 1px 1px 0 rgba(255,248,235,.24),inset -1px -1px 0 rgba(0,0,0,.3);padding:26px 22px}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .glass{background:rgba(18,18,17,.9)} .g1{background:rgba(30,29,27,.9)}
+}
+
+/* 4. COMPONENTS -------------------------------------------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:56px;padding:0 28px;
+  border-radius:14px;border:1px solid rgba(243,238,229,.35);background:var(--oxblood);color:var(--parchment);
+  text-decoration:none;cursor:pointer;font-weight:700;font-size:15px;letter-spacing:.06em;text-transform:uppercase;
+  box-shadow:0 10px 30px rgba(101,31,45,.35),inset 0 1px 0 rgba(255,255,255,.18);
+  transition:transform .25s var(--ease),background .25s;
+}
+.btn span{display:inline-block;transition:transform .25s var(--ease)}
+.btn:hover{background:#7a2535;transform:translateY(-1px)}
+.btn:hover span{transform:translate(3px,-3px)}
+.btn.block{width:100%}
+.btn.light{background:var(--parchment);color:var(--oxblood);border-color:var(--parchment);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.btn.light:hover{background:#fff}
+
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--bone)}
+.meta i{font-style:normal;color:var(--brass)}
+
+/* Accordion (curriculum + FAQ) */
+.acc-btn{width:100%;display:grid;grid-template-columns:40px 1fr 28px;align-items:center;gap:6px;min-height:68px;padding:10px 0;background:none;border:0;text-align:left;cursor:pointer;color:inherit}
+.acc-btn .n{font-family:var(--f-mono);font-size:13px;color:var(--brass)}
+.acc-btn .t{font-family:var(--f-head);font-weight:700;font-size:23px;text-transform:uppercase;line-height:1.05}
+.acc-btn .pm{position:relative;width:20px;height:20px;justify-self:end}
+.acc-btn .pm::before,.acc-btn .pm::after{content:"";position:absolute;left:0;right:0;top:9px;height:2px;background:var(--bone);transition:transform .35s var(--ease),background .25s}
+.acc-btn .pm::after{transform:rotate(90deg)}
+.acc-btn[aria-expanded="true"] .pm::after{transform:rotate(0)}
+.acc-btn[aria-expanded="true"] .pm::before,.acc-btn[aria-expanded="true"] .pm::after{background:#c8566c}
+.acc-panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .4s var(--ease)}
+.acc-btn[aria-expanded="true"] + .acc-panel{grid-template-rows:1fr}
+.acc-panel > div{overflow:hidden}
+.acc-panel p{padding:0 38px 20px 46px;color:rgba(243,238,229,.82);max-width:60ch}
+
+/* Curriculum: rows inside ONE glass panel; open row gets stronger fill + oxblood bar */
+.curr-list .acc-item{position:relative;border-top:1px solid var(--line);padding:0 8px;border-radius:0;transition:background .3s}
+.curr-list .acc-item:last-child{border-bottom:1px solid var(--line)}
+.curr-list .acc-item::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--oxblood);transform:scaleY(0);transform-origin:top;transition:transform .35s var(--ease)}
+.curr-list .acc-item.open{background:rgba(255,248,235,.09)}
+.curr-list .acc-item.open::before{transform:scaleY(1)}
+
+/* FAQ: each row is its own subtle glass */
+.faq-list{display:grid;gap:10px}
+.faq-list .acc-item{padding:0 18px}
+.faq-list .acc-item.open{background:rgba(255,248,235,.12);border-color:rgba(255,248,235,.22)}
+.faq-list .acc-btn{grid-template-columns:1fr 28px}
+.faq-list .acc-btn .t{text-transform:none;font-size:22px}
+.faq-list .acc-panel p{padding:0 0 18px}
+
+/* 5. SECTIONS ---------------------------------------------- */
+.top{position:absolute;top:0;left:0;right:0;z-index:5}
+.top .wrap{display:flex;justify-content:space-between;align-items:center;height:68px}
+.brand{font-family:var(--f-head);font-weight:700;font-size:26px;text-decoration:none;text-transform:lowercase}
+.brand b{color:var(--brass)}
+.top nav{display:none}
+.top .mini{font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,248,235,.22);background:rgba(255,255,255,.08);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+
+/* 01 Hero — one large level-3 panel */
+.hero{padding:84px 0 36px}
+.hero .glass{overflow:hidden}
+.hero h1{font-size:clamp(44px,12.4vw,100px);margin:16px 0 18px}
+.hero h1 mark{background:var(--oxblood);color:var(--parchment);padding:0 .14em;margin-left:-.06em;border-radius:6px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.hero .lead{margin-bottom:26px}
+.cta-row{display:flex;flex-direction:column;gap:18px}
+.chart{margin-top:30px;padding-top:22px;border-top:1px solid var(--line)}
+.chart svg{width:100%;height:auto;overflow:visible}
+.chart .grid{stroke:rgba(243,238,229,.12);stroke-width:1}
+.chart .ln{fill:none;stroke:var(--bone);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.chart .ln2{fill:none;stroke:var(--petrol);stroke-width:2;stroke-dasharray:4 6}
+.chart .area{fill:url(#pg)}
+.chart text{font-family:var(--f-mono);font-size:11px;fill:var(--bone);letter-spacing:.1em}
+.chart .tag{fill:var(--oxblood)} .chart .tagt{fill:var(--parchment)}
+.chart .dot{fill:var(--oxblood);stroke:var(--parchment);stroke-width:2}
+
+/* 02 Event */
+.event h2{font-size:clamp(32px,9vw,56px);margin:10px 0 18px}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;margin:0 0 24px}
+.dgrid div{padding:13px 0;border-top:1px solid var(--line)}
+.dgrid dt{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
+.dgrid dd{margin:2px 0 0;font-family:var(--f-head);font-weight:700;font-size:24px;line-height:1.1}
+
+/* 03 Problem */
+.pstate{list-style:none;margin:0;padding:0;counter-reset:p}
+.pstate li{counter-increment:p;position:relative;padding:18px 0 18px 44px;border-top:1px solid var(--line);font-family:var(--f-head);font-weight:600;font-size:clamp(28px,7.6vw,44px);line-height:1}
+.pstate li::before{content:"0" counter(p);position:absolute;left:0;top:25px;font-family:var(--f-mono);font-size:12px;color:var(--brass)}
+.problem h2 span{display:block;color:var(--bone)}
+
+/* 04 Learn — asymmetric glass cards */
+.lgrid{display:grid;gap:14px}
+.lcard{display:grid;gap:12px;align-content:start}
+.lcard .num{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;color:var(--brass)}
+.lcard h3{font-size:32px}
+.lcard p{color:rgba(243,238,229,.82);max-width:40ch}
+.dia{color:var(--bone);height:90px}
+.dia svg{width:100%;height:100%}
+.k1 .dia{height:120px}
+.k2{grid-template-columns:1fr 38%;column-gap:14px;align-items:center;margin-left:22px}
+.k2 .num,.k2 h3,.k2 p{grid-column:1}
+.k2 .dia{grid-column:2;grid-row:1/4;height:110px}
+.k3{margin-right:22px;border-left:3px solid var(--oxblood)}
+.k4{text-align:left}
+.k4 .num{font-size:44px;font-family:var(--f-head);font-weight:700;letter-spacing:0;color:rgba(243,238,229,.28);line-height:.8}
+.mid-cta{margin-top:30px;display:flex;flex-direction:column;gap:10px}
+.mid-cta small{font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--bone)}
+
+/* 05 Framework */
+.framework h2{margin-top:10px}
+.steps{list-style:none;margin:26px 0 0;padding:0 0 0 42px;position:relative}
+.steps::before{content:"";position:absolute;left:11px;top:16px;bottom:16px;width:3px;border-radius:2px;background:var(--oxblood)}
+.steps li{position:relative;padding:12px 0}
+.steps li::before{content:"";position:absolute;left:-39px;top:21px;width:14px;height:14px;border-radius:50%;background:var(--night);border:2px solid var(--bone)}
+.steps li:last-child::before{background:var(--oxblood);border-color:var(--bone)}
+.steps b{display:block;font-family:var(--f-head);font-size:34px;font-weight:700;line-height:1}
+.steps span{font-size:14px;color:rgba(243,238,229,.75)}
+.spark{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+.spark svg{width:100%;height:56px}
+
+/* 06 Compare — overlapping glass */
+.cmp{display:grid}
+.cmp h3{font-size:28px;margin-bottom:12px}
+.cmp ul{list-style:none;margin:0;padding:0;font-weight:600}
+.cmp li{padding:10px 0;border-top:1px solid var(--line)}
+.without{padding-bottom:58px;transform:rotate(-1deg)}
+.without li{text-decoration:line-through;text-decoration-color:rgba(200,86,108,.7);color:rgba(243,238,229,.6)}
+.with{margin:-38px 0 0 16px;border-top:3px solid var(--oxblood);z-index:2;background:rgba(30,28,26,.62)}
+.with li::before{content:"→ ";color:var(--brass)}
+
+/* 07 Mentor — image dissolves into the glass */
+.mentor .glass{padding:0;overflow:hidden}
+.portrait{position:relative;aspect-ratio:4/4.2;display:grid;place-items:center;
+  background:repeating-linear-gradient(135deg,rgba(255,248,235,.05) 0 10px,transparent 10px 20px),rgba(255,248,235,.06)}
+.portrait span{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-align:center;color:var(--bone);padding:0 20px}
+.portrait::after{content:"";position:absolute;inset:auto 0 0 0;height:60%;background:linear-gradient(to top,rgba(18,18,17,.92),rgba(18,18,17,0))}
+.mbody{position:relative;padding:0 24px 26px;margin-top:-64px;z-index:2}
+.mbody h3{font-size:44px;margin-bottom:6px}
+.role{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--brass);margin-bottom:14px}
+.mstats{display:grid;grid-template-columns:repeat(3,1fr);margin-top:22px;border-top:1px solid var(--line)}
+.mstats div{padding:14px 8px 0 0}
+.mstats b{display:block;font-family:var(--f-head);font-size:34px;line-height:1}
+.mstats span{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--brass)}
+
+/* 08 Authority — numbers float over the snow, glass rules */
+.big{display:grid;grid-template-columns:1fr 1fr}
+.big div{padding:26px 0;border-top:1px solid var(--line)}
+.big div:nth-child(odd){padding-right:14px;border-right:1px solid var(--line)}
+.big div:nth-child(even){padding-left:18px}
+.big b{display:block;font-family:var(--f-head);font-weight:700;font-size:clamp(54px,16vw,100px);line-height:.9;text-shadow:0 2px 28px rgba(0,0,0,.7)}
+.big span{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
+.note{margin-top:18px;font-family:var(--f-mono);font-size:11px;opacity:.6}
+
+/* 09–10 Course */
+.intro h2{font-size:clamp(34px,9.6vw,70px)}
+.flow{display:flex;align-items:center;gap:10px;margin:22px 0 28px;font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.flow i{flex:1;height:2px;background:var(--oxblood);position:relative}
+.flow i::after{content:"";position:absolute;right:0;top:-4px;border-left:8px solid var(--oxblood);border-top:5px solid transparent;border-bottom:5px solid transparent}
+.curr-list{padding:12px 16px}
+
+/* 11 Materials — layered glass at different depths */
+.desk{position:relative;height:560px;margin-top:8px}
+.sheet{position:absolute;padding:16px;font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--bone)}
+.sheet h4{margin:0 0 10px;font-family:var(--f-head);font-size:24px;font-weight:700;letter-spacing:0;line-height:1;color:var(--parchment)}
+.bar{height:8px;border-radius:4px;background:rgba(243,238,229,.2);margin:8px 0}
+.bar.o{background:var(--oxblood);width:55%} .bar.s{width:70%}
+.s1{left:0;top:0;width:78%;height:210px;transform:rotate(-2deg);z-index:1}
+.s2{right:0;top:120px;width:62%;height:200px;transform:rotate(2.5deg);z-index:2}
+.s3{left:6%;top:290px;width:66%;height:190px;transform:rotate(1.5deg);z-index:3;border-color:rgba(255,248,235,.24)}
+.s4{right:2%;top:400px;width:56%;height:150px;transform:rotate(-3deg);z-index:4;border-top:2px solid var(--brass)}
+.mini-ch{height:56px;margin-top:8px}.mini-ch svg{width:100%;height:100%}
+
+/* 12 Testimonials */
+.tscroll{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 calc(var(--gutter)*-1);padding:6px var(--gutter) 20px;scrollbar-width:none}
+.tscroll::-webkit-scrollbar{display:none}
+.tcard{flex:0 0 84%;scroll-snap-align:start;margin:0;display:flex;flex-direction:column;gap:18px;min-height:250px}
+.tcard.lg{min-height:290px}
+.tcard.lg q{font-size:32px}
+.case{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;color:var(--brass)}
+.tcard q{quotes:"“" "”";font-family:var(--f-head);font-weight:600;font-size:25px;line-height:1.1;flex:1}
+.tcard cite{font-style:normal;font-size:13px}
+.tcard cite b{display:block;letter-spacing:.06em;text-transform:uppercase}
+.tcard cite span{font-family:var(--f-mono);font-size:11px;color:var(--brass);letter-spacing:.08em;text-transform:uppercase}
+.tctl{display:flex;gap:10px}
+.tctl button{width:48px;height:48px;border-radius:14px;border:1px solid rgba(255,248,235,.22);background:rgba(255,255,255,.08);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);cursor:pointer;font-size:18px}
+.tctl button:hover{background:rgba(255,255,255,.16)}
+
+/* 13 Who */
+.rows{list-style:none;margin:0;padding:0}
+.rows li{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:18px 0;border-top:1px solid var(--line)}
+.rows li:first-child{border-top:0}
+.rows .n{font-family:var(--f-mono);font-size:13px;color:var(--brass);padding-top:6px}
+.rows p{font-family:var(--f-head);font-weight:600;font-size:25px;line-height:1.1}
+
+/* 14 Agenda */
+.tl{position:relative;padding-left:34px;margin-top:26px;--p:0}
+.tl::before,.tl .fill{content:"";position:absolute;left:5px;top:8px;width:3px;border-radius:2px;bottom:8px;background:rgba(243,238,229,.16)}
+.tl .fill{background:var(--oxblood);bottom:auto;height:calc((100% - 16px)*var(--p))}
+.tl ol{list-style:none;margin:0;padding:0}
+.tl li{position:relative;padding:0 0 26px}
+.tl li::before{content:"";position:absolute;left:-34px;top:8px;width:13px;height:13px;border-radius:50%;background:var(--night);border:2px solid var(--brass)}
+.tl li.on::before{background:var(--oxblood);border-color:var(--bone)}
+.tl time{font-family:var(--f-mono);font-size:13px;color:var(--brass);letter-spacing:.1em}
+.tl strong{display:block;font-family:var(--f-head);font-size:34px;font-weight:700;text-transform:uppercase;line-height:1}
+
+/* 15 Registration — strong oxblood glass */
+.reg-panel{background:rgba(101,31,45,.88);border-color:rgba(255,248,235,.26);
+  -webkit-backdrop-filter:blur(22px) saturate(120%);backdrop-filter:blur(22px) saturate(120%);
+  box-shadow:0 30px 90px rgba(0,0,0,.4),inset 1px 1px 0 rgba(255,248,235,.28),inset -1px -1px 0 rgba(0,0,0,.25)}
+.reg-panel .label{color:var(--bone)}
+.reg-panel h2{font-size:clamp(42px,12vw,96px);margin:12px 0 16px}
+.reg-sub{font-family:var(--f-head);font-weight:700;font-size:26px;text-transform:uppercase;margin-bottom:8px}
+.reg-panel .meta{margin-bottom:26px;color:var(--parchment)}
+.reg-panel .meta i{color:var(--bone)}
+form{display:grid;gap:16px;max-width:520px}
+.fld label{display:block;font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;color:var(--bone)}
+.fld input{width:100%;min-height:56px;padding:0 16px;border-radius:14px;border:1px solid rgba(243,238,229,.4);background:rgba(18,10,12,.28);color:var(--parchment);font:inherit;font-size:16px}
+.fld input::placeholder{color:rgba(243,238,229,.5)}
+.fld input:focus{outline:2px solid var(--parchment);background:rgba(18,10,12,.4)}
+.fld input[aria-invalid="true"]{border-color:#ffd1a8}
+.err{display:none;font-size:13px;margin-top:6px;color:#ffd9bf}
+.fld input[aria-invalid="true"] + .err{display:block}
+.fine{font-size:12px;opacity:.78;max-width:46ch}
+#formOk{display:none;padding:18px;border:1px solid var(--bone);border-radius:14px;max-width:520px}
+#formOk.show{display:block}
+
+/* 16 FAQ heading handled by .faq-list */
+
+/* 17 Final — raw snow, no panel */
+.final{padding:80px 0 72px}
+.final h2{font-size:clamp(46px,13.4vw,120px);margin:0}
+.final h2 span{display:block;color:var(--bone)}
+.final .btn{margin:30px 0 20px}
+
+footer{padding:30px 0 40px;border-top:1px solid var(--line);font-size:12px;color:var(--bone)}
+footer .wrap{display:grid;gap:10px}
+footer p{opacity:.72;max-width:70ch}
+
+/* Sticky mobile CTA (glass level 3) */
+.sticky{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:10px var(--gutter) calc(10px + env(safe-area-inset-bottom));
+  background:rgba(18,18,17,.7);-webkit-backdrop-filter:blur(20px) saturate(125%);backdrop-filter:blur(20px) saturate(125%);
+  border-top:1px solid rgba(255,248,235,.2);display:flex;align-items:center;gap:12px;transform:translateY(110%);transition:transform .4s var(--ease)}
+.sticky.show{transform:none}
+.sticky div{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;line-height:1.35;color:var(--brass);flex:0 0 auto}
+.sticky .btn{flex:1;min-height:48px;padding:0 14px;font-size:13px}
+
+/* 6. MOTION ------------------------------------------------ */
+.js .rv{opacity:0;transform:translateY(20px) scale(.985);transition:opacity .8s var(--ease),transform .8s var(--ease);transition-delay:var(--d,0s)}
+.js .rv.in{opacity:1;transform:none}
+.js .without.rv{transform:translateY(20px) rotate(-1deg)}.js .without.rv.in{transform:rotate(-1deg)}
+.js .s1.rv{transform:translateY(20px) rotate(-2deg)}.js .s1.rv.in{transform:rotate(-2deg)}
+.js .s2.rv{transform:translateY(20px) rotate(2.5deg)}.js .s2.rv.in{transform:rotate(2.5deg)}
+.js .s3.rv{transform:translateY(20px) rotate(1.5deg)}.js .s3.rv.in{transform:rotate(1.5deg)}
+.js .s4.rv{transform:translateY(20px) rotate(-3deg)}.js .s4.rv.in{transform:rotate(-3deg)}
+.js .draw{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 2.2s var(--ease) .3s}
+.js .draw.in{stroke-dashoffset:0}
+.js .fadein{opacity:0;transition:opacity .6s 1.8s}.js .fadein.in{opacity:1}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .js .rv{opacity:1;transition:none}.js .rv:not(.without):not(.s1):not(.s2):not(.s3):not(.s4){transform:none}
+  .js .draw{stroke-dashoffset:0;transition:none}.js .fadein{opacity:1;transition:none}
+  .acc-panel,.sticky,.btn,.btn span,.curr-list .acc-item::before{transition:none}
+}
+
+/* 7. TABLET / DESKTOP -------------------------------------- */
+@media (min-width:768px){
+  :root{--gutter:32px}
+  body{padding-bottom:0}.sticky{display:none}
+  section{padding:64px 0}
+  .glass{padding:36px}.g3{padding:48px}
+  .top nav{display:flex;gap:26px}
+  .top nav a{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;opacity:.85}
+  .hero{padding:110px 0 50px}
+  .cta-row{flex-direction:row;align-items:center}
+  .lgrid{grid-template-columns:repeat(12,1fr);align-items:start}
+  .k1{grid-column:1/8}.k2{grid-column:8/13;margin:46px 0 0}
+  .k3{grid-column:1/6;margin:-8px 0 0}.k4{grid-column:6/13;margin:34px 0 0}
+  .dia{height:120px}.k1 .dia{height:150px}
+  .mid-cta{flex-direction:row;align-items:center;gap:20px}
+  .steps{display:grid;grid-template-columns:repeat(5,1fr);padding:0;margin-top:34px}
+  .steps::before{left:0;right:0;top:12px;bottom:auto;width:auto;height:3px}
+  .steps li{padding:38px 14px 0 0}.steps li::before{left:0;top:5px}
+  .steps b{font-size:30px}
+  .cmp{grid-template-columns:1fr 1fr}.with{margin:38px 0 0 -40px}
+  .mentor .glass{display:grid;grid-template-columns:5fr 6fr;align-items:stretch}
+  .portrait{aspect-ratio:auto;min-height:520px}
+  .portrait::after{inset:0 0 0 auto;width:40%;height:auto;background:linear-gradient(to left,rgba(18,18,17,.92),rgba(18,18,17,0))}
+  .mbody{margin:0;padding:48px;align-self:center}
+  .big{grid-template-columns:repeat(4,1fr)}
+  .big div,.big div:nth-child(odd),.big div:nth-child(even){padding:26px 20px;border-right:1px solid var(--line)}
+  .big div:last-child{border-right:0}
+  .desk{height:640px}
+  .s1{width:46%}.s2{width:40%;top:70px}.s3{width:42%;top:300px;left:10%}.s4{width:34%;top:380px}
+  .tcard{flex-basis:42%}.tcard.lg{flex-basis:56%}
+  .rows{display:grid;grid-template-columns:1fr 1fr;column-gap:60px}
+  .rows li:nth-child(2){border-top:0}
+  .reg-panel .rgrid{display:grid;grid-template-columns:1.1fr 1fr;gap:60px;align-items:start}
+  .final{padding:130px 0}
+}
+@media (min-width:1024px){
+  .hero .hgrid{display:grid;grid-template-columns:1.15fr 1fr;gap:56px;align-items:center}
+  .chart{margin-top:0;padding-top:0;border-top:0}
+  .event .dwrap{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:end}
+  .acc-btn{min-height:84px;grid-template-columns:70px 1fr 32px}
+  .acc-btn .t{font-size:32px}
+  .acc-panel p{padding-left:76px;font-size:17px}
+  .faq-list .acc-btn{grid-template-columns:1fr 32px}
+  .faq-list .acc-btn .t{font-size:26px}
+}
