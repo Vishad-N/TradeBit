@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import Snowfall from './components/Snowfall.jsx'
 import StickyCta from './components/StickyCta.jsx'
+import WhatsAppPopup from './components/WhatsAppPopup.jsx'
 import Agenda from './sections/Agenda.jsx'
 import Audience from './sections/Audience.jsx'
 import Authority from './sections/Authority.jsx'
@@ -50,6 +51,7 @@ export default function TradeBitPage() {
       </main>
       <Footer />
       <StickyCta heroRef={heroRef} registerRef={registerRef} />
+      <WhatsAppPopup />
     </>
   )
 }

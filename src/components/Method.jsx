@@ -3,6 +3,7 @@ import { CapRings } from './Rings.jsx';
 import { methodMini } from '../lib/charts.js';
 import { html } from '../lib/html.js';
 import { useStrokeLengths } from '../hooks/motion.js';
+import { EthereumAsset } from './FloatingAssets.jsx';
 
 function ZoneChart({ z }) {
   const ref = useRef(null);
@@ -15,6 +16,7 @@ export default function Method() {
   return (
     <section className="method dark" id="method" aria-labelledby="method-t">
       <CapRings className="cap-rings" count={5} step={26} radiusVar="--r-cap" />
+      <EthereumAsset />
       <div className="wrap">
         <div className="method-head">
           <div>

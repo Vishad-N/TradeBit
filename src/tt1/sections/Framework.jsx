@@ -1,4 +1,5 @@
 import Reveal from '../shared/Reveal.jsx'
+import { EthereumAsset } from '../components/FloatingAssets.jsx'
 
 const STEPS = [
   ['Context', 'What is the market doing?'],
@@ -11,6 +12,7 @@ const STEPS = [
 export default function Framework() {
   return (
     <section className="framework">
+      <EthereumAsset />
       <div className="wrap">
         <Reveal className="glass">
           <p className="label">03 / Signature method</p>

@@ -1,5 +1,6 @@
 import Faq from './Faq.jsx';
 import { CapRings } from './Rings.jsx';
+import { GoldAsset } from './FloatingAssets.jsx';
 
 export default function Offer() {
   return (
@@ -17,6 +18,7 @@ export default function Offer() {
           </g>
         </svg>
       </div>
+      <GoldAsset />
       <div className="wrap">
         <div className="offer-head">
           <span className="label rv" style={{ justifyContent: 'center' }}>Your Invitation</span>

@@ -3,6 +3,7 @@ import { LensRings } from './Rings.jsx';
 import { liveBg, liveChart } from '../lib/charts.js';
 import { html } from '../lib/html.js';
 import { prefersReducedMotion, useInViewOnce, useStrokeLengths } from '../hooks/motion.js';
+import { SolanaAsset } from './FloatingAssets.jsx';
 
 const CHIPS = [
   { l: 1, label: 'Structure' },
@@ -68,6 +69,7 @@ export default function LiveAnalysis() {
     <section className="live dark" id="live" aria-labelledby="live-t">
       <LensRings />
       <svg className="live-bgc drawn" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true" dangerouslySetInnerHTML={html(bg)} />
+      <SolanaAsset />
       <div className="wrap">
         <div className="live-head">
           <div>

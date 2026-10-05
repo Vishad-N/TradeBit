@@ -5,6 +5,7 @@ import { cx, prefersReducedMotion } from '../shared/utils.js'
 import EventMeta from '../components/EventMeta.jsx'
 import ReserveButton from '../components/ReserveButton.jsx'
 import { EVENT } from '../content.js'
+import { BitcoinAsset } from '../components/FloatingAssets.jsx'
 
 const PRICE = 'M10 230 L50 200 L80 215 L120 160 L150 175 L190 120 L220 140 L260 90 L290 105 L330 60 L360 75 L410 40'
 
@@ -69,6 +70,7 @@ function EntryChart() {
 export default function Hero({ ref }) {
   return (
     <section className="hero" ref={ref}>
+      <BitcoinAsset />
       <div className="wrap">
         <Reveal className="glass g3">
           <div className="hgrid">

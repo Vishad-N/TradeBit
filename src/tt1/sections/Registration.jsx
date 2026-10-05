@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import Reveal from '../shared/Reveal.jsx'
 import EventMeta from '../components/EventMeta.jsx'
 import { EVENT } from '../content.js'
+import { GoldAsset } from '../components/FloatingAssets.jsx'
 
 const FIELDS = [
   {
@@ -117,6 +118,7 @@ function RegistrationForm() {
 export default function Registration({ ref }) {
   return (
     <section id="register" ref={ref}>
+      <GoldAsset />
       <div className="wrap">
         <Reveal className="glass g3 reg-panel">
           <div className="rgrid">

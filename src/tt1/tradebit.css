@@ -35,7 +35,7 @@ button{font:inherit;color:inherit}
 main,header.top,footer{position:relative;z-index:1}
 
 .wrap{width:100%;max-width:1200px;margin:0 auto;padding:0 var(--gutter)}
-section{padding:44px 0}
+section{padding:44px 0;position:relative;overflow:hidden}
 .label{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
 h2{font-size:clamp(34px,9.6vw,66px);margin:12px 0 22px}
 .lead{font-size:16.5px;max-width:48ch;color:rgba(243,238,229,.88)}
@@ -81,9 +81,17 @@ h2{font-size:clamp(34px,9.6vw,66px);margin:12px 0 22px}
   text-decoration:none;cursor:pointer;font-weight:700;font-size:15px;letter-spacing:.06em;text-transform:uppercase;
   box-shadow:0 10px 30px rgba(101,31,45,.35),inset 0 1px 0 rgba(255,255,255,.18);
   transition:transform .25s var(--ease),background .25s;
+  animation:btn-attention 5s infinite;
+}
+@keyframes btn-attention {
+  0%, 85% { transform: scale(1); }
+  88% { transform: scale(1.05); }
+  91% { transform: scale(1); }
+  94% { transform: scale(1.05); }
+  97%, 100% { transform: scale(1); }
 }
 .btn span{display:inline-block;transition:transform .25s var(--ease)}
-.btn:hover{background:#7a2535;transform:translateY(-1px)}
+.btn:hover{background:#7a2535;transform:translateY(-1px);animation:none}
 .btn:hover span{transform:translate(3px,-3px)}
 .btn.block{width:100%}
 .btn.light{background:var(--parchment);color:var(--oxblood);border-color:var(--parchment);box-shadow:0 10px 30px rgba(0,0,0,.25)}
@@ -377,4 +385,94 @@ footer p{opacity:.72;max-width:70ch}
   .acc-panel p{padding-left:76px;font-size:17px}
   .faq-list .acc-btn{grid-template-columns:1fr 32px}
   .faq-list .acc-btn .t{font-size:26px}
+}
+
+/* ---------- Floating SVGs ---------- */
+.bg-asset {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  color: var(--brass);
+}
+.bg-asset-inner {
+  animation: float-slow 12s ease-in-out infinite;
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-30px) rotate(8deg); }
+}
+.bg-asset svg {
+  width: 100%;
+  height: 100%;
+  opacity: 0.45;
+  filter: drop-shadow(0 0 16px rgba(168,132,84,0.8));
+}
+
+/* Bitcoin in Hero */
+.asset-btc {
+  width: clamp(300px, 40vw, 800px);
+  right: -15%;
+  top: 10%;
+  z-index: 1;
+}
+
+/* Ethereum in Framework */
+.asset-eth {
+  width: clamp(300px, 40vw, 600px);
+  right: -10%;
+  top: 10%;
+  z-index: 0;
+}
+
+/* Solana in Learn */
+.asset-sol {
+  width: clamp(200px, 25vw, 400px);
+  left: -5%;
+  top: 40%;
+  z-index: 0;
+}
+.asset-sol .bg-asset-inner {
+  animation-duration: 7s;
+}
+
+/* Gold in Registration */
+.asset-gold {
+  width: clamp(150px, 20vw, 300px);
+  left: 10%;
+  top: 60%;
+  z-index: 0;
+}
+
+/* Altcoins in Problem */
+.asset-alt {
+  width: clamp(300px, 50vw, 800px);
+  right: -5%;
+  top: 20%;
+  z-index: 0;
+}
+.fade-shape {
+  animation: fade-shape-anim 4s infinite alternate;
+}
+.s1 { animation-delay: 0s; }
+.s2 { animation-delay: -1s; }
+.s3 { animation-delay: -2s; }
+.s4 { animation-delay: -3s; }
+@keyframes fade-shape-anim {
+  0% { opacity: 0.2; }
+  100% { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  /* On mobile, thin lines get obliterated by the glass blur. 
+     We boost opacity heavily and place them at the very top/edges 
+     so they peek out from behind the glass container! */
+  .bg-asset svg { 
+    opacity: 0.85; 
+    filter: drop-shadow(0 0 16px rgba(168,132,84,1));
+  }
+  .asset-btc { right: -20%; top: -5%; width: 400px; }
+  .asset-eth { left: -30%; top: 0%; width: 350px; }
+  .asset-sol { right: -30%; top: -2%; width: 300px; }
+  .asset-gold { left: -20%; top: -5%; width: 280px; }
+  .asset-alt { right: -30%; top: 0%; width: 350px; }
 }

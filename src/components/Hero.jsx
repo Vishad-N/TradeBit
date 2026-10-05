@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { formTopo, heroCapTopo, heroChart } from '../lib/charts.js';
 import { html } from '../lib/html.js';
 import { prefersReducedMotion, useStrokeLengths } from '../hooks/motion.js';
+import { BitcoinAsset } from './FloatingAssets.jsx';
 
 export default function Hero({ onPlayVideo }) {
   const chartRef = useRef(null);
@@ -17,6 +18,7 @@ export default function Hero({ onPlayVideo }) {
   return (
     <section className="hero" id="top" aria-labelledby="hero-t">
       <div className="hero-grid-bg" aria-hidden="true"></div>
+      <BitcoinAsset />
       <div className="hero-copy">
         <span className="label rv">The Modern Trading Framework</span>
         <h1 id="hero-t" className="h-xl split">

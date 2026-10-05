@@ -1,6 +1,7 @@
 import Reveal from '../shared/Reveal.jsx'
 import ReserveButton from '../components/ReserveButton.jsx'
 import SectionHeading from '../components/SectionHeading.jsx'
+import { SolanaAsset } from '../components/FloatingAssets.jsx'
 
 // Small line diagrams, one per topic. Decorative: the card text carries the meaning.
 const StructureDiagram = () => (
@@ -76,6 +77,7 @@ const TOPICS = [
 export default function Learn() {
   return (
     <section id="learn">
+      <SolanaAsset />
       <div className="wrap">
         <SectionHeading label="02 / The session">Inside the live masterclass</SectionHeading>
         <div className="lgrid">

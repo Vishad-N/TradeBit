@@ -1,5 +1,6 @@
 import { probArt, probLines } from '../lib/charts.js';
 import { html } from '../lib/html.js';
+import { AltcoinsAsset } from './FloatingAssets.jsx';
 
 export default function Problem() {
   return (
@@ -7,6 +8,7 @@ export default function Problem() {
       <div className="prob-art" aria-hidden="true"><svg viewBox="0 0 100 240" preserveAspectRatio="none" dangerouslySetInnerHTML={html(probArt())} /></div>
       <div className="prob-cap" aria-hidden="true"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M36 0 C66 0 90 20 100 100 V0 Z" fill="#DCE8C0"/></svg></div>
       <svg className="prob-lines" viewBox="0 0 1440 1200" preserveAspectRatio="none" aria-hidden="true" dangerouslySetInnerHTML={html(probLines())} />
+      <AltcoinsAsset />
       <div className="wrap">
         <div className="prob-head">
           <span className="label rv">The Real Problem</span>
