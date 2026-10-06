@@ -7,7 +7,7 @@ import { SolanaAsset } from '../components/FloatingAssets.jsx'
 const StructureDiagram = () => (
   <svg viewBox="0 0 240 96" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
     <path d="M4 80 L40 50 L62 64 L110 28 L132 42 L186 8 L236 30" />
-    <g fill="#651F2D" stroke="#E4DBCD">
+    <g fill="#0c1a15" stroke="#e7f0ea">
       <circle cx="40" cy="50" r="5" />
       <circle cx="110" cy="28" r="5" />
       <circle cx="186" cy="8" r="5" />
@@ -19,15 +19,15 @@ const SelectionDiagram = () => (
   <svg viewBox="0 0 120 110" fill="currentColor">
     <rect x="0" y="4" width="116" height="16" rx="3" opacity=".3" />
     <rect x="0" y="32" width="76" height="16" rx="3" opacity=".3" />
-    <rect x="0" y="60" width="106" height="16" rx="3" fill="#A88454" />
+    <rect x="0" y="60" width="106" height="16" rx="3" fill="#6f9e96" />
     <rect x="0" y="88" width="46" height="14" rx="3" opacity=".3" />
   </svg>
 )
 const RiskDiagram = () => (
   <svg viewBox="0 0 240 96" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M0 18H240" stroke="#496772" strokeWidth="3" />
+    <path d="M0 18H240" stroke="#6f9e96" strokeWidth="3" />
     <path d="M0 52H240" strokeDasharray="4 4" strokeWidth="1" />
-    <path d="M0 84H240" stroke="#651F2D" strokeWidth="3" />
+    <path d="M0 84H240" stroke="#9bb0a6" strokeWidth="3" />
     <path d="M30 80 L80 52 L120 62 L190 20" strokeWidth="2.5" />
     <text x="4" y="12" fontSize="9" fill="currentColor" stroke="none" fontFamily="IBM Plex Mono">
       TARGET
@@ -40,7 +40,7 @@ const RiskDiagram = () => (
 const PsychologyDiagram = () => (
   <svg viewBox="0 0 240 96" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M0 48 C20 4 40 92 60 48 S100 10 120 48 S160 80 180 48 S220 40 240 48" />
-    <path d="M0 48H240" stroke="#A88454" strokeDasharray="2 5" strokeWidth="1.5" />
+    <path d="M0 48H240" stroke="#9bb0a6" strokeDasharray="2 5" strokeWidth="1.5" />
   </svg>
 )
 

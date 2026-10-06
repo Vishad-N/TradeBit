@@ -27,7 +27,7 @@ export default function Framework() {
             ))}
           </ol>
           <div className="spark" aria-hidden="true">
-            <svg viewBox="0 0 400 56" preserveAspectRatio="none" fill="none" stroke="#496772" strokeWidth="2.5">
+            <svg viewBox="0 0 400 56" preserveAspectRatio="none" fill="none" stroke="#3d5249" strokeWidth="2.5">
               <path d="M0 44 L40 36 L70 40 L120 20 L160 28 L220 10 L270 22 L330 8 L400 14" />
             </svg>
           </div>

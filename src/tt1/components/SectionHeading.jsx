@@ -1,6 +1,6 @@
 import Reveal from '../shared/Reveal.jsx'
 
-// Label + h2 pair for sections whose heading floats directly on the snow
+// Label + h2 pair for sections whose heading floats directly on the background
 // (.shade adds the text-shadow that keeps it legible there).
 export default function SectionHeading({ label, children }) {
   const numberMatch = label.match(/^(\d{2})/);

@@ -1,0 +1,11 @@
+{
+  "ts": 1791270406.9024978,
+  "iso": "2026-10-06T12:36:46",
+  "event": "pre_tool",
+  "channel": "hook",
+  "ok": true,
+  "detail": "inject chars=9987",
+  "project_id": "visha-90fc8883",
+  "cwd": "C:\\Users\\visha\\OneDrive\\Desktop\\work\\strata-landing\\src\\tt1",
+  "pid": 38504
+}

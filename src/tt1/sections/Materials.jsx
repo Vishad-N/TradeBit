@@ -25,7 +25,7 @@ export default function Materials() {
           <Reveal className="glass g3 sheet s3">
             <h4>Live analysis</h4>
             <div className="mini-ch" aria-hidden="true">
-              <svg viewBox="0 0 200 56" fill="none" stroke="#E4DBCD" strokeWidth="2">
+              <svg viewBox="0 0 200 56" fill="none" stroke="#e7f0ea" strokeWidth="2">
                 <path d="M0 46 L30 30 L55 38 L90 14 L120 24 L160 6 L200 16" />
               </svg>
             </div>

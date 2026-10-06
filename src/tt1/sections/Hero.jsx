@@ -37,8 +37,8 @@ function EntryChart() {
       >
         <defs>
           <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#496772" stopOpacity=".75" />
-            <stop offset="1" stopColor="#496772" stopOpacity="0" />
+            <stop offset="0" stopColor="#6f9e96" stopOpacity=".75" />
+            <stop offset="1" stopColor="#6f9e96" stopOpacity="0" />
           </linearGradient>
         </defs>
         <g className="grid">

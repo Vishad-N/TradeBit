@@ -1,5 +1,4 @@
 import { useRef } from 'react'
-import Snowfall from './components/Snowfall.jsx'
 import StickyCta from './components/StickyCta.jsx'
 import StickyMarginIndex from './components/StickyMarginIndex.jsx'
 import WhatsAppPopup from './components/WhatsAppPopup.jsx'
@@ -29,7 +28,6 @@ export default function TradeBitPage() {
 
   return (
     <>
-      <Snowfall />
       <Header />
       <main id="top">
         <Hero ref={heroRef} />

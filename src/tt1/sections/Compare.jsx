@@ -7,7 +7,7 @@ const WITH = ['Defined context', 'Planned setup', 'Controlled risk', 'Structured
 // "With" overlaps "without" so the better state reads as laid on top of the old one.
 export default function Compare() {
   return (
-    <section>
+    <section className="compare">
       <div className="wrap">
         <SectionHeading label="04 / The difference">Process changes everything.</SectionHeading>
         <div className="cmp">
