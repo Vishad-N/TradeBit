@@ -6,9 +6,11 @@ import Problem from '../components/Problem.jsx';
 import Solution from '../components/Solution.jsx';
 import Method from '../components/Method.jsx';
 import Education from '../components/Education.jsx';
+import WaysToLearn from '../components/WaysToLearn.jsx';
 import LiveAnalysis from '../components/LiveAnalysis.jsx';
 import Mentor from '../components/Mentor.jsx';
 import Platform from '../components/Platform.jsx';
+import TradingPlatforms from '../components/TradingPlatforms.jsx';
 import Stories from '../components/Stories.jsx';
 import Offer from '../components/Offer.jsx';
 import FinalCta from '../components/FinalCta.jsx';
@@ -59,9 +61,11 @@ export default function Landing() {
         <Solution />
         <Method />
         <Education />
+        <WaysToLearn />
         <LiveAnalysis />
         <Mentor />
         <Platform />
+        <TradingPlatforms />
         <Stories onPlayVideo={openVideo} />
         <Offer />
         <FinalCta />

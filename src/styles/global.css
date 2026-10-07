@@ -301,17 +301,23 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .disclaim{margin-top:16px;color:var(--l-40);font-size:11.5px}
 
 /* ---------- 12 · MENTOR (asymmetric container, portrait breaks out) ---------- */
-.mentor{position:relative;z-index:3;margin:calc(-1 * var(--r-lens) - 70px) 4vw 0;background:var(--l);border-radius:32px 220px 32px 32px;display:grid;grid-template-columns:44% 1fr;box-shadow:0 60px 120px -70px rgba(21,24,20,.8)}
-.portrait{position:relative;min-height:640px}
-.portrait-art{position:absolute;left:4%;right:0;top:-150px;bottom:0;pointer-events:none}
+.mentor{position:relative;z-index:3;margin:calc(-1 * var(--r-lens) - 70px) 4vw 0;background:var(--l);border-radius:32px 220px 32px 32px;padding:clamp(60px,7vw,110px) clamp(24px,5vw,90px) clamp(60px,6vw,90px);box-shadow:0 60px 120px -70px rgba(21,24,20,.8)}
+.mentor-head{margin-bottom:clamp(36px,5vw,64px)}
+.mentor-head h2{margin:26px 0 0;font-size:clamp(36px,4.6vw,72px)}
+/* Two mentors: staggered duo. The second card sits lower and in the pale-lime tone. */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,70px);align-items:start}
+.mcard{display:flex;flex-direction:column;gap:26px;min-width:0}
+.mcard.m2{margin-top:clamp(40px,7vw,110px)}
+.portrait{position:relative;aspect-ratio:600/700;width:100%;margin-bottom:64px}
+.portrait-art{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none}
+.m1 .portrait-art{top:clamp(-120px,-7vw,-50px)}
 .portrait-art svg{width:100%;height:100%;overflow:visible}
-.portrait-cap{position:absolute;left:clamp(24px,4vw,60px);bottom:36px;z-index:2;color:var(--l)}
-.portrait-cap b{display:block;font-size:26px;font-weight:500;letter-spacing:-.02em;line-height:1.1}
-.portrait-cap .meta{color:var(--pl)}
-.mentor-copy{padding:clamp(60px,7vw,110px) clamp(24px,5vw,90px) clamp(60px,6vw,90px) clamp(20px,3vw,40px)}
-.mentor-copy h2{margin:26px 0 30px;font-size:clamp(36px,4.6vw,72px)}
+.portrait-cap{position:absolute;left:0;bottom:-64px;z-index:2;color:var(--c)}
+.portrait-cap b{display:block;font-size:clamp(22px,2.2vw,28px);font-weight:500;letter-spacing:-.02em;line-height:1.1}
+.portrait-cap .meta{color:var(--c-60)}
 .story{display:flex;flex-direction:column;gap:14px;color:var(--c-60);max-width:540px}
-.mstats{display:grid;grid-template-columns:repeat(3,1fr);margin:48px 0 40px;border-top:1px solid var(--c-12)}
+.mentor .quote{max-width:720px}
+.mstats{display:grid;grid-template-columns:repeat(3,1fr);margin:clamp(48px,6vw,80px) 0 40px;border-top:1px solid var(--c-12)}
 .mstats div{padding-top:22px}
 .mstats div+div{padding-left:22px;border-left:1px solid var(--c-12)}
 .mstats b{display:block;font-size:clamp(40px,4.4vw,70px);font-weight:500;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums}
@@ -576,10 +582,12 @@ footer{background:var(--c);color:var(--l-60);border-top:1px solid var(--lime);pa
   .m-risk,.m-live{grid-column:span 6}
   .m-risk{border-right:1px solid var(--c-12);padding-right:24px}
   .m-live{padding-left:24px}
-  .mentor{grid-template-columns:1fr;border-radius:28px 120px 28px 28px;margin-top:calc(-1 * var(--r-lens) - 40px)}
-  .portrait{min-height:520px}
-  .portrait-art{left:0;top:-100px}
-  .mentor-copy{padding:10px var(--g) 70px}
+  .mentor{border-radius:28px 120px 28px 28px;margin-top:calc(-1 * var(--r-lens) - 40px);padding:70px var(--g)}
+  .duo{grid-template-columns:1fr;gap:56px}
+  .mcard.m2{margin-top:0}
+  .portrait{max-width:460px}
+  .m1 .portrait-art{top:-60px}
+
   .platform{--cut-r:48vw;--cut-x:50%;--cut-y:calc(100% + 16vw)}
   .plat-stage{padding-bottom:calc(32vw + 120px);min-height:0}
   .plat-copy{max-width:640px}
@@ -604,7 +612,7 @@ footer{background:var(--c);color:var(--l-60);border-top:1px solid var(--lime);pa
   .burger{width:40px;height:40px}
   .nav-in{gap:10px}
   .readout{top:auto}
-  .portrait-art{top:-60px}
+  .m1 .portrait-art{top:-40px}
   .brand small{display:none}
   .checks{grid-template-columns:1fr 1fr;gap:12px 16px;font-size:12px}
   .hero-ctas .btn-dark{width:100%;justify-content:center}
@@ -626,7 +634,7 @@ footer{background:var(--c);color:var(--l-60);border-top:1px solid var(--lime);pa
   .board-chart svg{overflow:hidden}
   .mentor{margin-left:3vw;margin-right:3vw}
   .mstats div+div{padding-left:12px}
-  .portrait{min-height:430px}
+  .portrait{max-width:none}
   .phone{border-radius:22px;padding:5px;left:-6%}
   .p-screen{border-radius:18px}
   .flt{font-size:10.5px;padding:8px 10px}.flt i{width:24px;height:24px}
@@ -747,3 +755,26 @@ footer{background:var(--c);color:var(--l-60);border-top:1px solid var(--lime);pa
 }
 
 
+
+/* ---------- Mobile only: student stories as a chat thread ---------- */
+@media (max-width:768px){
+  .comp{gap:14px;padding:6px 0}
+  .tst{display:flex;flex-direction:column;width:88%;padding:16px 18px 14px;border-radius:22px;box-shadow:none}
+  .tst .who{order:-1;gap:10px;margin-bottom:10px}
+  .tst .who b{font-size:13.5px}
+  .tst .who span{font-size:11.5px;line-height:1.3}
+  .tst .face,.t-main .face{width:36px;height:36px}
+  .tst blockquote,.t-main blockquote,.t-s blockquote{order:0;font-size:16px;font-weight:500;letter-spacing:-.01em;line-height:1.42;margin:0}
+  .t-main blockquote{font-size:17px}
+  .tst .stars{order:1;align-self:flex-end;margin-top:10px;font-size:11px;letter-spacing:2px}
+  /* Incoming (left) and outgoing (right) bubbles; the squared corner is the tail. */
+  .t-main{justify-self:start;background:var(--c);color:var(--l);border-radius:22px 22px 22px 5px}
+  .t-main .who span{color:var(--l-60)}
+  .t-2{justify-self:end;background:var(--pl);color:var(--c);border-radius:22px 22px 5px 22px}
+  .t-3{justify-self:start;background:var(--l);color:var(--c);border:1px solid var(--c-12);border-radius:22px 22px 22px 5px;box-shadow:none}
+  .t-vid{justify-self:end;width:88%;aspect-ratio:16/10;padding:16px;border-radius:22px 22px 5px 22px}
+  .t-vid .play{width:56px;height:56px}
+  .t-vid b{font-size:16px}
+  .stories-head{margin-bottom:28px}
+}
+@media (max-width:768px){.t-2 .stars{color:var(--c)}.t-3 .stars{color:#7d9622}}

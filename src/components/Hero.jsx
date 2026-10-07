@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { formTopo, heroCapTopo, heroChart } from '../lib/charts.js';
 import { html } from '../lib/html.js';
 import { prefersReducedMotion, useStrokeLengths } from '../hooks/motion.js';
-import { BitcoinAsset } from './FloatingAssets.jsx';
+// Bitcoin hero SVG is paused for now; re-enable by restoring this import and the <BitcoinAsset /> line below.
+// import { BitcoinAsset } from './FloatingAssets.jsx';
 
 export default function Hero({ onPlayVideo }) {
   const chartRef = useRef(null);
@@ -18,7 +19,7 @@ export default function Hero({ onPlayVideo }) {
   return (
     <section className="hero" id="top" aria-labelledby="hero-t">
       <div className="hero-grid-bg" aria-hidden="true"></div>
-      <BitcoinAsset />
+      {/* <BitcoinAsset /> */}
       <div className="hero-copy">
         <span className="label rv">The Modern Trading Framework</span>
         <h1 id="hero-t" className="h-xl split">
@@ -49,7 +50,7 @@ export default function Hero({ onPlayVideo }) {
         <div className="hero-chart" data-speed="-0.04">
           <svg ref={chartRef} className={drawn ? 'drawn' : undefined} viewBox="0 0 600 560" preserveAspectRatio="none" aria-hidden="true" dangerouslySetInnerHTML={html(chart)} />
         </div>
-        <div className="tag-float tf1"><span className="meta">NIFTY 50 · 4H</span><b>24,812.<span className="lime">40</span></b><span className="meta" style={{ color: '#B8D83D' }}>▲ Structure · Bullish</span></div>
+        <div className="tag-float tf1"><span className="meta">Ethereum (ETH) · 4H</span><b>3,248.<span className="lime">50</span></b><span className="meta" style={{ color: '#B8D83D' }}>▲ Structure · Bullish</span></div>
         <div className="tag-float tf2"><span className="meta">Planned R:R</span><b>1 : <span className="lime">3.2</span></b></div>
       </div>
 

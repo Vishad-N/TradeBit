@@ -1,0 +1,75 @@
+/* ---------- TRADING PLATFORMS (partner / broker sign-up cards) ----------
+   Charcoal slab placed below the "The Platform" stage (it must not overlap that section's device mock-ups), built from the site's own tokens, rings and chips. */
+.plats{position:relative;z-index:2;margin:clamp(40px,5vw,80px) 2vw 0;background:var(--c);color:var(--l);border-radius:var(--r-plat);padding:clamp(80px,9vw,140px) var(--g) clamp(70px,8vw,120px);overflow:hidden}
+.plats .wrap{z-index:2}
+.plats-rings{position:absolute;inset:0;pointer-events:none}
+.plats-rings i{position:absolute;right:-6vw;top:-8vw;border-radius:50%;border:1px solid var(--pl-08);transform:translate(0,0)}
+.plats-head h2{margin:26px 0 18px;font-size:clamp(38px,5.4vw,88px)}
+.plats-lead{color:var(--l-60);max-width:480px;font-size:clamp(16px,1.5vw,19px)}
+.plats-filters{display:flex;gap:6px;flex-wrap:wrap;margin:30px 0 0}
+.plats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,1.8vw,24px);margin-top:clamp(34px,4.5vw,60px)}
+.plats-item{display:flex;min-width:0}
+.plats-note{margin-top:30px;font-size:12px;color:var(--l-40);max-width:620px}
+
+/* card */
+.pcard{position:relative;display:flex;flex-direction:column;gap:14px;width:100%;padding:clamp(20px,2vw,28px);border-radius:28px;background:rgba(243,244,239,.05);border:1px solid var(--l-12);overflow:hidden;
+  opacity:0;transform:translateY(24px);animation:pc-in .9s var(--ease) forwards;animation-delay:calc(var(--i, 0) * 90ms);
+  transition:transform .6s var(--ease),border-color .6s var(--ease),box-shadow .6s var(--ease),background .6s var(--ease)}
+@keyframes pc-in{to{opacity:1;transform:none}}
+.pc-deco{position:absolute;right:-1px;top:-1px;width:160px;height:160px;pointer-events:none;transform-origin:100% 0;transition:transform .9s var(--ease)}
+.pc-top{position:relative;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.pc-logo{width:68px;height:68px;border-radius:18px;background:var(--l);display:grid;place-items:center;padding:10px;flex:none;transition:transform .6s var(--ease)}
+.pc-logo img{width:100%;height:100%;object-fit:contain}
+.pc-logo span{font-weight:700;font-size:20px;letter-spacing:.04em;color:var(--c)}
+.pc-tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;position:relative;max-width:60%}
+.pc-flag{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;background:var(--lime);color:var(--c);padding:7px 11px;border-radius:100px}
+.pc-cat{font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;border:1px solid var(--pl-20);color:var(--l-60);padding:6px 11px;border-radius:100px}
+.pcard h3{position:relative;font-size:clamp(24px,2.2vw,32px);font-weight:500;text-transform:uppercase;letter-spacing:-.03em;line-height:1}
+.pc-desc{position:relative;font-size:15px;color:var(--l-60);flex:1}
+.pc-code{position:relative;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px dashed var(--pl-40);border-radius:16px;padding:10px 12px}
+.pc-code .meta{color:var(--l-40)}
+.pc-code b{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:15px;letter-spacing:.04em;user-select:all;word-break:break-all}
+.pc-copy{margin-left:auto;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--l-40);border-radius:100px;padding:7px 12px;transition:background .4s var(--ease),color .4s var(--ease)}
+.pc-copy:hover{background:var(--pl);color:var(--c);border-color:var(--pl)}
+.pc-actions{position:relative;display:grid;gap:8px;margin-top:4px}
+.pcard .btn.pc-cta{width:100%;justify-content:space-between;padding:20px 24px;font-size:12px;min-height:58px}
+.btn-pale{background:var(--l);color:var(--c)}
+.btn-pale:hover{box-shadow:0 0 0 8px var(--l-12)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* featured: the site's lime accent + a stronger edge and shadow */
+.pcard.is-featured{border-color:var(--lime);background:rgba(184,216,61,.07);box-shadow:0 40px 80px -48px rgba(184,216,61,.45)}
+.pcard.is-featured::before{content:"";position:absolute;left:-1px;top:-1px;width:44px;height:4px;background:var(--lime)}
+
+/* loading skeleton (only while the list is being fetched) */
+.pcard.is-skeleton{min-height:300px;animation:none;opacity:1;transform:none;background:linear-gradient(110deg,rgba(243,244,239,.04) 30%,rgba(243,244,239,.09) 50%,rgba(243,244,239,.04) 70%);background-size:200% 100%;animation:pc-shimmer 1.6s linear infinite}
+@keyframes pc-shimmer{to{background-position:-200% 0}}
+
+/* desktop hover: restrained, hover-capable devices only */
+@media (hover:hover){
+  .pcard:hover{transform:translateY(-6px);border-color:var(--pl-40);box-shadow:0 40px 70px -46px rgba(0,0,0,.7)}
+  .pcard.is-featured:hover{border-color:var(--lime);box-shadow:0 44px 80px -44px rgba(184,216,61,.55)}
+  .pcard:hover .pc-logo{transform:scale(1.04)}
+  .pcard:hover .pc-deco{transform:scale(1.06)}
+  .pcard:hover .btn .ar{transform:translate(3px,-3px)}
+}
+/* touch: a light press response instead of hover */
+@media (hover:none){.pcard:active{transform:scale(.99)}}
+
+@media (max-width:1024px){.plats{margin-top:clamp(84px,11vw,120px)}.plats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:719px){
+  .plats{margin:88px 8px 0;border-radius:40px;padding:72px var(--g) 64px}
+  .plats-grid{grid-template-columns:1fr;gap:16px}
+  .pc-logo{width:60px;height:60px}
+  .pcard .btn.pc-cta{min-height:60px}
+}
+@media (prefers-reduced-motion:reduce){
+  .pcard{animation:none;opacity:1;transform:none;transition:none}
+  .pc-deco,.pc-logo{transition:none}
+  .pcard:hover{transform:none}
+  .pcard.is-skeleton{animation:none}
+}
+
+/* On the dark slab the site's highlight bar would sit behind light text, so the accent word is lime instead (as in the other dark sections). */
+.plats .hl{color:var(--lime)}
+.plats .hl::after{display:none}

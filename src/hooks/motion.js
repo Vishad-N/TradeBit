@@ -48,7 +48,7 @@ export function usePageReveal() {
       e.target.classList.add('drawn');
       draw.unobserve(e.target);
     }), { threshold: .25 });
-    document.querySelectorAll('.z-chart, #structChart, #archArt, .portrait-art svg, .sign svg, .edu-curve')
+    document.querySelectorAll('.z-chart, #structChart, #archArt, .portrait-art svg, .sign svg, .edu-curve, .ways-curve')
       .forEach(el => draw.observe(el));
 
     return () => { reveal.disconnect(); draw.disconnect(); };

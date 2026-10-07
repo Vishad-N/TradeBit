@@ -135,9 +135,9 @@ export function heroChart(reduceMotion) {
   a += `<polyline class="dr" points="${sw.map(p => `${p.x},${p.k === 'hi' ? p.hi : p.lo}`).join(' ')}" fill="none" stroke="${K.pl}" stroke-width="1.2" ${NSE}/>`;
   sw.forEach(p => { a += `<g class="fd">${pill(p.x, p.k === 'hi' ? p.hi - 18 : p.lo + 20, p.k === 'hi' ? 'HH' : 'HL', 'rgba(220,232,192,.14)', K.pl)}</g><circle class="fd" cx="${p.x}" cy="${p.k === 'hi' ? p.hi : p.lo}" r="3" fill="${K.pl}"/>`; });
   a += `<circle class="fd" cx="${bo.x}" cy="${hh.hi}" r="14" fill="none" stroke="${K.lime}" stroke-width="1.4"/><g class="fd">${pill(bo.x, hh.hi - 30, 'BREAKOUT ↗', K.lime, K.c)}</g>`;
-  a += `<line x1="${last.x}" x2="600" y1="${last.c}" y2="${last.c}" stroke="${K.lime}" stroke-opacity=".7" ${NSE}/><g class="fd">${pill(600, last.c, '24,812', K.lime, K.c, 'end')}</g>`;
+  a += `<line x1="${last.x}" x2="600" y1="${last.c}" y2="${last.c}" stroke="${K.lime}" stroke-opacity=".7" ${NSE}/><g class="fd">${pill(600, last.c, '3,248', K.lime, K.c, 'end')}</g>`;
   a += `<circle cx="${last.x}" cy="${last.c}" r="4" fill="${K.lime}">${reduceMotion ? '' : '<animate attributeName="r" values="4;10;4" dur="2.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.25;1" dur="2.6s" repeatCount="indefinite"/>'}</circle>`;
-  [0, 1, 2, 3, 4].forEach(i => { a += `<text x="-8" y="${60 + i * 110}" text-anchor="end" font-family="${F}" font-size="9" fill="${K.pl}" fill-opacity=".35">${(24900 - i * 120).toLocaleString('en-IN')}</text>`; });
+  [0, 1, 2, 3, 4].forEach(i => { a += `<text x="-8" y="${60 + i * 110}" text-anchor="end" font-family="${F}" font-size="9" fill="${K.pl}" fill-opacity=".35">${(3270 - i * 30).toLocaleString('en-US')}</text>`; });
   return ch.svg + a;
 }
 

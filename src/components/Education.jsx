@@ -44,9 +44,9 @@ export default function Education() {
             <div className="meta"><span>Module 03</span><span>16 Lessons</span></div>
             <h3>Trade Setups</h3>
             <ul className="checklist">
-              <li>Higher-timeframe trend aligned <b>✓</b></li>
-              <li>Price at a marked zone <b>✓</b></li>
-              <li>Confirmation candle closed <b>✓</b></li>
+              <li>Smart Money Concept (SMC) <b>✓</b></li>
+              <li>Inner Circle Trader (ICT) Concept <b>✓</b></li>
+              <li>High probability Winning setup <b>✓</b></li>
               <li>Minimum 2R available <b>✓</b></li>
             </ul>
           </article>
