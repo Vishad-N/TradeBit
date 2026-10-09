@@ -11,7 +11,6 @@ const MENTORS = [
     // Leave it empty to keep the illustrated placeholder.
     photo: '/public/mentors/satyendra.png',
     role: 'Gold & Crypto Trading Expert',
-    tags: ['Gold', 'Crypto', '7+ Years'],
     tagline: 'Welcome to TradeBit India – Mastering Gold & Crypto with 7+ Years of Market Expertise.',
     story: [
       "At TradeBit India, we believe trading isn't about guesswork; it's about mastering data, risk management, and market mindset. Founded by a professional trader with over 7 years of hands-on experience navigating the high-stakes worlds of Gold and Cryptocurrency, TradeBit India is built to bridge the gap between financial ambition and actual market execution.",
@@ -22,10 +21,9 @@ const MENTORS = [
     key: 'maam',
     tone: 'light',
     name: 'Samriddhi Kushwaha',
-    photo: '/public/mentors/maam.png', // e.g. '/mentors/maam.png'
+    photo: 'https://www.youtube.com/playlist?list=PLOhfC5cp83nw/public/mentors/maam.png', // e.g. '/mentors/maam.png'
     photoDrop: 110, // pushes a tall photo down inside the arch so her head is not cropped
     role: 'Mentor',
-    tags: ['Gold', 'Crypto', 'Strategy'],
     tagline: 'Stop Gambling, Start Strategic Trading. Learn Gold & Crypto from TradeBit India.',
     story: [
       "In an industry crowded with overnight ‘gurus’ and fake hype, TradeBit India stands for real skill, proven strategies, and verified experience. With 7+ years on the live trading floor specializing in Gold and Crypto, we have seen it all—the epic bull runs, the market crashes, and everything in between.",
@@ -89,26 +87,18 @@ export default function Mentor() {
         </div>
       </div>
 
-      {/* Two cards: the top half of each is the portrait, the bottom half is the details. */}
       <div className="duo">
         {MENTORS.map((m, i) => (
-          <article key={m.key} className={`mcard m${i + 1} ${m.tone} rv d${i + 1}`}>
-            <figure className="mc-media">
-              <Portrait uid={m.key} tone={m.tone} name={m.name} photo={m.photo} photoDrop={m.photoDrop} />
-              <span className="mc-index" aria-hidden="true">0{i + 1}</span>
+          <article key={m.key} className={`mcard m${i + 1} ${m.tone}`}>
+            <figure className="portrait">
+              <div className="portrait-art" data-speed={i === 0 ? '0.04' : '0.02'}>
+                <Portrait uid={m.key} tone={m.tone} name={m.name} photo={m.photo} photoDrop={m.photoDrop} />
+              </div>
+              <figcaption className="portrait-cap"><b>{m.name}</b><span className="meta">{m.role}</span></figcaption>
             </figure>
-            <div className="mc-body">
-              <div className="mc-id">
-                <h3>{m.name}</h3>
-                <span className="meta">{m.role}</span>
-              </div>
-              <p className="mc-tagline">{m.tagline}</p>
-              <div className="story">
-                {m.story.map(p => <p key={p}>{p}</p>)}
-              </div>
-              <ul className="mc-tags">
-                {m.tags.map(t => <li key={t}>{t}</li>)}
-              </ul>
+            <div className={`story rv d${i + 1}`}>
+              <p><strong>{m.tagline}</strong></p>
+              {m.story.map(p => <p key={p}>{p}</p>)}
             </div>
           </article>
         ))}

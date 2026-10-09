@@ -301,21 +301,28 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .disclaim{margin-top:16px;color:var(--l-40);font-size:11.5px}
 
 /* ---------- 12 · MENTOR (asymmetric container, portrait breaks out) ---------- */
-.mentor{position:relative;z-index:3;margin:calc(-1 * var(--r-lens) - 70px) 4vw 0;background:var(--l);border-radius:32px 220px 32px 32px;padding:clamp(60px,7vw,110px) clamp(24px,5vw,90px) clamp(60px,6vw,90px);box-shadow:0 60px 120px -70px rgba(21,24,20,.8)}
+.mentor{position:relative;z-index:3;margin:0;background:transparent;border-radius:0;padding:clamp(60px,7vw,110px) clamp(24px,5vw,90px) clamp(60px,6vw,90px)}
 .mentor-head{margin-bottom:clamp(36px,5vw,64px)}
 .mentor-head h2{margin:26px 0 0;font-size:clamp(36px,4.6vw,72px)}
 /* Two mentors: staggered duo. The second card sits lower and in the pale-lime tone. */
-.duo{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,70px);align-items:start}
-.mcard{display:flex;flex-direction:column;gap:26px;min-width:0}
-.mcard.m2{margin-top:clamp(40px,7vw,110px)}
-.portrait{position:relative;aspect-ratio:600/700;width:100%;margin-bottom:64px}
-.portrait-art{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none}
-.m1 .portrait-art{top:clamp(-120px,-7vw,-50px)}
-.portrait-art svg{width:100%;height:100%;overflow:visible}
-.portrait-cap{position:absolute;left:0;bottom:-64px;z-index:2;color:var(--c)}
-.portrait-cap b{display:block;font-size:clamp(22px,2.2vw,28px);font-weight:500;letter-spacing:-.02em;line-height:1.1}
-.portrait-cap .meta{color:var(--c-60)}
-.story{display:flex;flex-direction:column;gap:14px;color:var(--c-60);max-width:540px}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:clamp(20px,2.6vw,40px);align-items:stretch}
+.mcard{display:flex;flex-direction:column;min-width:0;background:#fff;border:1px solid var(--c-12);border-radius:28px;overflow:hidden;box-shadow:0 30px 60px -40px rgba(21,24,20,.35)}
+/* top half: portrait stage, alternating tone so the pair reads as a set */
+.mc-media{position:relative;margin:0;aspect-ratio:1/.82;display:flex;justify-content:center;overflow:hidden}
+.mcard.dark .mc-media{background:radial-gradient(circle at 50% 100%,#e6efcc,#DCE8C0 70%)}
+.mcard.light .mc-media{background:radial-gradient(circle at 50% 100%,#2b3026,#151814 70%)}
+.mc-media svg{height:100%;width:auto;max-width:100%;overflow:hidden}
+.mc-index{position:absolute;top:18px;left:22px;font-size:clamp(40px,4.4vw,64px);font-weight:500;letter-spacing:-.05em;line-height:1;color:transparent;-webkit-text-stroke:1px var(--c-40)}
+.mcard.light .mc-index{-webkit-text-stroke-color:rgba(243,244,239,.4)}
+/* bottom half: details */
+.mc-body{color:var(--c);flex:1;display:flex;flex-direction:column;gap:16px;padding:clamp(22px,2.4vw,36px)}
+.mc-id h3{font-size:clamp(24px,2.3vw,34px);font-weight:500;letter-spacing:-.025em;line-height:1.1}
+.mc-id .meta{display:block;margin-top:8px;color:var(--c-60)}
+.mc-tagline{font-size:clamp(15px,1.15vw,17px);line-height:1.45;font-weight:600;color:var(--c);padding-left:14px;border-left:3px solid var(--lime)}
+.story{display:flex;flex-direction:column;gap:12px;color:var(--c-60);font-size:clamp(14px,1vw,15.5px);line-height:1.6}
+.mc-tags{list-style:none;margin:auto 0 0;padding:6px 0 0;display:flex;flex-wrap:wrap;gap:8px}
+.mc-tags li{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;padding:7px 12px;border-radius:100px;border:1px solid var(--c-12);color:var(--c-60)}
+.mc-tags li:first-child{background:var(--lime);border-color:var(--lime);color:var(--c)}
 .mentor .quote{max-width:720px}
 .mstats{display:grid;grid-template-columns:repeat(3,1fr);margin:clamp(48px,6vw,80px) 0 40px;border-top:1px solid var(--c-12)}
 .mstats div{padding-top:22px}
@@ -582,11 +589,8 @@ footer{background:var(--c);color:var(--l-60);border-top:1px solid var(--lime);pa
   .m-risk,.m-live{grid-column:span 6}
   .m-risk{border-right:1px solid var(--c-12);padding-right:24px}
   .m-live{padding-left:24px}
-  .mentor{border-radius:28px 120px 28px 28px;margin-top:calc(-1 * var(--r-lens) - 40px);padding:70px var(--g)}
+  .mentor{border-radius:0;margin-top:0;padding:70px var(--g)}
   .duo{grid-template-columns:1fr;gap:56px}
-  .mcard.m2{margin-top:0}
-  .portrait{max-width:460px}
-  .m1 .portrait-art{top:-60px}
 
   .platform{--cut-r:48vw;--cut-x:50%;--cut-y:calc(100% + 16vw)}
   .plat-stage{padding-bottom:calc(32vw + 120px);min-height:0}
@@ -612,7 +616,6 @@ footer{background:var(--c);color:var(--l-60);border-top:1px solid var(--lime);pa
   .burger{width:40px;height:40px}
   .nav-in{gap:10px}
   .readout{top:auto}
-  .m1 .portrait-art{top:-40px}
   .brand small{display:none}
   .checks{grid-template-columns:1fr 1fr;gap:12px 16px;font-size:12px}
   .hero-ctas .btn-dark{width:100%;justify-content:center}
@@ -632,9 +635,8 @@ footer{background:var(--c);color:var(--l-60);border-top:1px solid var(--lime);pa
   .readout{position:relative;bottom:auto;max-width:none;margin-top:14px}
   .board-chart{aspect-ratio:1.25}
   .board-chart svg{overflow:hidden}
-  .mentor{margin-left:3vw;margin-right:3vw}
+  .mentor{margin-left:0;margin-right:0}
   .mstats div+div{padding-left:12px}
-  .portrait{max-width:none}
   .phone{border-radius:22px;padding:5px;left:-6%}
   .p-screen{border-radius:18px}
   .flt{font-size:10.5px;padding:8px 10px}.flt i{width:24px;height:24px}

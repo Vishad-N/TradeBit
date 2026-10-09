@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import StickyCta from './components/StickyCta.jsx'
 import StickyMarginIndex from './components/StickyMarginIndex.jsx'
+import FlipCountdown from './components/FlipCountdown.jsx'
 import WhatsAppPopup from './components/WhatsAppPopup.jsx'
 import Agenda from './sections/Agenda.jsx'
 import Audience from './sections/Audience.jsx'
@@ -46,6 +47,7 @@ export default function TradeBitPage() {
       <Footer />
       <StickyMarginIndex />
       <StickyCta heroRef={heroRef} registerRef={registerRef} />
+      <FlipCountdown />
       <WhatsAppPopup />
     </>
   )

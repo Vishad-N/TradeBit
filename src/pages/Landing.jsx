@@ -57,13 +57,13 @@ export default function Landing() {
       <main id="main">
         <Hero onPlayVideo={openVideo} />
         <Trust />
+        <Mentor />
         <Problem />
         <Solution />
         <Method />
         <Education />
         <WaysToLearn />
         <LiveAnalysis />
-        <Mentor />
         <Platform />
         <TradingPlatforms />
         <Stories onPlayVideo={openVideo} />
@@ -71,7 +71,7 @@ export default function Landing() {
         <FinalCta />
       </main>
       <Footer />
-      <div className={showCta ? 'm-cta show' : 'm-cta'}><a href="#offer">START YOUR JOURNEY → <small>₹9,999</small></a></div>
+      <div className={showCta ? 'm-cta show' : 'm-cta'}><a href="#offer">START YOUR JOURNEY → <small>₹0</small></a></div>
       <VideoModal open={videoOpen} onClose={closeVideo} />
     </>
   );

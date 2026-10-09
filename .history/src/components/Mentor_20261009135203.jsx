@@ -11,7 +11,6 @@ const MENTORS = [
     // Leave it empty to keep the illustrated placeholder.
     photo: '/public/mentors/satyendra.png',
     role: 'Gold & Crypto Trading Expert',
-    tags: ['Gold', 'Crypto', '7+ Years'],
     tagline: 'Welcome to TradeBit India – Mastering Gold & Crypto with 7+ Years of Market Expertise.',
     story: [
       "At TradeBit India, we believe trading isn't about guesswork; it's about mastering data, risk management, and market mindset. Founded by a professional trader with over 7 years of hands-on experience navigating the high-stakes worlds of Gold and Cryptocurrency, TradeBit India is built to bridge the gap between financial ambition and actual market execution.",
@@ -23,9 +22,7 @@ const MENTORS = [
     tone: 'light',
     name: 'Samriddhi Kushwaha',
     photo: '/public/mentors/maam.png', // e.g. '/mentors/maam.png'
-    photoDrop: 110, // pushes a tall photo down inside the arch so her head is not cropped
     role: 'Mentor',
-    tags: ['Gold', 'Crypto', 'Strategy'],
     tagline: 'Stop Gambling, Start Strategic Trading. Learn Gold & Crypto from TradeBit India.',
     story: [
       "In an industry crowded with overnight ‘gurus’ and fake hype, TradeBit India stands for real skill, proven strategies, and verified experience. With 7+ years on the live trading floor specializing in Gold and Crypto, we have seen it all—the epic bull runs, the market crashes, and everything in between.",
@@ -36,7 +33,7 @@ const MENTORS = [
 
 // Duotone arch portrait. Replace the <g className="person"> with the mentor's cut-out photograph.
 // Gradient/clip ids are prefixed per mentor so two copies of this SVG on one page do not collide.
-function Portrait({ uid, tone, name, photo, photoDrop = 0 }) {
+function Portrait({ uid, tone, name, photo }) {
   const dark = tone === 'dark';
   const c = dark
     ? { arch: '#151814', accent: '#DCE8C0', contour: '#DCE8C0', orbit: '#B8D83D', collar: '#DCE8C0', hair: '#151814', skinA: '#151814', skinB: '#2b3026', skinC: '#DCE8C0', skinCo: 0.85, body: ['#151814', '#232720', '#5d6452'], rim: '#DCE8C0' }
@@ -61,7 +58,7 @@ function Portrait({ uid, tone, name, photo, photoDrop = 0 }) {
       {photo ? (
         // A real photo fills the arch (cropped to it, aligned to the bottom). A cut-out PNG/WEBP with a
         // transparent background looks best, because the arch colour shows around the person.
-        <image href={photo} x="40" y="60" width="520" height={760 + photoDrop} preserveAspectRatio="xMidYMax slice" clipPath={`url(#clip-${uid})`} />
+        <image href={photo} x="40" y="60" width="520" height="760" preserveAspectRatio="xMidYMax slice" clipPath={`url(#clip-${uid})`} />
       ) : (
       <g className="person" clipPath={`url(#clip-${uid})`}>
         {!dark &&<path d="M190 392 C180 262 236 228 300 228 C368 228 416 262 410 392 C408 480 428 550 450 640 L150 640 C172 550 192 480 190 392Z" fill={c.hair} />}
@@ -89,26 +86,18 @@ export default function Mentor() {
         </div>
       </div>
 
-      {/* Two cards: the top half of each is the portrait, the bottom half is the details. */}
       <div className="duo">
         {MENTORS.map((m, i) => (
-          <article key={m.key} className={`mcard m${i + 1} ${m.tone} rv d${i + 1}`}>
-            <figure className="mc-media">
-              <Portrait uid={m.key} tone={m.tone} name={m.name} photo={m.photo} photoDrop={m.photoDrop} />
-              <span className="mc-index" aria-hidden="true">0{i + 1}</span>
+          <article key={m.key} className={`mcard m${i + 1} ${m.tone}`}>
+            <figure className="portrait">
+              <div className="portrait-art" data-speed={i === 0 ? '0.04' : '0.02'}>
+                <Portrait uid={m.key} tone={m.tone} name={m.name} photo={m.photo} />
+              </div>
+              <figcaption className="portrait-cap"><b>{m.name}</b><span className="meta">{m.role}</span></figcaption>
             </figure>
-            <div className="mc-body">
-              <div className="mc-id">
-                <h3>{m.name}</h3>
-                <span className="meta">{m.role}</span>
-              </div>
-              <p className="mc-tagline">{m.tagline}</p>
-              <div className="story">
-                {m.story.map(p => <p key={p}>{p}</p>)}
-              </div>
-              <ul className="mc-tags">
-                {m.tags.map(t => <li key={t}>{t}</li>)}
-              </ul>
+            <div className={`story rv d${i + 1}`}>
+              <p><strong>{m.tagline}</strong></p>
+              {m.story.map(p => <p key={p}>{p}</p>)}
             </div>
           </article>
         ))}

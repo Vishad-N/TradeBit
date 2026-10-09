@@ -18,4 +18,57 @@
 //     ctaLabel: 'Sign Up',                  // optional
 //     featured: false,
 //   }
-export const PLATFORMS_FALLBACK = [];
+export const PLATFORMS_FALLBACK = [
+  {
+    slug: 'xm-global',
+    name: 'XM Global',
+    logo: '/platforms/xm.png',
+    description: 'Get up to 100% deposit bonus when you open an account through our link.',
+    category: 'Crypto & Gold',
+    referralUrl: 'https://affs.click/YmATt',
+    referralCode: '6RTFG',
+  },
+  {
+    slug: 'elefin',
+    name: 'Elefin',
+    logo: '/platforms/elefin.png',
+    description: 'Trade Crypto & Gold with our partner link and partner code.',
+    category: 'Crypto & Gold',
+    referralUrl: 'https://partners.elefin.com/go/WCAM-ETK5U8',
+    referralCode: 'ETK5U8',
+  },
+  {
+    slug: 'coindcx',
+    name: 'CoinDCX',
+    logo: '/platforms/coindcx.png',
+    description: 'Get up to 50% discount on brokerage and fees.',
+    category: 'FIU Registered',
+    referralUrl: 'https://invite.coindcx.com/69946702',
+  },
+  {
+    slug: 'delta-exchange-india',
+    name: 'Delta Exchange India',
+    logo: '/platforms/delta.png',
+    description: 'Get up to 20% discount on brokerage and fees, plus free Algo access.',
+    category: 'FIU Registered',
+    referralUrl: 'https://www.delta.exchange/?code=UUQZHP',
+  },
+  {
+    slug: 'exness',
+    name: 'Exness',
+    logo: '/platforms/exness.png',
+    description: 'Trade Crypto & Gold with our partner link and partner code.',
+    category: 'Crypto & Gold',
+    referralUrl: 'https://one.exnessonelink.com/a/kcv6js6dnn',
+    referralCode: 'kcv6js6dnn',
+  },
+  {
+    slug: 'funded-now',
+    name: 'Funded Now',
+    logo: '/platforms/fundednow.png',
+    description: 'Use code TRADEBIT and get 10% discount.',
+    category: 'Prop Firm',
+    referralUrl: 'https://www.fundednow.com/?refcode=TRADEBIT',
+    referralCode: 'TRADEBIT',
+  },
+];

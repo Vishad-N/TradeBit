@@ -1,6 +1,8 @@
 import Faq from './Faq.jsx';
 import { CapRings } from './Rings.jsx';
 import { GoldAsset } from './FloatingAssets.jsx';
+import CountDown from './CountDown.jsx';
+import { TELEGRAM_URL } from '../config/learn.js';
 
 export default function Offer() {
   return (
@@ -28,8 +30,8 @@ export default function Offer() {
           <div className="price">
             <span className="meta">Complete programme · one-time payment</span>
             <div className="was"><span className="sr" style={{ position: 'absolute', left: '-9999px' }}>Original price</span>₹24,999</div>
-            <div className="now"><sup>₹</sup>9,999</div>
-            <span className="off">60% OFF · LIMITED ENROLMENT</span>
+            <div className="now"><sup>₹</sup><CountDown from={9999} to={0} /></div>
+            <span className="off">100% OFF · LIMITED ENROLMENT</span>
             <p>One payment, no subscription. Every future curriculum update is included for life.</p>
           </div>
           <div className="vr" aria-hidden="true"></div>
@@ -43,7 +45,7 @@ export default function Offer() {
           </ul>
         </div>
         <div className="go rv">
-          <a href="#checkout" className="btn btn-lime btn-xl">Get Started Now <span className="ar">→</span></a>
+          <a href={TELEGRAM_URL} target="_blank" rel="noopener noreferrer" className="btn btn-lime btn-xl">Get Started Now <span className="ar">→</span></a>
           <div className="assure">
             <span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2"/></svg>Secure Payment</span>
             <span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M9 1.5L3.5 9H8l-1 5.5L12.5 7H8z"/></svg>Instant Access</span>

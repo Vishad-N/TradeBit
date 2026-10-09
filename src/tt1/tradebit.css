@@ -789,3 +789,34 @@ header.top{z-index:5}
   .faq-list .acc-item,.faq-list .acc-item.open{border-radius:20px}
   @supports (animation-timeline:view()){.mentor .portrait{animation:none}}
 }
+
+/* ============ 1% CLUB: fixed header + sticky flip countdown ============ */
+.top{position:fixed;transition:background .3s var(--ease),box-shadow .3s var(--ease),border-color .3s}
+.top.scrolled{background:rgba(231,240,234,.82);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 8px 30px rgba(16,32,28,.1);border-bottom:1px solid rgba(16,32,28,.08)}
+@media (min-width:1100px){.top nav{display:flex;gap:26px}}
+/* Sticky timer: same right edge and width as the WhatsApp button, stacked directly above it. */
+.flipcd{position:fixed;right:24px;bottom:162px;width:60px;z-index:9998;padding:9px 0 8px;border-radius:18px;background:#10201c;color:#e7f0ea;border:1px solid rgba(231,240,234,.16);box-shadow:0 4px 14px rgba(0,0,0,.3);display:flex;flex-direction:column;align-items:center;gap:5px}
+.flipcd-label{font-family:var(--f-mono);font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);text-align:center;line-height:1.2}
+.flipcd-grp{display:flex;flex-direction:column;align-items:center;gap:2px}
+.flipcd-pair{display:flex;gap:2px}
+.flipcd-unit{font-family:var(--f-mono);font-size:7px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.fd{position:relative;display:block;width:21px;height:28px;perspective:160px;font-family:var(--f-mono);font-weight:500;font-size:17px;color:#f4f8f5}
+.fh{position:absolute;left:0;right:0;height:50%;overflow:hidden;background:#1d3d34;backface-visibility:hidden}
+.fh.t{top:0;border-radius:4px 4px 0 0;border-bottom:1px solid rgba(0,0,0,.6)}
+.fh.b{bottom:0;border-radius:0 0 4px 4px;background:#234a3f}
+.fh i{position:absolute;left:0;right:0;height:200%;display:grid;place-items:center;font-style:normal;line-height:1}
+.fh.t i{top:0}.fh.b i{bottom:0}
+.fh.flap-t{transform-origin:50% 100%;z-index:2;animation:flaptop .24s ease-in forwards}
+.fh.flap-b{transform-origin:50% 0;z-index:2;transform:rotateX(90deg);animation:flapbot .26s ease-out .24s forwards}
+@keyframes flaptop{to{transform:rotateX(-90deg)}}
+@keyframes flapbot{to{transform:rotateX(0)}}
+@media (prefers-reduced-motion:reduce){.fh.flap-t,.fh.flap-b{animation:none}.fh.flap-b{transform:none}}
+@media (min-width:768px){.flipcd{bottom:96px}}
+.portrait img{width:100%;height:100%;object-fit:cover;object-position:top center}
+@media (max-width:767px){.portrait img{aspect-ratio:4/4.2}}
+
+.mbody .mtag{font-family:var(--f-head);font-size:clamp(20px,2vw,26px);line-height:1.25;color:var(--ivory);margin:2px 0 14px;padding-left:14px;border-left:3px solid var(--gold)}
+.mbody p+p{margin-top:12px}
+.mtags{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.mtags li{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:7px 12px;border-radius:100px;border:1px solid var(--glass-border);color:var(--ivory-soft)}
+.mtags li:first-child{background:var(--gold);border-color:var(--gold);color:var(--ink)}

@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react'
+
 const LINKS = [
-  ['#learn', "What you'll learn"],
+  ['#learn', '1% Club'],
   ['#mentor', 'Mentor'],
   ['#curriculum', 'Course'],
   ['#agenda', 'Agenda'],
@@ -15,8 +17,16 @@ export function Brand() {
 }
 
 export default function Header() {
+  // Header is fixed; it gains a frosted background once the page scrolls past the top.
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
   return (
-    <header className="top">
+    <header className={scrolled ? 'top scrolled' : 'top'}>
       <div className="wrap">
         <Brand />
         <nav aria-label="Primary">

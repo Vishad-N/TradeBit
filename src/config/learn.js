@@ -6,7 +6,11 @@
 //                              (put the file in /public and use e.g. /classplus-preview.jpg)
 const env = import.meta.env;
 
-const playlistId = (env.VITE_YOUTUBE_PLAYLIST_ID || '').trim();
+// Default is the TradeBit India playlist; VITE_YOUTUBE_PLAYLIST_ID overrides it.
+const playlistId = (env.VITE_YOUTUBE_PLAYLIST_ID || 'PLOhfC5cp83nw').trim();
+
+// Telegram channel for the "Get Started Now" button. Same link as TELEGRAM_URL in backend/.env; VITE_TELEGRAM_URL overrides it.
+export const TELEGRAM_URL = (env.VITE_TELEGRAM_URL || 'https://t.me/tradebitindia_Official').trim();
 
 export const LEARN = {
   youtubePlaylistId: playlistId,

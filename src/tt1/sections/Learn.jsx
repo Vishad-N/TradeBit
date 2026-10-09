@@ -79,7 +79,7 @@ export default function Learn() {
     <section id="learn">
       <SolanaAsset />
       <div className="wrap">
-        <SectionHeading label="02 / The session">Inside the live masterclass</SectionHeading>
+        <SectionHeading label="02 / 1% Club">Inside the 1% Club masterclass</SectionHeading>
         <div className="lgrid">
           {TOPICS.map(({ cls, delay, title, body, Diagram }, i) => (
             <Reveal key={title} as="article" className={`glass lcard ${cls}`} delay={delay}>
