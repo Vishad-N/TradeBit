@@ -79,4 +79,20 @@ export const PLATFORMS_FALLBACK = [
     category: 'Charting',
     referralUrl: 'https://in.tradingview.com/?aff_id=1172080',
   },
+  {
+    slug: 'gocharting',
+    name: 'GoCharting',
+    description: 'Advanced charting and order-flow platform. Sign up through our link.',
+    category: 'Charting',
+    referralUrl: 'https://gocharting.com/sign-up?utm_ref=RDWFUBXL',
+    referralCode: 'RDWFUBXL',
+  },
+  {
+    slug: 'coinglass',
+    name: 'Coinglass',
+    description: 'Crypto derivatives data: open interest, funding and liquidations.',
+    category: 'Charting',
+    referralUrl: 'https://www.coinglass.com/?ref_code=TRADEBIT',
+    referralCode: 'TRADEBIT',
+  },
 ];

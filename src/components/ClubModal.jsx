@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
 // Shown prices. The payment page reads the live fee from the backend (MENTORSHIP_PRICE_USDT); keep the two in step.
@@ -80,7 +80,7 @@ export default function ClubModal({ open, onClose }) {
           <button type="button" className="btn btn-lime club-cta" onClick={apply}>
             Apply for 1:1 Mentorship <span className="ar">→</span>
           </button>
-          <p className="club-fine">Payments are verified manually. You get the Telegram link once your payment is approved.</p>
+          <p className="club-fine">Payments are verified manually. You get the Telegram link once your payment is approved. <Link to="/1-percent-club" onClick={onClose}>See what is inside the 1% Club</Link></p>
         </div>
       </div>
     </div>

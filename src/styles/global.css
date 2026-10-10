@@ -859,3 +859,31 @@ html{scroll-padding-top:96px}
 .mc-media svg{transition:transform .8s var(--ease)}
 @keyframes mcshine{from{transform:translateX(-130%)}to{transform:translateX(130%)}}
 @media (prefers-reduced-motion:reduce){.mcard,.mc-media svg{transition:none}.mcard:hover::before{animation:none;opacity:0}.mcard:hover{transform:none}}
+
+/* Telegram icon button in the nav */
+.tg-btn{position:relative;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;flex:none;color:var(--c);background:var(--l);border:1px solid var(--c-12);overflow:hidden;
+  transition:transform .35s var(--ease),background .35s var(--ease),color .35s var(--ease),box-shadow .35s var(--ease),border-color .35s}
+.nav:not(.solid) .tg-btn{background:#fff}
+.nav.solid .tg-btn{background:rgba(243,244,239,.1);color:var(--l);border-color:rgba(243,244,239,.25)}
+.tg-btn svg{width:20px;height:20px;transition:transform .45s var(--ease)}
+.tg-btn::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.7) 50%,transparent 70%);transform:translateX(-130%)}
+.tg-btn:hover,.tg-btn:focus-visible{background:#229ED9;color:#fff;border-color:#229ED9;transform:translateY(-2px) scale(1.06);box-shadow:0 10px 24px -8px rgba(34,158,217,.7),0 0 0 5px rgba(34,158,217,.18)}
+.tg-btn:hover svg,.tg-btn:focus-visible svg{transform:translate(2px,-2px) rotate(-12deg) scale(1.08)}
+.tg-btn:hover::after,.tg-btn:focus-visible::after{animation:mcshine .9s var(--ease) both}
+.tg-btn:focus-visible{outline:2px solid var(--c);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.tg-btn,.tg-btn svg{transition:none}.tg-btn:hover::after{animation:none}}
+.nav .tg-btn:hover,.nav .tg-btn:focus-visible{background:#229ED9;color:#fff;border-color:#229ED9}
+
+/* Footer social buttons: rounded-lg, 36px tall, outline / primary variants */
+.f-social{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.fbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:10px;white-space:nowrap;font-size:13.5px;font-weight:500;color:var(--l);
+  border:1px solid var(--pl-20);background:rgba(243,244,239,.04);transition:background .3s var(--ease),border-color .3s var(--ease),color .3s var(--ease),transform .3s var(--ease),box-shadow .3s var(--ease)}
+.fbtn svg{width:18px;height:18px;flex:none;transition:transform .3s var(--ease)}
+.fbtn:hover{background:rgba(243,244,239,.12);border-color:rgba(243,244,239,.4);transform:translateY(-2px)}
+.fbtn:hover svg{transform:scale(1.12) rotate(-6deg)}
+.fbtn:focus-visible{outline:2px solid var(--lime);outline-offset:3px}
+.fbtn-primary{background:var(--lime);border-color:var(--lime);color:var(--c);font-weight:600;box-shadow:0 8px 20px -10px rgba(184,216,61,.7)}
+.fbtn-primary:hover{background:#c9ea4a;border-color:#c9ea4a;color:var(--c);box-shadow:0 12px 26px -10px rgba(184,216,61,.9)}
+.f-grid .fbtn:hover{color:var(--l)}.f-grid .fbtn-primary:hover{color:var(--c)}
+@media (prefers-reduced-motion:reduce){.fbtn,.fbtn svg{transition:none}.fbtn:hover{transform:none}}
+.links a.club-link{padding:9px 16px;opacity:1}.links a.club-link::after{display:none}

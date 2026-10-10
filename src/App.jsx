@@ -6,6 +6,7 @@ import RiskDisclosure from './pages/RiskDisclosure.jsx';
 import Login from './pages/Login.jsx';
 import ReadBooks from './pages/ReadBooks/ReadBooks.jsx';
 import Mentorship from './pages/Mentorship.jsx';
+import Club from './pages/Club.jsx';
 import AdminReading from './pages/admin/AdminReading.jsx';
 import LegalLayout from './components/LegalLayout.jsx';
 import SiteLayout from './components/SiteLayout.jsx';
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/read/books" element={<ReadBooks />} />
             <Route path="/mentorship" element={<Mentorship />} />
+            <Route path="/1-percent-club" element={<Club />} />
             <Route path="/admin/reading" element={<AdminReading />} />
           </Route>
         </Routes>
