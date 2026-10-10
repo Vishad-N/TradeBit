@@ -887,3 +887,23 @@ html{scroll-padding-top:96px}
 .f-grid .fbtn:hover{color:var(--l)}.f-grid .fbtn-primary:hover{color:var(--c)}
 @media (prefers-reduced-motion:reduce){.fbtn,.fbtn svg{transition:none}.fbtn:hover{transform:none}}
 .links a.club-link{padding:9px 16px;opacity:1}.links a.club-link::after{display:none}
+
+/* ---------- NAV: alternating Free / Books label + WhatsApp FAB ---------- */
+.flip-label{display:inline-grid;perspective:400px;vertical-align:bottom}
+.fl-word{grid-area:1/1;display:inline-block;transform-origin:50% 100%;opacity:0;transform:rotateX(-90deg) translateY(60%);filter:blur(5px);transition:transform .7s var(--ease),opacity .45s,filter .6s var(--ease)}
+.fl-word.on{opacity:1;transform:none;filter:none}
+.fl-word:not(.on){transform:rotateX(90deg) translateY(-60%)}
+.fl-free{color:var(--lime);text-shadow:0 0 14px var(--lime-20)}
+.fl-free.on{animation:flpop 1s var(--ease)}
+.links a:has(.flip-label){opacity:1}
+@keyframes flpop{0%{text-shadow:0 0 0 var(--lime)}40%{text-shadow:0 0 22px var(--lime)}100%{text-shadow:0 0 14px var(--lime-20)}}
+.m-menu li a .flip-label{font:inherit}
+.wa-fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:95;display:flex;align-items:center;gap:0;height:58px;min-width:58px;justify-content:center;border-radius:100px;background:#25D366;color:#fff;box-shadow:0 14px 30px -10px rgba(37,211,102,.7),0 0 0 0 rgba(37,211,102,.5);animation:wapulse 2.6s infinite;transition:transform .4s var(--ease),gap .4s var(--ease),padding .4s var(--ease)}
+.wa-fab svg{width:30px;height:30px;flex:none}
+.wa-fab .wa-tip{max-width:0;overflow:hidden;white-space:nowrap;font-weight:600;font-size:14px;transition:max-width .5s var(--ease)}
+.wa-fab:hover,.wa-fab:focus-visible{transform:translateY(-3px);padding:0 20px 0 16px;gap:10px}
+.wa-fab:hover .wa-tip,.wa-fab:focus-visible .wa-tip{max-width:180px}
+.wa-fab:focus-visible{outline:2px solid #fff;outline-offset:3px}
+@keyframes wapulse{0%{box-shadow:0 14px 30px -10px rgba(37,211,102,.7),0 0 0 0 rgba(37,211,102,.5)}70%,100%{box-shadow:0 14px 30px -10px rgba(37,211,102,.7),0 0 0 18px rgba(37,211,102,0)}}
+@media (max-width:768px){.wa-fab{bottom:calc(88px + env(safe-area-inset-bottom));right:14px;height:52px;min-width:52px}}
+@media (prefers-reduced-motion:reduce){.fl-word,.fl-word.on{transition:opacity .2s;transform:none;filter:none;animation:none}.wa-fab{animation:none}}

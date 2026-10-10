@@ -19,6 +19,22 @@ export const NAV_LINKS = [
 // Route links live outside NAV_LINKS: that list drives the landing page's scroll-spy, which only understands #ids.
 export const ROUTE_LINKS = [['/read/books', 'Books']];
 
+// Alternates between two words every 5s with a 3D flip. Both words share one grid cell so the link never jumps.
+function FlipLabel({ words, upper = false, interval = 5000 }) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setI(n => (n + 1) % words.length), interval);
+    return () => clearInterval(t);
+  }, [words.length, interval]);
+  return (
+    <span className="flip-label" aria-hidden="true">
+      {words.map((w, k) => (
+        <span key={w} className={`fl-word fl-${w.toLowerCase()}${k === i ? ' on' : ''}`}>{upper ? w.toUpperCase() : w}</span>
+      ))}
+    </span>
+  );
+}
+
 export default function Nav({ solid, activeHref, menuOpen, onToggleMenu, onCloseMenu }) {
   const { pathname } = useLocation();
   const [clubOpen, setClubOpen] = useState(false);
@@ -45,7 +61,7 @@ export default function Nav({ solid, activeHref, menuOpen, onToggleMenu, onClose
               ))}
               {ROUTE_LINKS.map(([to, label]) => (
                 <li key={to}>
-                  <Link to={to} className={pathname.startsWith(to) ? 'act' : undefined} aria-current={pathname.startsWith(to) ? 'page' : undefined}>{label.toUpperCase()}</Link>
+                  <Link to={to} aria-label={label} className={pathname.startsWith(to) ? 'act' : undefined} aria-current={pathname.startsWith(to) ? 'page' : undefined}><FlipLabel words={['Free', label]} upper /></Link>
                 </li>
               ))}
             </ul>
@@ -63,7 +79,7 @@ export default function Nav({ solid, activeHref, menuOpen, onToggleMenu, onClose
         <ol>
           <li><Link to="/1-percent-club" className="club-link" onClick={onCloseMenu}>1% Club</Link></li>
           {NAV_LINKS.map(([href, label]) => <li key={href}><a href={anchor(href)} onClick={onCloseMenu}>{label}</a></li>)}
-          {ROUTE_LINKS.map(([to, label]) => <li key={to}><Link to={to} onClick={onCloseMenu}>{label}</Link></li>)}
+          {ROUTE_LINKS.map(([to, label]) => <li key={to}><Link to={to} aria-label={label} onClick={onCloseMenu}><FlipLabel words={['Free', label]} /></Link></li>)}
         </ol>
         <a href={anchor('#offer')} className="btn btn-lime" style={{ justifyContent: 'center' }} onClick={onCloseMenu}>Start Your Journey <span className="ar">→</span></a>
       </div>

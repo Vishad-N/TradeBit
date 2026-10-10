@@ -11,6 +11,7 @@ import AdminReading from './pages/admin/AdminReading.jsx';
 import LegalLayout from './components/LegalLayout.jsx';
 import SiteLayout from './components/SiteLayout.jsx';
 import ScrollToTop from './components/ScrollToTop.jsx';
+import WhatsAppButton from './components/WhatsAppButton.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <ScrollToTop />
+        <WhatsAppButton />
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route element={<LegalLayout />}>
