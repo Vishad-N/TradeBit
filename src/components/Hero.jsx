@@ -50,7 +50,7 @@ export default function Hero({ onPlayVideo }) {
         <div className="hero-chart" data-speed="-0.04">
           <svg ref={chartRef} className={drawn ? 'drawn' : undefined} viewBox="0 0 600 560" preserveAspectRatio="none" aria-hidden="true" dangerouslySetInnerHTML={html(chart)} />
         </div>
-        <div className="tag-float tf1"><span className="meta">Ethereum (ETH) · 4H</span><b>3,248.<span className="lime">50</span></b><span className="meta" style={{ color: '#B8D83D' }}>▲ Structure · Bullish</span></div>
+        <div className="tag-float tf1"><span className="meta">GOLD (XAUUSD) · 4H</span><b>4,248.<span className="lime">50</span></b><span className="meta" style={{ color: '#B8D83D' }}>▲ Structure · Bullish</span></div>
         <div className="tag-float tf2"><span className="meta">Planned R:R</span><b>1 : <span className="lime">3.2</span></b></div>
       </div>
 

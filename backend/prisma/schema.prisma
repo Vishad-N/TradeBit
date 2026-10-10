@@ -41,6 +41,8 @@ model User {
   id           String   @id @default(cuid())
   email        String   @unique
   name         String
+  // Collected at sign-up. Nullable because the admin account and older users have none.
+  phone        String?
   passwordHash String
   role         Role     @default(USER)
   createdAt    DateTime @default(now())
@@ -230,4 +232,21 @@ model Platform {
   updatedAt    DateTime  @updatedAt
 
   @@index([isActive, sortOrder])
+}
+
+/// Sign-ups from the /tt-1 webinar page (popup and on-page form). Shown in Admin -> Webinar Registrations.
+model WebinarRegistration {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  /// International format, e.g. +919876543210
+  phone     String
+  /// ISO country code picked in the form (popup only)
+  country   String?
+  /// "popup" or "page"
+  source    String   @default("page")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([email])
 }

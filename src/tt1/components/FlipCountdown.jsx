@@ -19,7 +19,7 @@ function readDeadline() {
   }
 }
 
-function useSecondsLeft() {
+export function useSecondsLeft() {
   const deadline = useRef(null)
   if (deadline.current === null) deadline.current = readDeadline()
   const calc = () => Math.max(0, Math.round((deadline.current - Date.now()) / 1000))
@@ -41,7 +41,7 @@ const Half = ({ v, pos, className = '' }) => (
 )
 
 // One split-flap digit: the top flap falls over the old digit, then the bottom flap lands with the new one.
-function FlipDigit({ value }) {
+export function FlipDigit({ value }) {
   const [state, setState] = useState({ cur: value, prev: value, flip: false })
   useEffect(() => {
     if (value === state.cur) return
@@ -64,14 +64,28 @@ function FlipDigit({ value }) {
   )
 }
 
+// Dispatched by the urgency popup when it shrinks into this timer, so the timer can pulse on arrival.
+export const CLOCK_PULSE_EVENT = 'tb:clock-pulse'
+
 export default function FlipCountdown() {
   const left = useSecondsLeft()
+  const [pulse, setPulse] = useState(false)
+  useEffect(() => {
+    let t
+    const on = () => {
+      setPulse(true)
+      clearTimeout(t)
+      t = setTimeout(() => setPulse(false), 1100)
+    }
+    window.addEventListener(CLOCK_PULSE_EVENT, on)
+    return () => { window.removeEventListener(CLOCK_PULSE_EVENT, on); clearTimeout(t) }
+  }, [])
   const h = String(Math.floor(left / 3600)).padStart(2, '0')
   const m = String(Math.floor((left % 3600) / 60)).padStart(2, '0')
   const s = String(left % 60).padStart(2, '0')
   const groups = [['hrs', h], ['min', m], ['sec', s]]
   return (
-    <div className="flipcd" role="timer" aria-label={`Free seats close in ${h} hours ${m} minutes ${s} seconds`}>
+    <div className={pulse ? 'flipcd pulse' : 'flipcd'} role="timer" aria-label={`Free seats close in ${h} hours ${m} minutes ${s} seconds`}>
       <span className="flipcd-label">Seats close in</span>
       {groups.map(([unit, val]) => (
         <span className="flipcd-grp" key={unit}>

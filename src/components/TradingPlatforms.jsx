@@ -6,6 +6,8 @@ import '../styles/platforms.css';
 
 // Cards come from the API (managed by the client in the admin area). If the API cannot be reached, the static
 // list in src/config/platforms.js is used instead. With neither, the section is not rendered at all.
+const fromFallback = () => PLATFORMS_FALLBACK.map(p => ({ ...p, hasReferralUrl: Boolean(p.referralUrl), href: p.referralUrl || p.websiteUrl || '' }));
+
 function usePlatforms() {
   const [state, setState] = useState({ loading: true, items: [] });
   useEffect(() => {
@@ -15,17 +17,15 @@ function usePlatforms() {
       .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then(list => setState({
         loading: false,
-        items: list.map(p => ({
+        // An empty admin list falls back to the static one, so the section never goes blank by accident.
+        items: list.length === 0 ? fromFallback() : list.map(p => ({
           ...p,
           // API logos can be relative ("/platforms/<slug>/logo"); sign-up always goes through the /go redirect.
           logo: p.logo && p.logo.startsWith('/') ? `${API_URL}${p.logo}` : p.logo,
           href: p.canSignUp ? `${API_URL}/go/${encodeURIComponent(p.slug)}` : '',
         })),
       }))
-      .catch(() => setState({
-        loading: false,
-        items: PLATFORMS_FALLBACK.map(p => ({ ...p, hasReferralUrl: Boolean(p.referralUrl), href: p.referralUrl || p.websiteUrl || '' })),
-      }))
+      .catch(() => setState({ loading: false, items: fromFallback() }))
       .finally(() => clearTimeout(timer));
     return () => { ctrl.abort(); clearTimeout(timer); };
   }, []);

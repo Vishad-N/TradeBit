@@ -52,6 +52,7 @@ export default function Platform() {
       </div>
 
       <div className="devices rv">
+        <img className="plat-person" src="/mentors/platform.webp" alt="" width="560" height="1184" loading="lazy" decoding="async" />
         <div className="flt flt1"><i>◷</i><div><b>Live session in 02:14:30</b><span>Weekly Outlook · Mon 8:30 PM</span></div></div>
         <div className="flt flt2"><i>±</i><div><b>Position size · 42 units</b><span>1% risk on ₹5,00,000</span></div></div>
         <div className="laptop">

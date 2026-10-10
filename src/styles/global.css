@@ -98,7 +98,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:19px;letter-spacing:.2em}
 .brand svg{width:30px;height:30px}
 .brand small{display:block;font-size:8.5px;letter-spacing:.3em;font-weight:500;opacity:.6;margin-top:-3px}
-.links{display:flex;gap:34px;list-style:none;font-size:12px;font-weight:600;letter-spacing:.16em}
+.links{display:flex;align-items:center;gap:34px;list-style:none;font-size:12px;font-weight:600;letter-spacing:.16em}
 .links a{position:relative;opacity:.72;transition:opacity .3s;padding:8px 0}
 .links a::after{content:"";position:absolute;left:50%;bottom:-2px;width:5px;height:5px;background:var(--lime);transform:translate(-50%,6px) scale(0);transition:transform .5s var(--ease)}
 .links a:hover,.links a.act{opacity:1}
@@ -240,36 +240,39 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .mod p{color:var(--c-60);font-size:14.5px;max-width:380px;margin-top:14px}
 .m-feature{grid-column:1/8;grid-row:1/3;border-right:1px solid var(--c-12);padding-left:0}
 .m-feature h3{font-size:clamp(56px,8vw,128px)}
-.m-feature svg{width:100%;height:auto;margin-top:26px;overflow:visible}
-.m-pa{grid-column:8/13}
-.m-pa h3{font-size:clamp(34px,3.6vw,56px)}
-.m-pa .pa{display:flex;gap:26px;align-items:center;margin-top:18px}
-.m-pa .pa svg{flex:none;width:96px;height:auto}
+.m-feature .pa{display:flex;gap:clamp(24px,3vw,48px);align-items:center;margin-top:clamp(28px,3vw,48px)}
+.m-feature .pa svg{flex:none;width:clamp(80px,9vw,130px);height:auto;overflow:visible}
+.m-feature .pa p{font-size:clamp(15px,1.2vw,18px);max-width:420px;margin:0}
 .m-setup{grid-column:8/13}
 .m-setup h3{font-size:clamp(26px,2.4vw,36px)}
 .checklist{list-style:none;margin-top:18px;counter-reset:c}
 .checklist li{display:flex;gap:14px;align-items:center;padding:10px 0;border-top:1px dashed var(--c-12);font-size:14px;font-weight:500}
 .checklist li::before{counter-increment:c;content:"0" counter(c);font-size:10.5px;letter-spacing:.14em;color:var(--c-40)}
 .checklist li b{margin-left:auto;width:20px;height:20px;border-radius:50%;background:var(--lime);display:grid;place-items:center;font-size:10px}
-.m-risk{grid-column:1/5;border-right:1px solid var(--c-12);padding-left:0}
+.m-risk{grid-column:8/13}
 .m-risk h3{font-size:clamp(28px,2.6vw,40px)}
 .rr{display:flex;flex-direction:column;gap:3px;margin-top:20px;width:100%;max-width:280px}
 .rr div{display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:10.5px;font-weight:600;letter-spacing:.14em;border-radius:3px}
 .rr .tp{height:74px;background:var(--lime-20);border:1px solid var(--lime)}
 .rr .en{height:2px;background:var(--c);padding:0}
 .rr .sl{height:26px;background:repeating-linear-gradient(-45deg,var(--c-12) 0 2px,transparent 2px 7px);border:1px solid var(--c-40)}
-.m-live{grid-column:5/9;border-right:1px solid var(--c-12)}
+.m-live{grid-column:1/7;border-right:1px solid var(--c-12);padding-left:0}
 .m-live h3{font-size:clamp(26px,2.4vw,36px)}
 .sched{margin-top:18px}
-.sched div{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--c-12);font-size:13.5px}
-.sched div span{color:var(--c-40)}
+.sched{list-style:none;padding:0;counter-reset:s}
+.sched li{display:flex;gap:14px;align-items:center;padding:10px 0;border-top:1px solid var(--c-12);font-size:14px;font-weight:500}
+.sched li::before{counter-increment:s;content:"0" counter(s);font-size:10.5px;letter-spacing:.14em;color:var(--c-40)}
 .live-dot{display:inline-flex;align-items:center;gap:8px;color:var(--c)}
 .live-dot::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 0 var(--lime);animation:ping 2.2s infinite}
 @keyframes ping{70%{box-shadow:0 0 0 9px rgba(184,216,61,0)}100%{box-shadow:0 0 0 0 rgba(184,216,61,0)}}
-.m-psy{grid-column:9/13}
+.m-psy{grid-column:7/13}
 .m-psy .q{font-size:clamp(30px,3vw,46px);font-weight:500;letter-spacing:-.035em;line-height:1;text-transform:uppercase}
 .m-psy .q span{color:var(--c-40)}
 .m-psy h3{font-size:15px;letter-spacing:.2em;margin-top:26px}
+/* Market Structure closes the curriculum as a full-width finale: text left, chart right. */
+.m-struct{grid-column:1/-1;display:grid;grid-template-columns:5fr 7fr;gap:clamp(24px,4vw,64px);align-items:center;padding-left:0;border-bottom:0}
+.m-struct h3{font-size:clamp(44px,6vw,96px)}
+.m-struct svg{width:100%;height:auto;overflow:visible}
 
 /* ---------- 11 · LIVE ANALYSIS (curved top + bottom) ---------- */
 .live{position:relative;background:var(--c);color:var(--l);border-radius:50% / var(--r-lens);padding:calc(var(--r-lens) + 50px) var(--g) calc(var(--r-lens) + 150px);overflow:hidden}
@@ -585,10 +588,11 @@ footer{background:var(--c);color:var(--l-60);border-top:1px solid var(--lime);pa
   .z-ann{grid-area:a;margin-top:18px}
   .z-txt{grid-area:x;max-width:none}
   .edu-head{justify-content:flex-start}.edu-head>div{text-align:left}
-  .m-feature,.m-pa,.m-setup,.m-risk,.m-live,.m-psy{grid-column:1/-1;grid-row:auto;border-right:0;padding-left:0;padding-right:0}
-  .m-risk,.m-live{grid-column:span 6}
-  .m-risk{border-right:1px solid var(--c-12);padding-right:24px}
-  .m-live{padding-left:24px}
+  .m-feature,.m-setup,.m-risk,.m-live,.m-psy,.m-struct{grid-column:1/-1;grid-row:auto;border-right:0;padding-left:0;padding-right:0}
+  .m-live,.m-psy{grid-column:span 6}
+  .m-live{border-right:1px solid var(--c-12);padding-right:24px}
+  .m-psy{padding-left:24px}
+  .m-struct{grid-template-columns:1fr}
   .mentor{border-radius:0;margin-top:0;padding:70px var(--g)}
   .duo{grid-template-columns:1fr;gap:56px}
 
@@ -631,7 +635,7 @@ footer{background:var(--c);color:var(--l-60);border-top:1px solid var(--lime);pa
   .shift li{font-size:13.5px}
   .sol-steps{position:static;flex-wrap:wrap;margin-top:18px}
   .sol-vis{aspect-ratio:1.05}
-  .m-risk,.m-live{grid-column:1/-1;border-right:0;padding-left:0;padding-right:0}
+  .m-live,.m-psy{grid-column:1/-1;border-right:0;padding-left:0;padding-right:0}
   .readout{position:relative;bottom:auto;max-width:none;margin-top:14px}
   .board-chart{aspect-ratio:1.25}
   .board-chart svg{overflow:hidden}
@@ -780,3 +784,78 @@ footer{background:var(--c);color:var(--l-60);border-top:1px solid var(--lime);pa
   .stories-head{margin-bottom:28px}
 }
 @media (max-width:768px){.t-2 .stars{color:var(--c)}.t-3 .stars{color:#7d9622}}
+
+/* ---------- Portrait cut-outs (public/mentors/*.webp): decorative, layered behind the content ---------- */
+.edu-head{position:relative}
+.edu-person{position:absolute;z-index:0;left:0;bottom:calc(-1 * clamp(60px,7vw,100px));width:min(40vw,540px);height:auto;pointer-events:none;-webkit-user-select:none;user-select:none;filter:drop-shadow(0 12px 22px rgba(21,24,20,.16))}
+.edu-head>div{position:relative;z-index:1}
+.devices .plat-person{position:absolute;z-index:0;right:6%;bottom:calc(100% - 46px);height:min(40vw,560px);width:auto;pointer-events:none;-webkit-user-select:none;user-select:none;filter:drop-shadow(0 12px 24px rgba(21,24,20,.2))}
+.devices .laptop{z-index:1}
+.ways-head{position:relative}
+.ways-person{position:absolute;z-index:0;right:clamp(120px,15vw,260px);top:calc(-1 * clamp(10px,2vw,40px));height:min(40vw,560px);width:auto;pointer-events:none;-webkit-user-select:none;user-select:none;filter:drop-shadow(0 12px 24px rgba(21,24,20,.2))}
+.ways-head>*:not(.ways-person){position:relative;z-index:1}
+@media (max-width:900px){.edu-person,.devices .plat-person,.ways-person{display:none}}
+
+/* ---------- 1% Club: highlighted nav item + 1:1 mentorship popup ---------- */
+.links .club-link{display:inline-flex;align-items:center;gap:8px;font:inherit;letter-spacing:inherit;color:var(--c);background:var(--lime);border:0;border-radius:100px;padding:9px 16px;cursor:pointer;opacity:1;box-shadow:0 0 0 0 var(--lime-20);transition:box-shadow .4s var(--ease),transform .3s var(--ease)}
+.links .club-link span{font-size:11px;animation:clubspin 3.2s var(--ease) infinite}
+.links .club-link:hover{box-shadow:0 0 0 6px var(--lime-20);transform:translateY(-1px)}
+.links .club-link:focus-visible{outline:2px solid var(--c);outline-offset:3px}
+@keyframes clubspin{0%,70%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.m-menu li .club-link{display:inline-flex;align-items:center;font:inherit;font-size:clamp(38px,11vw,56px);font-weight:500;text-transform:uppercase;letter-spacing:-.03em;padding:6px 0;color:var(--lime);background:none;border:0;cursor:pointer}
+.m-menu li .club-link::before{content:"★";font-size:14px;margin-right:14px;letter-spacing:0}
+.club{position:fixed;inset:0;z-index:210;display:flex;padding:clamp(10px,2.4vh,32px) clamp(12px,3vw,32px);overflow-y:auto;background:rgba(21,24,20,.82);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:clubfade .3s var(--ease) both}
+.club.closing{animation:clubfadeout .26s var(--ease) both}
+@keyframes clubfade{from{opacity:0}to{opacity:1}}
+@keyframes clubfadeout{to{opacity:0}}
+.club-box{position:relative;width:min(940px,100%);margin:auto;max-height:calc(100dvh - 2 * clamp(10px,2.4vh,32px));display:grid;grid-template-columns:5fr 6fr;border-radius:28px;overflow:hidden;background:var(--l);color:var(--c);box-shadow:0 60px 120px -40px rgba(0,0,0,.7);animation:clubrise .5s var(--ease) both}
+.club.closing .club-box{animation:clubsink .26s var(--ease) both}
+@keyframes clubrise{from{opacity:0;transform:translateY(26px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes clubsink{to{opacity:0;transform:translateY(12px) scale(.98)}}
+.club-x{position:absolute;top:14px;right:14px;z-index:3;width:42px;height:42px;border-radius:50%;border:1px solid var(--c-12);background:var(--l);color:var(--c);cursor:pointer;transition:transform .3s var(--ease),background .3s}
+.club-x:hover{transform:rotate(90deg);background:var(--lime)}
+.club-x:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+.club-stage{position:relative;min-height:0;background:radial-gradient(circle at 50% 100%,#2b3026,#151814 72%);overflow:hidden;display:flex;align-items:flex-end;justify-content:center}
+.club-arch{position:absolute;left:12%;right:12%;bottom:0;top:12%;border-radius:999px 999px 0 0;background:var(--lime-20);border:1px solid rgba(184,216,61,.35);border-bottom:0}
+.club-orbit{position:absolute;left:-8%;right:-8%;top:34%;width:116%;height:auto;opacity:.9}
+.club-stage img{position:relative;z-index:1;display:block;height:94%;width:auto;max-width:100%;object-fit:contain;object-position:bottom}
+.club-badge{position:absolute;z-index:2;left:18px;top:18px;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:var(--c);background:var(--lime);padding:8px 12px;border-radius:100px}
+.club-body{padding:clamp(18px,3.4vh,48px) clamp(22px,3.6vw,48px);display:flex;flex-direction:column;gap:0;overflow-y:auto;min-height:0}
+.club-body h2{font-size:clamp(30px,min(4.6vw,7.4vh),60px);font-weight:500;letter-spacing:-.04em;line-height:.98;text-transform:uppercase;margin:clamp(8px,1.8vh,18px) 0 clamp(8px,1.6vh,14px)}
+.club-lead{color:var(--c-60);max-width:420px;font-size:clamp(13.5px,1.9vh,15px)}
+.club-price{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin:clamp(12px,2.4vh,22px) 0 clamp(12px,2.2vh,20px);padding:clamp(10px,1.9vh,18px) 20px;border:1px solid var(--c-12);border-radius:18px;background:#fff;align-self:flex-start;min-width:230px}
+.club-price s{font-size:16px;font-weight:500;color:var(--c-40);text-decoration-thickness:2px}
+.club-price b{font-size:clamp(38px,min(5.6vw,8.6vh),68px);font-weight:500;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums}
+.club-price b small{font-size:.32em;letter-spacing:.06em;font-weight:600}
+.club-save{margin-top:clamp(4px,1vh,8px);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;background:var(--lime);padding:6px 10px;border-radius:100px}
+.club-list{list-style:none;display:grid;gap:clamp(6px,1.2vh,10px);margin:0 0 clamp(14px,2.6vh,24px);padding:0}
+.club-list li{display:flex;gap:12px;align-items:center;font-size:clamp(13px,1.9vh,14.5px);font-weight:500}
+.club-list li b{flex:none;width:20px;height:20px;border-radius:50%;background:var(--c);color:var(--lime);display:grid;place-items:center;font-size:10px}
+.club-cta{justify-content:center;align-self:stretch}
+.club-fine{margin-top:clamp(8px,1.4vh,12px);font-size:12px;color:var(--c-60);text-align:center}
+@media (max-width:760px){
+  .club-box{grid-template-columns:1fr}
+  .club-stage{height:clamp(150px,26vh,230px)}
+  .club-box{max-height:none}
+  .club-stage img{height:100%}
+  .club-orbit{top:30%}
+}
+@media (prefers-reduced-motion:reduce){.club,.club-box,.club.closing,.club.closing .club-box,.links .club-link span{animation:none}}
+
+/* Anchored sections stop below the fixed nav instead of hiding their heading under it. */
+html{scroll-padding-top:96px}
+
+/* Mentor cards: glass shine sweeps across the card and the portrait on hover. */
+.mcard{position:relative;isolation:isolate;transition:transform .5s var(--ease),box-shadow .5s var(--ease),border-color .5s}
+.mcard::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(115deg,transparent 32%,rgba(255,255,255,.55) 47%,rgba(255,255,255,.18) 53%,transparent 68%);
+  transform:translateX(-130%);opacity:0}
+.mcard::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:inherit;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.0),inset 0 1px 0 rgba(255,255,255,.0);transition:box-shadow .5s var(--ease)}
+.mcard:hover,.mcard:focus-within{transform:translateY(-6px);box-shadow:0 44px 80px -40px rgba(21,24,20,.5);border-color:rgba(184,216,61,.6)}
+.mcard:hover::before,.mcard:focus-within::before{opacity:1;animation:mcshine 1.1s var(--ease) both}
+.mcard:hover::after,.mcard:focus-within::after{box-shadow:inset 0 0 0 1px rgba(255,255,255,.55),inset 0 1px 0 rgba(255,255,255,.9)}
+.mcard:hover .mc-media svg{transform:scale(1.03)}
+.mc-media svg{transition:transform .8s var(--ease)}
+@keyframes mcshine{from{transform:translateX(-130%)}to{transform:translateX(130%)}}
+@media (prefers-reduced-motion:reduce){.mcard,.mc-media svg{transition:none}.mcard:hover::before{animation:none;opacity:0}.mcard:hover{transform:none}}

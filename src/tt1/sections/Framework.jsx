@@ -15,6 +15,7 @@ export default function Framework() {
       <EthereumAsset />
       <div className="wrap">
         <div className="fw-content">
+          <img className="fw-person" src="/mentors/method.webp" alt="" width="720" height="937" loading="lazy" decoding="async" />
           <p className="label">03 / Signature method</p>
           <h2>The framework</h2>
           <p className="lead" style={{ color: 'var(--ink)' }}>One repeatable sequence, from the big picture to the click of the button.</p>

@@ -4,8 +4,9 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { adminApi } from '../../services/readingApi.js';
 import PaymentsTab from './PaymentsTab.jsx';
 import PlatformsTab from './PlatformsTab.jsx';
+import WebinarTab from './WebinarTab.jsx';
 
-const TABS = [['books', 'Books'], ['tasks', 'Tasks'], ['requests', 'Reading Requests'], ['payments', 'Mentorship Payments'], ['platforms', 'Platforms']];
+const TABS = [['books', 'Books'], ['tasks', 'Tasks'], ['requests', 'Reading Requests'], ['payments', 'Mentorship Payments'], ['platforms', 'Platforms'], ['webinar', 'Webinar Registrations']];
 const STATUS_LABEL = { PENDING_REVIEW: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected', PROCESSING: 'Processing', READY: 'Ready', FAILED: 'Failed' };
 const fmt = d => (d ? new Date(d).toLocaleString() : '—');
 
@@ -283,6 +284,7 @@ export default function AdminReading() {
     <section className="rd-section">
       <span className="label">Admin</span>
       <h1 className="h-l rd-title">Reading</h1>
+      <p><Link className="rd-link" to="/read/books?view=reader">View as reader →</Link></p>
       <div className="rd-tabs" role="tablist">
         {TABS.map(([id, label]) => (
           <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>{label}</button>
@@ -293,6 +295,7 @@ export default function AdminReading() {
       {tab === 'requests' && <RequestsTab />}
       {tab === 'payments' && <PaymentsTab />}
       {tab === 'platforms' && <PlatformsTab />}
+      {tab === 'webinar' && <WebinarTab />}
     </section>
   );
 }

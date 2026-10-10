@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
     loading,
     isAdmin: user?.role === 'ADMIN',
     login: async (email, password) => finish(await authApi.login(email, password)),
-    register: async (name, email, password) => finish(await authApi.register(name, email, password)),
+    register: async (name, email, phone, password) => finish(await authApi.register(name, email, phone, password)),
     logout: () => { tokenStore.clear(); setUser(null); },
   }), [user, loading, finish]);
 

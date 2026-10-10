@@ -40,8 +40,9 @@ export class AuthService implements OnModuleInit {
   async register(dto: RegisterDto) {
     const email = dto.email.trim().toLowerCase();
     if (await this.prisma.user.findUnique({ where: { email } })) throw new ConflictException('An account with this email already exists');
+    const phone = dto.phone.trim();
     const user = await this.prisma.user.create({
-      data: { email, name: dto.name.trim(), passwordHash: await bcrypt.hash(dto.password, 12), role: 'USER' },
+      data: { email, name: dto.name.trim(), phone, passwordHash: await bcrypt.hash(dto.password, 12), role: 'USER' },
     });
     return this.sign(user);
   }

@@ -150,3 +150,21 @@
 .rd-form .rd-note{margin-bottom:2px}
 @media (max-width:720px){.mp-row{flex-direction:column;align-items:flex-start;gap:6px}.mp-btns .btn{flex:1;justify-content:center}}
 .rd-gap-sm{margin-bottom:18px}.rd-notice .rd-link{color:var(--l)}
+
+/* Password field with a show/hide toggle */
+.rd-pw{position:relative;display:block}
+.rd-pw input{width:100%;padding-right:48px}
+.rd-eye{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:36px;height:36px;display:grid;place-items:center;border:0;border-radius:8px;background:transparent;color:var(--c-60);cursor:pointer}
+.rd-eye:hover{color:var(--c)}
+.rd-eye:focus-visible{outline:2px solid var(--c);outline-offset:1px}
+.rd-eye svg{width:20px;height:20px}
+
+.rd-search{font:inherit;font-size:14px;min-height:40px;padding:0 14px;border-radius:100px;border:1px solid var(--c-40);background:var(--l);color:var(--c);min-width:min(280px,100%)}
+.rd-search:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+
+/* Shown to an admin who is previewing the reader's Books page */
+.rd-adminbar{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;align-items:center;margin:0 var(--g,16px);padding:12px 18px;border-radius:14px;background:var(--lime);color:var(--c);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.rd-adminbar .rd-link{color:var(--c);letter-spacing:.06em}
+
+.rd-field .ph-row{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.4fr);gap:8px}
+@media (max-width:480px){.rd-field .ph-row{grid-template-columns:1fr}}

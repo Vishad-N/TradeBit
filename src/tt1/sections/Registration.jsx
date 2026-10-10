@@ -3,6 +3,10 @@ import Reveal from '../shared/Reveal.jsx'
 import EventMeta from '../components/EventMeta.jsx'
 import { EVENT } from '../content.js'
 import { GoldAsset } from '../components/FloatingAssets.jsx'
+import { registerWebinar } from '../lib/registerWebinar.js'
+import PhoneField from '../../components/PhoneField.jsx'
+import { COUNTRIES } from '../../lib/countries.js'
+import { isValidPhone, PHONE_ERROR } from '../../lib/phone.js'
 
 const FIELDS = [
   {
@@ -23,8 +27,8 @@ const FIELDS = [
     inputMode: 'tel',
     autoComplete: 'tel',
     placeholder: '+91 98765 43210',
-    error: 'Enter a valid WhatsApp number.',
-    isValid: (v) => /^[0-9+\s-]{8,16}$/.test(v.trim()),
+    error: PHONE_ERROR,
+    isValid: (v) => isValidPhone(v),
   },
   {
     id: 'em',
@@ -40,8 +44,11 @@ const FIELDS = [
 
 function RegistrationForm() {
   const [values, setValues] = useState({ fn: '', wa: '', em: '' })
+  const [iso, setIso] = useState('IN')
   const [invalid, setInvalid] = useState({})
   const [submitted, setSubmitted] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
   const inputRefs = useRef({})
   const successRef = useRef(null)
 
@@ -56,8 +63,9 @@ function RegistrationForm() {
     if (invalid[field.id] && field.isValid(value)) setInvalid((s) => ({ ...s, [field.id]: false }))
   }
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault()
+    setError('')
     const nextInvalid = Object.fromEntries(FIELDS.map((f) => [f.id, !f.isValid(values[f.id])]))
     setInvalid(nextInvalid)
     const firstBad = FIELDS.find((f) => nextInvalid[f.id])
@@ -65,8 +73,16 @@ function RegistrationForm() {
       inputRefs.current[firstBad.id].focus()
       return
     }
-    // TODO: send the registration to the CRM / webhook and fire the Meta Pixel "Lead" event here.
-    // Nothing is transmitted yet: the form only validates and shows the confirmation.
+    setBusy(true)
+    try {
+      await registerWebinar({ name: values.fn.trim(), email: values.em.trim(), phone: (COUNTRIES.find((c) => c.iso === iso)?.dial ?? '') + values.wa, country: iso, source: 'page' })
+    } catch (err) {
+      setError(err.message)
+      setBusy(false)
+      return
+    }
+    // TODO: fire the Meta Pixel "Lead" event here.
+    try { localStorage.setItem('tb-registered', '1') } catch { /* storage blocked */ }
     setSubmitted(true)
   }
 
@@ -85,6 +101,22 @@ function RegistrationForm() {
       {FIELDS.map((f) => (
         <div className="fld" key={f.id}>
           <label htmlFor={f.id}>{f.label}</label>
+          {f.id === 'wa' ? (
+            <PhoneField
+              id={f.id}
+              className="ph-row"
+              iso={iso}
+              digits={values.wa}
+              invalid={invalid.wa}
+              describedBy={invalid.wa ? 'e-wa' : undefined}
+              inputRef={(el) => (inputRefs.current.wa = el)}
+              onChange={({ iso: nextIso, digits }) => {
+                setIso(nextIso)
+                setValues((v) => ({ ...v, wa: digits }))
+                if (invalid.wa && isValidPhone(digits)) setInvalid((s) => ({ ...s, wa: false }))
+              }}
+            />
+          ) : (
           <input
             ref={(el) => (inputRefs.current[f.id] = el)}
             id={f.id}
@@ -99,13 +131,15 @@ function RegistrationForm() {
             aria-invalid={invalid[f.id] || undefined}
             aria-describedby={invalid[f.id] ? `e-${f.id}` : undefined}
           />
+          )}
           <span className="err" id={`e-${f.id}`}>
             {f.error}
           </span>
         </div>
       ))}
-      <button className="btn light block" type="submit">
-        Reserve my free seat <span aria-hidden="true">↗</span>
+      {error && <p className="err" role="alert" style={{ display: 'block', marginBottom: 10 }}>{error}</p>}
+      <button className="btn light block" type="submit" disabled={busy}>
+        {busy ? 'Please wait…' : 'Reserve my free seat'} <span aria-hidden="true">↗</span>
       </button>
       <p className="fine">
         By registering you agree to receive webinar details on WhatsApp and email. Educational content only; no trading

@@ -100,6 +100,7 @@ export default function WaysToLearn() {
 
       <div className="wrap">
         <div className="ways-head">
+          <img className="ways-person" src="/mentors/ways.webp" alt="" width="640" height="1026" loading="lazy" decoding="async" />
           <span className="label rv">Ways To Learn</span>
           <h2 id="ways-t" className="h-l split"><span className="ln"><span>Choose The Path</span></span><span className="ln"><span>That Fits <span className="hl">You.</span></span></span></h2>
           <p className="ways-lead rv d1">Choose the learning path that fits you.</p>

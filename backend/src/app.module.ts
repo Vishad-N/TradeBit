@@ -8,6 +8,7 @@ import { BooksModule } from './books/books.module';
 import { ReadingModule } from './reading/reading.module';
 import { MentorshipModule } from './mentorship/mentorship.module';
 import { PlatformsModule } from './platforms/platforms.module';
+import { WebinarModule } from './webinar/webinar.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -20,6 +21,7 @@ import { HealthModule } from './health/health.module';
     ReadingModule,
     MentorshipModule,
     PlatformsModule,
+    WebinarModule,
     HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

@@ -2,7 +2,7 @@ import { api } from './api.js';
 
 export const authApi = {
   login: (email, password) => api.post('/auth/login', { email, password }),
-  register: (name, email, password) => api.post('/auth/register', { name, email, password }),
+  register: (name, email, phone, password) => api.post('/auth/register', { name, email, phone, password }),
   me: () => api.get('/auth/me'),
 };
 
@@ -46,6 +46,7 @@ adminApi.rejectPayment = (id, reason) => api.patch(`/admin/mentorship/payments/$
 // The screenshot is private: fetched with the admin token and shown from a blob URL.
 adminApi.paymentScreenshot = async (id) => URL.createObjectURL(await (await api.raw(`/admin/mentorship/payments/${id}/screenshot`)).blob());
 
+adminApi.webinarRegistrations = (search) => api.get(`/admin/webinar/registrations${search ? `?search=${encodeURIComponent(search)}` : ''}`);
 adminApi.platforms = () => api.get('/admin/platforms');
 adminApi.createPlatform = (form) => api.upload('/admin/platforms', form);
 adminApi.updatePlatform = (id, form) => api.uploadPatch(`/admin/platforms/${id}`, form);

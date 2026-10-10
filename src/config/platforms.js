@@ -71,4 +71,12 @@ export const PLATFORMS_FALLBACK = [
     referralUrl: 'https://www.fundednow.com/?refcode=TRADEBIT',
     referralCode: 'TRADEBIT',
   },
+  {
+    slug: 'tradingview',
+    name: 'TradingView',
+    logo: '/platforms/tradingview.png',
+    description: 'Charting platform for market analysis. Sign up through our link.',
+    category: 'Charting',
+    referralUrl: 'https://in.tradingview.com/?aff_id=1172080',
+  },
 ];
