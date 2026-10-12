@@ -21,7 +21,7 @@ export default function About() {
         </div>
         <img
           className="ab-art"
-          src="/Blindfolded Businessman Building a Bridge.png"
+          src="/blindfolded-bridge.webp"
           alt="A blindfolded businessman steps off a cliff towards a bridge that is only being sketched with a pencil: trading without skill"
           width="1674"
           height="940"
