@@ -4,7 +4,8 @@ import { WHATSAPP_MESSAGE, WHATSAPP_NUMBER } from '../config/learn.js';
 // Sticky chat button, shown site-wide except in the admin area.
 export default function WhatsAppButton() {
   const { pathname } = useLocation();
-  if (!WHATSAPP_NUMBER || pathname.startsWith('/admin')) return null;
+  // The contact page already has a WhatsApp card, so the floating button would only cover it there.
+  if (!WHATSAPP_NUMBER || pathname.startsWith('/admin') || pathname === '/contact') return null;
   const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
   return (
     <a className="wa-fab" href={href} target="_blank" rel="noopener noreferrer" aria-label="Chat with us on WhatsApp">

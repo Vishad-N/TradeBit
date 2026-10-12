@@ -981,3 +981,12 @@ html{scroll-padding-top:96px}
 @keyframes wapulse{0%{box-shadow:0 14px 30px -10px rgba(37,211,102,.7),0 0 0 0 rgba(37,211,102,.5)}70%,100%{box-shadow:0 14px 30px -10px rgba(37,211,102,.7),0 0 0 18px rgba(37,211,102,0)}}
 @media (max-width:768px){.wa-fab{bottom:calc(88px + env(safe-area-inset-bottom));right:14px;height:52px;min-width:52px}}
 @media (prefers-reduced-motion:reduce){.fl-word,.fl-word.on{transition:opacity .2s;transform:none;filter:none;animation:none}.wa-fab{animation:none}}
+
+/* ---------- Site-wide disclaimer (components/Disclaimer.jsx) ---------- */
+.disclaimer{font-size:12px;line-height:1.6;color:var(--c-60);max-width:760px}
+.disclaimer strong{font-weight:600;color:var(--c)}
+.disclaimer.on-dark{color:rgba(243,244,239,.62)}
+.disclaimer.on-dark strong{color:rgba(243,244,239,.85)}
+.disclaimer-box{margin-bottom:28px;padding:14px 18px;border-left:3px solid var(--lime);background:var(--pl-40);border-radius:0 14px 14px 0;font-size:14px}
+.cl-disclaim{margin:28px auto 0;max-width:640px;text-align:center}
+.pmq .disclaimer{margin-top:6px}

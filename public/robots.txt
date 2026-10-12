@@ -1,0 +1,28 @@
+# robots.txt for https://www.tradebitindia.com
+# Crawlers that have their own group below ignore the "*" group, so the rules are repeated for each.
+
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /login
+Disallow: /read/
+Disallow: /mentorship
+Disallow: /go/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /login
+Disallow: /read/
+Disallow: /mentorship
+Disallow: /go/
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /login
+Disallow: /read/
+Disallow: /mentorship
+Disallow: /go/
+
+Sitemap: https://www.tradebitindia.com/sitemap.xml

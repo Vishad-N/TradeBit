@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import BrandMark from './BrandMark.jsx';
+import Disclaimer from './Disclaimer.jsx';
 import { DISCORD_URL, FACEBOOK_URL, INSTAGRAM_URL, LEARN, TELEGRAM_URL, TRADINGVIEW_URL, TWITTER_URL } from '../config/learn.js';
 
 const ICONS = {
@@ -45,7 +46,7 @@ export default function Footer() {
           <div><h3>Legal</h3><ul><li><Link to="/privacy">Privacy</Link></li><li><Link to="/terms">Terms</Link></li><li><Link to="/refund">Refund &amp; Cancellation</Link></li><li><Link to="/risk-disclosure">Risk Disclosure</Link></li></ul></div>
         </div>
         <div className="risk">
-          <p><strong style={{ color: 'rgba(243,244,239,.62)' }}>Risk disclosure:</strong> Trading in financial markets involves substantial risk and may not be suitable for every investor. You could lose some or all of your capital. TradeBit provides educational content only and is not a registered investment adviser. Nothing presented constitutes financial advice. Illustrative examples do not guarantee future results.</p>
+          <Disclaimer tone="dark" />
           <p>© 2026 TradeBit</p>
         </div>
       </div>

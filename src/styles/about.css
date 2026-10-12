@@ -1,0 +1,66 @@
+/* ---------- About page ----------
+   Rhythm: pale-lime hero slab (the picture) -> two-column statement -> numbered row -> charcoal vision band.
+   Light, light, light, dark: the page ends on its strongest moment, the call to join. */
+.ab{max-width:var(--max);margin:0 auto;display:grid;gap:clamp(56px,7vw,110px)}
+
+/* hero: the artwork is the composition; copy lives in the empty "bridge" area of the picture */
+.ab-hero{position:relative;background:var(--pl);border-radius:clamp(36px,6vw,96px) 28px 28px 28px;overflow:hidden;isolation:isolate}
+.ab-hero::before{content:"";position:absolute;inset:0;z-index:-1;background:
+  radial-gradient(circle at 78% 18%,rgba(255,255,255,.55),transparent 46%),
+  repeating-radial-gradient(circle at 100% 0,transparent 0 46px,rgba(21,24,20,.05) 46px 47px)}
+/* headroom: the picture sits lower so the headline fits in the open sky above the drawn bridge */
+.ab-art{display:block;width:100%;height:auto;margin-top:clamp(0px,4.2vw,64px);position:relative;z-index:1;pointer-events:none;user-select:none}
+.ab-copy{position:absolute;z-index:2;left:46%;right:3%;top:clamp(18px,3.4vw,48px)}
+.ab .ab-title{margin:14px 0 14px;font-size:clamp(24px,3.5vw,58px);line-height:.96;text-wrap:balance}
+.ab-lead{max-width:560px;font-size:clamp(14px,1.3vw,20px);line-height:1.45;color:var(--c-80);text-wrap:balance}
+.ab-lead strong{font-weight:600;color:var(--c)}
+
+/* statement + body */
+.ab-about{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(28px,5vw,90px);align-items:start;padding:0 clamp(0px,1vw,16px)}
+.ab-about-head h2{margin-top:22px;text-transform:uppercase;letter-spacing:-.035em;line-height:.98}
+.ab-em{position:relative;color:var(--c);background:linear-gradient(transparent 62%,var(--lime) 62%)}
+.ab-about-body{display:grid;gap:20px;font-size:clamp(16px,1.35vw,19px);line-height:1.65;color:var(--c-80)}
+.ab-about-body b{font-weight:600;color:var(--c)}
+.ab-close{padding:18px 0 0 18px;border-left:3px solid var(--lime);font-size:clamp(18px,1.6vw,23px);font-weight:500;letter-spacing:-.015em;line-height:1.35;color:var(--c)}
+
+/* three pillars: outlined numerals, hairline dividers, like the Method row */
+.ab-pillars{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--c-12);border-bottom:1px solid var(--c-12)}
+.ab-pillars li{padding:clamp(22px,2.6vw,38px) clamp(18px,2.4vw,36px) clamp(26px,3vw,44px);border-left:1px solid var(--c-12)}
+.ab-pillars li:first-child{border-left:0;padding-left:0}
+.ab-num{display:block;font-size:clamp(48px,5.5vw,88px);font-weight:500;letter-spacing:-.05em;line-height:.85;color:transparent;-webkit-text-stroke:1px var(--c-40)}
+.ab-pillars h3{margin-top:20px;font-size:13px;letter-spacing:.2em;text-transform:uppercase;font-weight:600}
+.ab-pillars p{margin-top:10px;max-width:340px;font-size:15px;line-height:1.6;color:var(--c-60)}
+
+/* vision band */
+.ab-vision{position:relative;overflow:hidden;background:var(--c);color:var(--l);border-radius:28px clamp(36px,6vw,96px) 28px clamp(36px,6vw,96px);padding:clamp(48px,7vw,110px) clamp(24px,5vw,90px)}
+.ab-vision .label{color:var(--pl)}
+.ab-vision-rings{position:absolute;right:-8%;top:50%;width:min(60vw,640px);aspect-ratio:1;transform:translateY(-50%);pointer-events:none}
+.ab-vision-rings i{position:absolute;border:1px solid var(--pl-12);border-radius:50%}
+.ab-vision-rings i:nth-child(1){inset:0}
+.ab-vision-rings i:nth-child(2){inset:12%}
+.ab-vision-rings i:nth-child(3){inset:24%}
+.ab-vision-rings i:nth-child(4){inset:36%;border-color:rgba(184,216,61,.45)}
+.ab-vision-text{position:relative;margin-top:26px;max-width:980px;font-size:clamp(24px,3.2vw,50px);font-weight:500;letter-spacing:-.03em;line-height:1.1;text-wrap:balance}
+.ab-vision-text em{font-style:normal;color:var(--l-40);text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:var(--pl)}
+.ab-vision-text strong{font-weight:500;color:var(--lime)}
+.ab-vision-sub{position:relative;margin-top:22px;max-width:620px;font-size:clamp(16px,1.5vw,20px);color:var(--l-60)}
+.ab-vision-cta{position:relative;display:flex;align-items:center;gap:26px;flex-wrap:wrap;margin-top:34px}
+.ab-link{font-size:13px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;border-bottom:1px solid var(--lime);padding-bottom:3px}
+
+.ab-note{font-size:12px;color:var(--c-60);max-width:680px}
+.ab-note a{border-bottom:1px solid var(--c-40)}
+
+/* tablet and phone: the headline moves above the picture so nothing sits on the figure */
+@media (max-width:1039px){
+  .ab-hero{display:flex;flex-direction:column}
+  .ab-art{margin-top:0}
+  .ab-copy{position:static;padding:clamp(28px,6vw,44px) clamp(20px,5vw,36px) 0}
+  .ab .ab-title{font-size:clamp(30px,6.4vw,52px)}
+}
+@media (max-width:899px){
+  .ab-about{grid-template-columns:1fr}
+  .ab-pillars{grid-template-columns:1fr}
+  .ab-pillars li{border-left:0;border-top:1px solid var(--c-12);padding-left:0}
+  .ab-pillars li:first-child{border-top:0}
+  .ab-vision{border-radius:28px 56px 28px 56px}
+}

@@ -6,8 +6,9 @@ export default function Footer() {
       <div className="wrap">
         <Brand />
         <p>
-          Trading involves risk. Content is for education only and is not investment advice. Past performance does not
-          guarantee future results.
+          <strong>Disclaimer:</strong> TradeBit India is an educational platform only. We are not SEBI registered
+          advisors or analysts. All content, charts, and analysis are for educational purposes. Trading involves
+          significant financial risk.
         </p>
         <p>© {new Date().getFullYear()} Trade Bit. All rights reserved.</p>
       </div>

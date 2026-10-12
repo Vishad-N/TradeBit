@@ -143,7 +143,8 @@ function RegistrationForm() {
       </button>
       <p className="fine">
         By registering you agree to receive webinar details on WhatsApp and email. Educational content only; no trading
-        signals or guaranteed results.
+        signals or guaranteed results. We are not SEBI registered advisors or analysts. Trading involves significant
+        financial risk.
       </p>
     </form>
   )

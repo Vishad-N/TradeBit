@@ -18,10 +18,11 @@ export const WHATSAPP_MESSAGE = 'Hi TradeBit India, I would like to know more ab
 
 // Optional: shown as a footer button only when set (no Instagram link has been supplied yet).
 export const INSTAGRAM_URL = (env.VITE_INSTAGRAM_URL || '').trim();
-// Same idea: each button appears in the footer only once its URL is set (VITE_TWITTER_URL, VITE_FACEBOOK_URL, VITE_DISCORD_URL).
-export const TWITTER_URL = (env.VITE_TWITTER_URL || '').trim();
-export const FACEBOOK_URL = (env.VITE_FACEBOOK_URL || '').trim();
-export const DISCORD_URL = (env.VITE_DISCORD_URL || '').trim();
+// X (Twitter), Facebook and Discord default to TradeBit India's pages; VITE_TWITTER_URL, VITE_FACEBOOK_URL and
+// VITE_DISCORD_URL override them.
+export const TWITTER_URL = (env.VITE_TWITTER_URL || 'https://x.com/tradebitindia').trim();
+export const FACEBOOK_URL = (env.VITE_FACEBOOK_URL || 'https://www.facebook.com/share/19N3DrrVkh/').trim();
+export const DISCORD_URL = (env.VITE_DISCORD_URL || 'https://discord.gg/HmVvnkV4F').trim();
 export const TRADINGVIEW_URL = 'https://in.tradingview.com/?aff_id=1172080';
 
 export const LEARN = {

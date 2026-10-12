@@ -1,4 +1,5 @@
 import { LEARN, TELEGRAM_URL } from '../config/learn.js';
+import Disclaimer from '../components/Disclaimer.jsx';
 
 const pStyle = { marginBottom: '20px' };
 
@@ -34,7 +35,7 @@ export default function MarketNews() {
             </p>
           </>
         )}
-        <p style={{ ...pStyle, fontSize: '14px' }}>Market news is shared for educational purposes only and is not investment advice.</p>
+        <Disclaimer />
       </div>
     </div>
   );

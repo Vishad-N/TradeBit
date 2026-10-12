@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { LensRings } from './Rings.jsx';
 import { liveBg, liveChart } from '../lib/charts.js';
 import { html } from '../lib/html.js';
+import Disclaimer from './Disclaimer.jsx';
 import { prefersReducedMotion, useInViewOnce, useStrokeLengths } from '../hooks/motion.js';
 import { SolanaAsset } from './FloatingAssets.jsx';
 
@@ -99,7 +100,7 @@ export default function LiveAnalysis() {
             <div className={swapping ? 'readout-b swap' : 'readout-b'}><span className="meta">{roKey}</span><h3>{roTitle}</h3><p>{roText}</p></div>
           </div>
         </div>
-        <p className="disclaim">Educational illustration only. Past price behaviour does not guarantee future results.</p>
+        <Disclaimer tone="dark" className="disclaim" />
       </div>
     </section>
   )

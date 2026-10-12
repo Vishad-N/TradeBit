@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/((?!tt-1|assets/|.*\\..*).*)", "destination": "/index.html" }
+  ],
+  "redirects": [
+    { "source": "/tt-1", "destination": "/tt-1/", "permanent": true }
+  ]
+}

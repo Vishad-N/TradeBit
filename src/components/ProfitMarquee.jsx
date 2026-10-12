@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { API_URL } from '../services/api.js';
+import Disclaimer from './Disclaimer.jsx';
 
 // A slow, looping strip of profit screenshots just above the footer.
 // Images are managed in Admin -> Profit Screenshots. If none are uploaded (or the API is unreachable), image
@@ -49,6 +50,7 @@ export default function ProfitMarquee() {
         </ul>
       </div>
       <p className="pmq-note">Screenshots show individual results and are not indicative of future performance.</p>
+      <Disclaimer className="pmq-note" />
     </section>
   );
 }

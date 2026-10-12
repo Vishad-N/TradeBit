@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import Disclaimer from '../components/Disclaimer.jsx';
 import Counter from '../components/Counter.jsx';
 import { usePageReveal, prefersReducedMotion } from '../hooks/motion.js';
 import { OPEN_CLUB_EVENT } from '../components/Nav.jsx';
@@ -234,6 +235,7 @@ export default function Club() {
           <h2 id="cl-fin-t" className="cl-h2 cl-h2-xl split"><span className="ln"><span>Consistency is the</span></span><span className="ln"><span>secret of the <span className="lime">top 1%.</span></span></span></h2>
           <p className="cl-lead rv d1">They did not find a magic indicator. They found a process, and they never stopped applying it. Your seat is one click away.</p>
           <div className="rv d2"><JoinButton className="btn btn-lime btn-xl cl-glow">Register Now</JoinButton></div>
+          <Disclaimer tone="dark" className="cl-disclaim" />
         </div>
       </section>
     </div>

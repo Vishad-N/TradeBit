@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { mentorshipApi } from '../services/readingApi.js';
+import Disclaimer from '../components/Disclaimer.jsx';
 
 const fmtDate = d => (d ? new Date(d).toLocaleString() : '—');
 const todayISO = () => new Date().toISOString().slice(0, 10);
@@ -13,6 +14,7 @@ function Shell({ title, lead, children }) {
       <h1 className="h-l rd-title">{title}</h1>
       {lead && <p className="rd-lead">{lead}</p>}
       {children}
+      <Disclaimer style={{ marginTop: 28 }} />
     </section>
   );
 }

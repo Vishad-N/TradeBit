@@ -4,6 +4,7 @@ import { html } from '../lib/html.js';
 import { prefersReducedMotion } from '../hooks/motion.js';
 import { API_URL } from '../services/api.js';
 import { parseVideo } from '../lib/video.js';
+import Disclaimer from './Disclaimer.jsx';
 
 // Built-in sample content. It is shown until the admin adds written reviews / a video story
 // (Admin -> Testimonials), so the section never goes blank.
@@ -202,6 +203,7 @@ export default function Stories({ onPlayVideo }) {
         </div>
 
         <p className="stories-foot">Testimonials describe individual learning experiences and are not indicative of future performance or trading results.</p>
+        <Disclaimer className="stories-foot" />
       </div>
       <StoryVideoModal story={playing} onClose={() => setPlaying(null)} />
     </section>
