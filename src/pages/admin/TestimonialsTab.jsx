@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { adminApi } from '../../services/readingApi.js';
+import { API_URL } from '../../services/api.js';
 
 const EMPTY = { kind: 'TEXT', quote: '', name: '', role: '', rating: '5', videoUrl: '', duration: '', isActive: true, sortOrder: '0' };
 
@@ -12,6 +13,7 @@ export default function TestimonialsTab() {
   const [editing, setEditing] = useState(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
+  const photoRef = useRef(null);
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
   const isVideo = form.kind === 'VIDEO';
 
@@ -37,8 +39,16 @@ export default function TestimonialsTab() {
         rating: Number(form.rating) || 5, isActive: form.isActive, sortOrder: Number.parseInt(form.sortOrder, 10) || 0,
       };
       if (isVideo) { body.videoUrl = form.videoUrl.trim(); body.duration = form.duration.trim(); }
-      if (editing) await adminApi.updateTestimonial(editing.id, body);
-      else await adminApi.createTestimonial({ ...body, kind: form.kind });
+      const saved = editing
+        ? await adminApi.updateTestimonial(editing.id, body)
+        : await adminApi.createTestimonial({ ...body, kind: form.kind });
+      const photo = photoRef.current?.files?.[0];
+      if (photo) {
+        const fd = new FormData();
+        fd.append('photo', photo);
+        await adminApi.setTestimonialPhoto(saved.id, fd);
+      }
+      if (photoRef.current) photoRef.current.value = '';
       setMsg({ ok: editing ? 'Saved.' : 'Added. It now appears on the website.' });
       reset(); load();
     } catch (err) {
@@ -69,9 +79,15 @@ export default function TestimonialsTab() {
           </label>
         )}
         <label className="rd-field"><span>{isVideo ? 'Headline quote (shown on the video card)' : 'Review text'}</span>
-          <textarea rows={isVideo ? 2 : 4} value={form.quote} onChange={set('quote')} required maxLength={isVideo ? 120 : 600} />
+          <textarea rows={isVideo ? 2 : 4} value={form.quote} onChange={set('quote')} required maxLength={isVideo ? 120 : 1000} />
         </label>
         <label className="rd-field"><span>Student name</span><input value={form.name} onChange={set('name')} required maxLength={80} /></label>
+        {!isVideo && (
+          <label className="rd-field"><span>Photo (optional: JPG, PNG or WEBP, up to 2MB){editing?.photoKey ? ' · choose a file to replace the current one' : ''}</span>
+            <input type="file" accept="image/jpeg,image/png,image/webp" ref={photoRef} />
+            <small>Shown as the round avatar. A head-and-shoulders crop works best; without a photo a neutral avatar is used.</small>
+          </label>
+        )}
         <label className="rd-field"><span>Role · City (optional)</span><input value={form.role} onChange={set('role')} maxLength={120} placeholder="Software Engineer · Pune" /></label>
         {isVideo ? (
           <>
@@ -102,13 +118,14 @@ export default function TestimonialsTab() {
             <tbody>
               {rows.map(t => (
                 <tr key={t.id}>
-                  <td data-label="Student"><strong>{t.name}</strong><small>{t.quote.slice(0, 90)}{t.quote.length > 90 ? '…' : ''}</small></td>
+                  <td data-label="Student">{t.photoKey && <img src={`${API_URL}/testimonials/${t.id}/photo?v=${new Date(t.updatedAt).getTime()}`} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', float: 'left', marginRight: 10 }} onError={e => { e.currentTarget.style.display = 'none'; }} />}<strong>{t.name}</strong><small>{t.quote.slice(0, 90)}{t.quote.length > 90 ? '…' : ''}</small></td>
                   <td data-label="Type">{t.kind === 'VIDEO' ? 'Video' : `Written · ${t.rating}★`}</td>
                   <td data-label="Order">{t.sortOrder}</td>
                   <td data-label="Visible">{t.isActive ? 'Yes' : 'No'}</td>
                   <td data-label="Actions" className="rd-actions">
                     <button className="rd-mini" onClick={() => edit(t)}>Edit</button>
                     <button className="rd-mini" onClick={act(() => adminApi.updateTestimonial(t.id, { isActive: !t.isActive }))}>{t.isActive ? 'Hide' : 'Show'}</button>
+                    {t.photoKey && <button className="rd-mini" onClick={act(() => adminApi.clearTestimonialPhoto(t.id))}>Remove photo</button>}
                     <button className="rd-mini rd-danger" onClick={() => window.confirm(`Delete the testimonial from ${t.name}?`) && act(() => adminApi.deleteTestimonial(t.id))()}>Delete</button>
                   </td>
                 </tr>

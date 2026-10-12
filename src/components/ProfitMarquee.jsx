@@ -29,7 +29,24 @@ const SECONDS_PER_IMAGE = 4;
 
 export default function ProfitMarquee() {
   const images = useShots();
+  // Large preview: shown while a tile is hovered (the strip also pauses), or pinned open by a click / tap.
+  const [preview, setPreview] = useState(null); // { src, alt, cx }
+  const [pinned, setPinned] = useState(false);
+
+  useEffect(() => {
+    if (!pinned) return;
+    const onKey = e => { if (e.key === 'Escape') { setPinned(false); setPreview(null); } };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [pinned]);
+
   if (!images || images.length === 0) return null;
+
+  const show = (img, e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    setPreview({ src: img.src, alt: img.alt || 'Profit screenshot', cx: r.left + r.width / 2 });
+  };
+  const close = () => { setPinned(false); setPreview(null); };
 
   const set = Array.from({ length: Math.max(1, Math.ceil(MIN_PER_SET / images.length)) }, () => images).flat();
   const duration = `${set.length * SECONDS_PER_IMAGE}s`;
@@ -43,12 +60,26 @@ export default function ProfitMarquee() {
         <ul className="pmq-track" style={{ '--pmq-dur': duration }}>
           {[0, 1].map(copy => set.map((img, i) => (
             // The second copy exists only for the seamless loop, so it is hidden from assistive tech.
-            <li key={`${copy}-${i}`} aria-hidden={copy === 1 || undefined}>
+            <li
+              key={`${copy}-${i}`}
+              aria-hidden={copy === 1 || undefined}
+              onMouseEnter={e => !pinned && show(img, e)}
+              onMouseLeave={() => !pinned && setPreview(null)}
+              onClick={e => { show(img, e); setPinned(true); }}
+            >
               <img src={img.src} alt={copy === 0 ? (img.alt || 'Profit screenshot') : ''} loading="lazy" decoding="async" draggable="false" />
             </li>
           )))}
         </ul>
       </div>
+      {preview && (
+        <>
+          {pinned && <button type="button" className="pmq-backdrop" aria-label="Close enlarged screenshot" onClick={close} />}
+          <div className={`pmq-pop${pinned ? ' is-pinned' : ''}`} style={{ '--cx': `${preview.cx}px` }} role={pinned ? 'dialog' : undefined} aria-label={pinned ? 'Enlarged profit screenshot' : undefined}>
+            <img src={preview.src} alt={preview.alt} />
+          </div>
+        </>
+      )}
       <p className="pmq-note">Screenshots show individual results and are not indicative of future performance.</p>
       <Disclaimer className="pmq-note" />
     </section>

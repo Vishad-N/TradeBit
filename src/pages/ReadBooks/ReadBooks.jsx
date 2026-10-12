@@ -19,13 +19,41 @@ function MentorshipNotice({ state }) {
   );
 }
 
-function Shell({ label = 'Books', title = 'Books', lead, children }) {
+// The page's pitch. Shown whenever the visitor is at the library's front door (logged out, nothing to read yet,
+// loading, or an access problem); the mid-flow task screens keep their own focused titles.
+function BooksIntro() {
   return (
-    <section className="rd-section rd-narrow">
-      <span className="label">{label}</span>
-      <h1 className="h-l rd-title">{title}</h1>
-      {lead && <p className="rd-lead">{lead}</p>}
-      {children}
+    <header className="bk-intro">
+      <span className="label">Free Books</span>
+      <h1 className="h-l bk-title">
+        Master high-probability <span className="hl">SMC, ICT</span> and advanced price action strategies,{' '}
+        <em>without spending a single rupee.</em>
+      </h1>
+      <div className="bk-body">
+        <h2 className="bk-sub">Unlock elite knowledge: the premium books library</h2>
+        <p>
+          Information is power, and we believe it should be accessible to everyone. This exclusive folder houses a handpicked
+          collection of high-value books designed to give you an edge in your field. From transformative self-help to deeply
+          technical masterpieces, your next intellectual leap is just a click away.
+        </p>
+        <p className="bk-callout"><span aria-hidden="true">🎯</span> Don't leave your growth to chance. Explore the folder, read instantly, and start learning without boundaries.</p>
+      </div>
+    </header>
+  );
+}
+
+function Shell({ label, title, lead, children }) {
+  const focused = Boolean(title); // task screens pass their own title
+  return (
+    <section className={`rd-section ${focused ? 'rd-narrow' : 'bk'}`}>
+      {focused ? (
+        <>
+          <span className="label">{label || 'Books'}</span>
+          <h1 className="h-l rd-title">{title}</h1>
+        </>
+      ) : <BooksIntro />}
+      {lead && <p className="rd-lead bk-status">{lead}</p>}
+      <div className={focused ? undefined : 'bk-action'}>{children}</div>
     </section>
   );
 }

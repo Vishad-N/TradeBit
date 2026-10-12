@@ -168,3 +168,16 @@
 
 .rd-field .ph-row{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.4fr);gap:8px}
 @media (max-width:480px){.rd-field .ph-row{grid-template-columns:1fr}}
+
+/* ---------- Books front door (marketing intro above the access card) ---------- */
+.rd-section.bk{max-width:var(--max)}
+.bk-intro{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(20px,4vw,72px);align-items:end;margin-bottom:clamp(28px,4vw,52px)}
+.bk-intro .label{grid-column:1 / -1}
+.rd-section .bk-title{margin:0;font-size:clamp(28px,3.9vw,62px);line-height:.96;text-wrap:balance}
+.bk-title em{font-style:normal;color:var(--c-40)}
+.bk-body{display:grid;gap:14px;font-size:clamp(15px,1.3vw,18px);line-height:1.65;color:var(--c-80)}
+.bk-sub{font-size:clamp(17px,1.5vw,21px);font-weight:500;letter-spacing:-.015em;line-height:1.3;color:var(--c)}
+.bk-callout{margin-top:6px;padding:14px 18px;border-left:3px solid var(--lime);background:var(--pl-40);border-radius:0 16px 16px 0;font-size:clamp(14.5px,1.2vw,17px);font-weight:500;color:var(--c)}
+.bk-status{margin-bottom:18px}
+.bk-action{max-width:760px}
+@media (max-width:899px){.bk-intro{grid-template-columns:1fr}}

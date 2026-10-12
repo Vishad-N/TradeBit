@@ -33,12 +33,12 @@ export default function App() {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/refund" element={<Refund />} />
-            <Route path="/market-news" element={<MarketNews />} />
             <Route path="/risk-disclosure" element={<RiskDisclosure />} />
           </Route>
           <Route element={<SiteLayout />}>
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/market-news" element={<MarketNews />} />
             <Route path="/gallery" element={<Suspense fallback={null}><Gallery /></Suspense>} />
             <Route path="/login" element={<Login />} />
             <Route path="/read/books" element={<ReadBooks />} />

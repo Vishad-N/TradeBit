@@ -14,3 +14,29 @@
 .gal-grid{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:16px;height:100%;overflow:auto}
 .gal-grid img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:14px}
 @media (prefers-reduced-motion:reduce){.gal-loading{animation:none}}
+
+/* ---------- Phone layout ---------- */
+.gal-stage.is-phone{width:auto;margin-left:0;height:auto;overflow:visible}
+.gp{display:grid;gap:12px}
+.gp-item{position:relative;display:block;width:100%;padding:0;border-radius:22px;overflow:hidden;background:var(--c);box-shadow:0 18px 40px -28px rgba(21,24,20,.6);-webkit-tap-highlight-color:transparent}
+.gp-item img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .6s var(--ease)}
+.gp-item:active img{transform:scale(1.03)}
+.gp-tag{position:absolute;left:12px;bottom:10px;font-size:10.5px;font-weight:600;letter-spacing:.18em;color:var(--l);text-shadow:0 1px 8px rgba(0,0,0,.55)}
+.gp-feature{aspect-ratio:4/5;border-radius:28px 28px 28px 8px}
+.gp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.gp-grid .gp-item{aspect-ratio:3/4}
+/* editorial stagger: the second column sits lower, so the grid reads as two flowing lines, not a table */
+.gp-grid .gp-item:nth-child(even){margin-top:34px}
+.gp-grid .gp-item:nth-child(4n+1){border-radius:22px 22px 8px 22px}
+.gp-grid .gp-item:nth-child(4n+2){border-radius:8px 22px 22px 22px}
+
+/* full-screen viewer */
+.gp-view{position:fixed;inset:0;z-index:300;display:grid;place-items:center;padding:56px 14px 92px;background:rgba(21,24,20,.94);backdrop-filter:blur(8px);animation:gpIn .3s var(--ease) both}
+.gp-view>img{max-width:100%;max-height:100%;object-fit:contain;border-radius:20px;animation:gpImg .45s var(--ease) both;touch-action:pan-y}
+.gp-x{position:absolute;top:max(12px,env(safe-area-inset-top));right:12px;width:46px;height:46px;border-radius:50%;border:1px solid var(--pl-20);color:var(--l);font-size:16px;display:grid;place-items:center}
+.gp-nav{position:absolute;left:0;right:0;bottom:max(18px,env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:center;gap:20px;color:var(--l)}
+.gp-nav button{width:52px;height:52px;border-radius:50%;border:1px solid var(--pl-20);color:var(--l);font-size:20px;display:grid;place-items:center}
+.gp-nav span{min-width:64px;text-align:center;font-size:12px;font-weight:600;letter-spacing:.18em}
+@keyframes gpIn{from{opacity:0}to{opacity:1}}
+@keyframes gpImg{from{opacity:0;transform:translateX(18px) scale(.97)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.gp-view,.gp-view>img{animation:none}.gp-item img{transition:none}}

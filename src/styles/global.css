@@ -465,7 +465,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .pui .tabs .on{color:var(--lime)}
 
 /* ---------- 14 · STORIES (organic overlap) ---------- */
-.stories{position:relative;padding:clamp(130px,13vw,200px) var(--g) calc(var(--overlap) + clamp(110px,11vw,170px))}
+.stories{position:relative;padding:clamp(80px,8vw,120px) var(--g) calc(var(--overlap) + clamp(70px,7vw,110px))}
 .stories-head{display:flex;justify-content:space-between;align-items:end;gap:30px;flex-wrap:wrap;margin-bottom:60px}
 .stories-head h2{margin-top:26px}
 .score{display:flex;align-items:center;gap:16px}
@@ -516,8 +516,18 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .pmq-track:hover{animation-play-state:paused}
 .pmq-track li{flex:none;height:clamp(130px,14vw,200px);border-radius:14px;overflow:hidden;background:var(--c-08);box-shadow:0 0 0 1px var(--c-12);transition:transform .45s var(--ease),box-shadow .45s var(--ease)}
 .pmq-track li:hover{transform:scale(1.07);box-shadow:0 0 0 1px var(--c-12),0 18px 36px -18px rgba(21,24,20,.55);position:relative;z-index:2}
-.pmq-track img{height:100%;width:auto;display:block;user-select:none}
+/* A fixed tile shape (phone screenshots): the strip's width never depends on when images finish loading */
+.pmq-track li{aspect-ratio:.46}
+.pmq-track img{height:100%;width:100%;object-fit:contain;display:block;user-select:none}
 .pmq-note{padding:0 var(--g);font-size:12px;color:var(--c-60)}
+.pmq-track li{cursor:zoom-in}
+/* Large preview: centred in the viewport, horizontally near the tile, never covering the pointer's hit target */
+.pmq-pop{--ph:min(82vh,820px);--pw:calc(var(--ph) * .46);position:fixed;z-index:80;top:50%;left:clamp(calc(var(--pw) / 2 + 12px),var(--cx),calc(100% - var(--pw) / 2 - 12px));transform:translate(-50%,-50%);pointer-events:none;animation:pmqPop .35s var(--ease) both}
+.pmq-pop img{display:block;height:var(--ph);width:auto;max-width:calc(100vw - 24px);object-fit:contain;border-radius:22px;background:var(--c);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 40px 90px -20px rgba(21,24,20,.75)}
+.pmq-pop.is-pinned{left:50%;pointer-events:auto}
+.pmq-backdrop{position:fixed;inset:0;z-index:79;background:rgba(21,24,20,.72);backdrop-filter:blur(4px);cursor:zoom-out;border:0}
+@keyframes pmqPop{from{opacity:0;transform:translate(-50%,-48%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@media (prefers-reduced-motion:reduce){.pmq-pop{animation:none}}
 @keyframes pmqScroll{to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){
   .pmq-track{animation:none}
@@ -990,3 +1000,47 @@ html{scroll-padding-top:96px}
 .disclaimer-box{margin-bottom:28px;padding:14px 18px;border-left:3px solid var(--lime);background:var(--pl-40);border-radius:0 14px 14px 0;font-size:14px}
 .cl-disclaim{margin:28px auto 0;max-width:640px;text-align:center}
 .pmq .disclaimer{margin-top:6px}
+
+/* Review avatars: real photos fill the round face, cropped from the top so heads are never cut */
+.face.has-photo{background:var(--c)}
+.face.has-photo img{width:100%;height:100%;object-fit:cover;object-position:center 22%}
+/* Very long reviews: keep the small cards readable */
+.t-s blockquote.is-xlong{font-size:clamp(14px,1.15vw,16px);line-height:1.5;letter-spacing:-.005em}
+.t-main blockquote.is-xlong{font-size:clamp(17px,1.65vw,24px);line-height:1.3;letter-spacing:-.015em}
+
+/* ---------- Student stories: review cards ----------
+   Three equal cards (charcoal / pale lime / off-white). Text lives inside each card, long reviews clamp to a few
+   lines with "Read more", and the author is pinned to the bottom so every card has the same rhythm. */
+.st-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,1.8vw,26px);margin-top:clamp(8px,2vw,24px);align-items:stretch}
+.st-card{display:flex;min-width:0;border-radius:28px;padding:clamp(22px,2.2vw,34px);border:1px solid transparent;transition:transform .55s var(--ease),box-shadow .55s var(--ease)}
+.st-card.st-dark{background:var(--c);color:var(--l)}
+.st-card.st-pale{background:var(--pl);color:var(--c)}
+.st-card.st-light{background:var(--l);color:var(--c);border-color:var(--c-12)}
+.st-in{display:flex;flex-direction:column;gap:16px;width:100%;min-width:0}
+.st-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.st-mark{font-size:clamp(54px,5vw,76px);font-weight:500;line-height:.7;height:.42em;color:var(--lime)}
+.st-pale .st-mark{color:var(--c)}
+.st-card .stars{font-size:13px;letter-spacing:2px;padding-top:4px}
+.st-pale .stars{color:var(--c)}
+.st-light .stars{color:#7d9622}
+.st-card blockquote{font-size:clamp(15px,1.15vw,17px);line-height:1.6;letter-spacing:-.005em;font-weight:400;overflow-wrap:anywhere}
+.st-card blockquote.is-clamped{display:-webkit-box;-webkit-line-clamp:7;-webkit-box-orient:vertical;overflow:hidden}
+.st-more{align-self:flex-start;margin-top:-6px;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;border-bottom:1px solid var(--lime);padding-bottom:2px;color:inherit}
+.st-who{display:flex;align-items:center;gap:14px;margin-top:auto;padding-top:18px;border-top:1px solid currentColor;border-top-color:rgba(21,24,20,.14)}
+.st-dark .st-who{border-top-color:var(--l-12)}
+.st-who b{display:block;font-size:15px;font-weight:600;line-height:1.3}
+.st-who span:not(.face){display:block;font-size:12.5px;line-height:1.4;opacity:.66}
+.st-card .face{width:48px;height:48px}
+
+/* rotation: outgoing cards lift and fade in a cascade, incoming ones rise in */
+.st-card.is-out .st-in>*{opacity:0;transform:translateY(-12px);filter:blur(3px);transition:opacity .32s ease-in,transform .32s ease-in,filter .32s ease-in;transition-delay:calc(var(--slot,0) * .06s)}
+.st-card .st-in>*{animation:stIn .8s var(--ease) backwards;animation-delay:calc(var(--slot,0) * .1s)}
+@keyframes stIn{from{opacity:0;transform:translateY(16px);filter:blur(3px)}to{opacity:1;transform:none;filter:blur(0)}}
+@media (hover:hover){.st-card:hover{transform:translateY(-4px);box-shadow:0 30px 56px -38px rgba(21,24,20,.6)}}
+
+@media (max-width:999px){.st-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.st-card:nth-child(3){grid-column:1 / -1}}
+@media (max-width:640px){.st-grid{grid-template-columns:1fr}.st-card:nth-child(3){grid-column:auto}}
+@media (prefers-reduced-motion:reduce){.st-card .st-in>*{animation:none}.st-card.is-out .st-in>*{transition:none}.st-card{transition:none}}
+
+/* Small phones: the Telegram icon also lives in the menu and footer, so drop it from the bar to keep the burger on screen */
+@media (max-width:480px){.nav .tg-btn{display:none}}

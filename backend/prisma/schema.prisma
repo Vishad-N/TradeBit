@@ -262,6 +262,8 @@ model Testimonial {
   rating    Int      @default(5)
   videoUrl  String?
   duration  String?
+  /// Optional avatar, stored in storage and served at /testimonials/:id/photo
+  photoKey  String?
   isActive  Boolean  @default(true)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())

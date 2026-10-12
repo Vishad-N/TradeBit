@@ -66,3 +66,6 @@ adminApi.galleryImages = () => api.get('/admin/gallery');
 adminApi.createGalleryImage = (form) => api.upload('/admin/gallery', form);
 adminApi.updateGalleryImage = (id, form) => api.uploadPatch(`/admin/gallery/${id}`, form);
 adminApi.deleteGalleryImage = (id) => api.delete(`/admin/gallery/${id}`);
+
+adminApi.setTestimonialPhoto = (id, form) => api.upload(`/admin/testimonials/${id}/photo`, form);
+adminApi.clearTestimonialPhoto = (id) => api.delete(`/admin/testimonials/${id}/photo`);

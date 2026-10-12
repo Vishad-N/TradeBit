@@ -1,0 +1,58 @@
+/* ---------- Market News page ----------
+   Promise -> what we cover -> what moves prices -> the one action (charcoal band). */
+.mn{max-width:var(--max);margin:0 auto;display:grid;gap:clamp(40px,5.5vw,84px)}
+
+.mn-hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(20px,4vw,72px);align-items:end}
+.mn-hero .label{grid-column:1 / -1}
+.mn .mn-title{margin:0;font-size:clamp(36px,5.6vw,92px);line-height:.92;text-wrap:balance}
+.mn-intro{display:grid;gap:16px;font-size:clamp(15px,1.3vw,18px);line-height:1.65;color:var(--c-80)}
+.mn-quote{padding-left:16px;border-left:3px solid var(--lime);font-size:clamp(18px,1.6vw,23px);font-weight:500;letter-spacing:-.015em;line-height:1.35;color:var(--c)}
+.mn-quote b{font-weight:600;background:linear-gradient(transparent 62%,var(--lime) 62%)}
+
+/* ticker strip */
+.mn-ticker{list-style:none;display:flex;flex-wrap:wrap;gap:10px 0;padding:14px 0;border-top:1px solid var(--c-12);border-bottom:1px solid var(--c-12);font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--c-60)}
+.mn-ticker li{display:flex;align-items:center}
+.mn-ticker li+li::before{content:"";width:6px;height:6px;margin:0 clamp(14px,2vw,28px);background:var(--lime);flex:none}
+
+/* catalysts */
+.mn-catalysts{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(24px,4vw,72px);align-items:start}
+.mn-cat-head h2{margin-top:20px;text-transform:uppercase;letter-spacing:-.035em;line-height:.98}
+.mn-catalysts ol{list-style:none;border-top:1px solid var(--c-12)}
+.mn-catalysts ol li{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"n t" "n p";gap:2px 22px;padding:clamp(18px,2vw,28px) 0;border-bottom:1px solid var(--c-12);transition:padding-left .5s var(--ease)}
+.mn-num{grid-area:n;font-size:clamp(40px,4.4vw,68px);font-weight:500;letter-spacing:-.05em;line-height:.9;color:transparent;-webkit-text-stroke:1px var(--c-40);transition:color .5s,-webkit-text-stroke-color .5s}
+.mn-catalysts h3{grid-area:t;font-size:clamp(18px,1.6vw,23px);font-weight:500;letter-spacing:-.02em;align-self:end}
+.mn-catalysts p{grid-area:p;font-size:15px;line-height:1.55;color:var(--c-60);max-width:480px}
+@media (hover:hover){
+  .mn-catalysts ol li:hover{padding-left:10px}
+  .mn-catalysts ol li:hover .mn-num{color:var(--lime);-webkit-text-stroke-color:var(--lime)}
+}
+
+/* latest (only rendered when there are items) */
+.mn-latest h2{text-transform:uppercase;letter-spacing:-.035em;margin-bottom:20px}
+.mn-latest ul{list-style:none;border-top:1px solid var(--c-12)}
+.mn-latest li{padding:20px 0;border-bottom:1px solid var(--c-12)}
+.mn-latest .meta{color:var(--c-60)}
+.mn-latest h3{margin-top:6px;font-size:clamp(18px,1.6vw,22px);font-weight:500;letter-spacing:-.02em}
+.mn-latest a{border-bottom:1px solid var(--lime)}
+.mn-latest p{margin-top:6px;color:var(--c-60);max-width:640px}
+
+/* call to action */
+.mn-cta{position:relative;overflow:hidden;background:var(--c);color:var(--l);border-radius:28px clamp(36px,6vw,96px) 28px clamp(36px,6vw,96px);padding:clamp(40px,6vw,96px) clamp(24px,5vw,90px)}
+.mn-cta-rings{position:absolute;right:-6%;top:50%;width:min(52vw,560px);aspect-ratio:1;transform:translateY(-50%);pointer-events:none}
+.mn-cta-rings i{position:absolute;border:1px solid var(--pl-12);border-radius:50%}
+.mn-cta-rings i:nth-child(1){inset:0}
+.mn-cta-rings i:nth-child(2){inset:16%}
+.mn-cta-rings i:nth-child(3){inset:32%;border-color:rgba(184,216,61,.45)}
+.mn-cta>*:not(.mn-cta-rings){position:relative}
+.mn-cta-lead{font-size:clamp(15px,1.4vw,19px);color:var(--l-60)}
+.mn-cta-lead strong{font-weight:500;color:var(--l)}
+.mn-cta-title{margin-top:14px;max-width:880px;font-size:clamp(28px,4.4vw,70px);font-weight:500;text-transform:uppercase;letter-spacing:-.035em;line-height:.96;text-wrap:balance}
+.mn-cta-sub{margin-top:20px;max-width:560px;font-size:clamp(15px,1.35vw,18px);line-height:1.55;color:var(--l-60)}
+.mn-cta-actions{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:30px}
+.mn-cta-note{font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--l-40)}
+
+@media (max-width:899px){
+  .mn-hero,.mn-catalysts{grid-template-columns:1fr}
+  .mn-ticker{font-size:10.5px}
+}
+@media (prefers-reduced-motion:reduce){.mn-catalysts ol li{transition:none}}
