@@ -51,3 +51,18 @@ adminApi.platforms = () => api.get('/admin/platforms');
 adminApi.createPlatform = (form) => api.upload('/admin/platforms', form);
 adminApi.updatePlatform = (id, form) => api.uploadPatch(`/admin/platforms/${id}`, form);
 adminApi.deletePlatform = (id) => api.delete(`/admin/platforms/${id}`);
+
+adminApi.testimonials = () => api.get('/admin/testimonials');
+adminApi.createTestimonial = (data) => api.post('/admin/testimonials', data);
+adminApi.updateTestimonial = (id, data) => api.patch(`/admin/testimonials/${id}`, data);
+adminApi.deleteTestimonial = (id) => api.delete(`/admin/testimonials/${id}`);
+
+adminApi.profitShots = () => api.get('/admin/profit-shots');
+adminApi.createProfitShot = (form) => api.upload('/admin/profit-shots', form);
+adminApi.updateProfitShot = (id, form) => api.uploadPatch(`/admin/profit-shots/${id}`, form);
+adminApi.deleteProfitShot = (id) => api.delete(`/admin/profit-shots/${id}`);
+
+adminApi.galleryImages = () => api.get('/admin/gallery');
+adminApi.createGalleryImage = (form) => api.upload('/admin/gallery', form);
+adminApi.updateGalleryImage = (id, form) => api.uploadPatch(`/admin/gallery/${id}`, form);
+adminApi.deleteGalleryImage = (id) => api.delete(`/admin/gallery/${id}`);

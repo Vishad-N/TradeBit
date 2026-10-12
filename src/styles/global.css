@@ -179,6 +179,36 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .err .frag .meta{color:var(--l-40)}
 .err:hover .word{color:var(--l-80)}
 
+/* ---------- Hooklines (hero, problem, solution, mentor, final CTA) ---------- */
+.hook-hero{margin-top:22px;max-width:540px;padding-left:16px;border-left:3px solid var(--lime);font-size:clamp(15px,1.2vw,17px);line-height:1.5;color:var(--c-80)}
+.hook-hero b{font-weight:600;color:var(--c)}
+.hook-hero a{display:inline-block;font-weight:600;border-bottom:1px solid var(--lime)}
+.prob-hooks{position:relative;z-index:3;margin-top:clamp(56px,7vw,100px);display:grid;gap:clamp(28px,3vw,44px)}
+.hook-sniper{display:grid;grid-template-columns:auto 1fr;gap:10px 28px;align-items:baseline;padding:clamp(22px,3vw,40px) 0;border-top:1px solid var(--pl-12);border-bottom:1px solid var(--pl-12)}
+.hook-sniper .meta{color:var(--l-40)}
+.hook-sniper .meta:nth-of-type(2){color:var(--lime)}
+.hook-big{font-size:clamp(20px,2.6vw,38px);font-weight:500;letter-spacing:-.025em;line-height:1.15;color:var(--l-80)}
+.hook-big s{text-decoration-color:var(--pl);text-decoration-thickness:2px;color:var(--l-40)}
+.hook-big b{font-weight:500;color:var(--lime)}
+.hook-fix{max-width:760px;font-size:clamp(17px,1.6vw,22px);line-height:1.45;color:var(--l-60)}
+.hook-fix b{font-weight:500;color:var(--l)}
+.hook-fix a{color:var(--lime);font-weight:500;white-space:nowrap}
+.hook-callout{margin-top:36px;padding:22px 26px;background:var(--pl-40);border-radius:0 28px 0 28px;font-size:clamp(17px,1.5vw,21px);font-weight:500;letter-spacing:-.015em;line-height:1.4}
+.hook-club{display:grid;grid-template-columns:auto 1fr auto;gap:clamp(20px,3vw,48px);align-items:center;margin-top:clamp(40px,5vw,72px);padding:clamp(24px,3vw,44px);background:var(--c);color:var(--l);border-radius:0 var(--r-cap) 0 var(--r-cap)}
+.hook-club-fig{display:flex;align-items:center;gap:14px;font-size:clamp(34px,4vw,60px);font-weight:500;letter-spacing:-.05em;line-height:1}
+.hook-club-fig span{color:var(--l-40);text-decoration:line-through}
+.hook-club-fig i{font-style:normal;color:var(--l-40)}
+.hook-club-fig b{color:var(--lime);font-weight:500}
+.hook-club p{font-size:clamp(16px,1.5vw,20px);line-height:1.5;color:var(--l-80)}
+.hook-club p s{color:var(--l-40)}
+.hook-club p b{color:var(--lime);font-weight:500}
+.hook-club .btn-dark{background:var(--lime);color:var(--c);border-color:var(--lime);white-space:nowrap}
+.final-hook{font-size:clamp(18px,1.8vw,24px) !important;font-weight:500;color:var(--l) !important;max-width:620px}
+@media (max-width:900px){
+  .hook-club{grid-template-columns:1fr;border-radius:0 48px 0 48px}
+  .hook-sniper{grid-template-columns:1fr}
+}
+
 /* ---------- 08 · SOLUTION (asymmetric radius, overlapping) ---------- */
 .sol-wrap{position:relative;background:linear-gradient(to bottom,var(--c) 0,var(--c) 42%,var(--l) 42%);margin-top:calc(-1 * var(--overlap));padding:0 3vw}
 .solution{position:relative;background:var(--l);border-radius:0 var(--r-sol) 0 var(--r-sol);padding:clamp(70px,8vw,130px) var(--g);overflow:hidden;box-shadow:0 0 0 1px var(--c-08)}
@@ -211,7 +241,9 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .zone:hover::before,.zone:focus-within::before{transform:scaleX(1)}
 .z-num{display:block;font-size:clamp(56px,6vw,96px);font-weight:500;letter-spacing:-.05em;line-height:.85;color:transparent;-webkit-text-stroke:1px var(--pl-40);transition:color .8s var(--ease),-webkit-text-stroke-color .8s}
 .zone:hover .z-num{color:var(--lime);-webkit-text-stroke-color:var(--lime)}
-.zone h3{margin-top:22px;font-size:15px;letter-spacing:.2em;text-transform:uppercase;font-weight:600}
+.zone h3{margin-top:22px;font-size:15px;letter-spacing:.2em;text-transform:uppercase;font-weight:600;line-height:1.35}
+/* Titles run to two lines in the five columns; reserve both so the charts stay aligned. */
+@media (min-width:1025px){.zone h3{min-height:2.7em}}
 .z-chart{height:120px;margin:22px 0 14px;position:relative}
 .z-chart svg{width:100%;height:100%;overflow:visible}
 .z-chart .ln{stroke-dasharray:var(--len,400);stroke-dashoffset:var(--len,400);transition:stroke-dashoffset 1.8s var(--ease)}
@@ -475,6 +507,48 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .note{position:absolute;z-index:3;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;padding:8px 12px;border:1px dashed var(--c-40);border-radius:100px;background:var(--l);transform:rotate(-4deg)}
 .n1{left:52%;top:10px}
 .stories-foot{margin-top:24px;font-size:12px;color:var(--c-60);max-width:620px}
+
+/* Profit screenshot strip: scrolls right to left, pauses and enlarges the image under the pointer */
+.pmq{position:relative;z-index:1;background:var(--l);padding:clamp(28px,3.5vw,48px) 0 clamp(20px,2.5vw,32px);border-top:1px solid var(--c-08)}
+.pmq-head{padding:0 var(--g);margin-bottom:6px}
+.pmq-view{overflow:hidden;padding:clamp(18px,2vw,28px) 0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.pmq-track{display:flex;gap:clamp(12px,1.4vw,20px);width:max-content;list-style:none;animation:pmqScroll var(--pmq-dur,40s) linear infinite;will-change:transform}
+.pmq-track:hover{animation-play-state:paused}
+.pmq-track li{flex:none;height:clamp(130px,14vw,200px);border-radius:14px;overflow:hidden;background:var(--c-08);box-shadow:0 0 0 1px var(--c-12);transition:transform .45s var(--ease),box-shadow .45s var(--ease)}
+.pmq-track li:hover{transform:scale(1.07);box-shadow:0 0 0 1px var(--c-12),0 18px 36px -18px rgba(21,24,20,.55);position:relative;z-index:2}
+.pmq-track img{height:100%;width:auto;display:block;user-select:none}
+.pmq-note{padding:0 var(--g);font-size:12px;color:var(--c-60)}
+@keyframes pmqScroll{to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){
+  .pmq-track{animation:none}
+  .pmq-view{overflow-x:auto}
+}
+
+/* Student stories: admin-managed reviews that rotate in a staggered cascade once there are more than three */
+.tst-body{display:contents}
+.t-main blockquote.is-long{font-size:clamp(22px,2.5vw,38px);line-height:1.15;letter-spacing:-.025em}
+.tst.is-out .tst-body>*{opacity:0;transform:translateY(-14px);filter:blur(3px);transition:opacity .32s ease-in,transform .32s ease-in,filter .32s ease-in;transition-delay:calc(var(--slot,0) * .06s)}
+.comp.is-rotating .tst-body>*{--k:0;animation:tstIn .85s var(--ease) backwards;animation-delay:calc(var(--slot,0) * .12s + var(--k) * .07s)}
+.comp.is-rotating .tst-body>:nth-child(2){--k:1}
+.comp.is-rotating .tst-body>:nth-child(3){--k:2}
+@keyframes tstIn{from{opacity:0;transform:translateY(18px);filter:blur(3px)}to{opacity:1;transform:none;filter:blur(0)}}
+.st-ctrl{display:flex;align-items:center;gap:16px;margin-top:8px;max-width:520px}
+.st-btn{width:44px;height:44px;flex:none;border-radius:50%;border:1px solid var(--c-12);font-size:18px;line-height:1;display:grid;place-items:center;transition:background .3s,border-color .3s,transform .5s var(--ease)}
+.st-btn:hover{background:var(--lime);border-color:var(--lime)}
+.st-btn:active{transform:scale(.92)}
+.st-count{font-size:13px;font-weight:600;letter-spacing:.14em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.st-count em{font-style:normal;color:var(--c-40)}
+.st-prog{position:relative;flex:1;height:2px;background:var(--c-12);border-radius:2px;overflow:hidden}
+.st-prog i{position:absolute;inset:0;background:var(--lime);transform:scaleX(0);transform-origin:left}
+.st-prog i.run{animation:stProg linear forwards}
+@keyframes stProg{to{transform:scaleX(1)}}
+.modal-box.is-media{padding:0;overflow:hidden;background:#000}
+.modal-box.is-media iframe,.modal-box.is-media video{position:absolute;inset:0;width:100%;height:100%;border:0}
+.modal-box.is-media .modal-x{z-index:2;background:rgba(21,24,20,.6);color:var(--l)}
+@media (prefers-reduced-motion:reduce){
+  .tst.is-out .tst-body>*{transition:none}
+  .comp.is-rotating .tst-body>*{animation:none}
+}
 
 /* ---------- 15 · OFFER (giant stage) + FAQ ---------- */
 .offer{position:relative;z-index:2;margin:calc(-1 * var(--overlap)) 2vw 0;background:var(--c);color:var(--l);border-radius:var(--r-offer) var(--r-offer) 0 0;padding:clamp(100px,11vw,170px) var(--g) clamp(70px,7vw,110px);overflow:hidden}

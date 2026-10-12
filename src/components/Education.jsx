@@ -44,9 +44,7 @@ export default function Education() {
             </ul>
           </article>
           <article className="mod m-risk rv">
-            <h3>Risk<br />Ma
-            
-            nagement</h3>
+            <h3>Risk<br />Management</h3>
             <div className="rr" aria-label="Reward-to-risk diagram: target of 3R above entry, stop of 1R below"><div className="tp"><span>TARGET</span><span>+3R</span></div><div className="en"></div><div className="sl"><span>STOP</span><span>−1R</span></div></div>
             <p>Position sizing, stop placement and R-multiples.</p>
           </article>

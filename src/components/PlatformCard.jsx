@@ -31,7 +31,7 @@ export default function PlatformCard({ platform, href, index = 0 }) {
   );
 
   return (
-    <article className={`pcard${featured ? ' is-featured' : ''}`} style={{ '--i': index }}>
+    <article className={`pcard${featured ? ' is-featured' : ''}`} data-slug={platform.slug} style={{ '--i': index }}>
       <svg className="pc-deco" viewBox="0 0 160 160" fill="none" aria-hidden="true">
         <circle cx="160" cy="0" r="150" stroke="#DCE8C0" strokeOpacity=".07" />
         <circle cx="160" cy="0" r="115" stroke="#DCE8C0" strokeOpacity=".07" />

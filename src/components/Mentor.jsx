@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import Counter from './Counter.jsx';
 
 // Two mentors. Satyendra Sir and "Ma'am" share one composition: mirrored arch portraits, the second one
@@ -120,6 +121,12 @@ export default function Mentor() {
         <div><Counter as="b" to={1000} suf="+" /><span>Market Analyses</span></div>
       </div>
       <blockquote className="quote rv d3">“The market will never be predictable. Your process can be — that's the only edge I've ever trusted.”</blockquote>
+
+      <div className="hook-club rv d3">
+        <div className="hook-club-fig" aria-hidden="true"><span>99%</span><i>→</i><b>1%</b></div>
+        <p>I built a community with one clear mission: to take struggling traders out of the <s>99% failure bracket</s> and move them into the <b>elite 1% club.</b></p>
+        <Link to="/1-percent-club" className="btn btn-dark">Join the 1% Club <span className="ar">→</span></Link>
+      </div>
     </section>
   )
 }

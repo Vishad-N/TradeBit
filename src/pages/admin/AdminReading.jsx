@@ -5,8 +5,11 @@ import { adminApi } from '../../services/readingApi.js';
 import PaymentsTab from './PaymentsTab.jsx';
 import PlatformsTab from './PlatformsTab.jsx';
 import WebinarTab from './WebinarTab.jsx';
+import TestimonialsTab from './TestimonialsTab.jsx';
+import ProfitShotsTab from './ProfitShotsTab.jsx';
+import GalleryTab from './GalleryTab.jsx';
 
-const TABS = [['books', 'Books'], ['tasks', 'Tasks'], ['requests', 'Reading Requests'], ['payments', 'Mentorship Payments'], ['platforms', 'Platforms'], ['webinar', 'Webinar Registrations']];
+const TABS = [['books', 'Books'], ['tasks', 'Tasks'], ['requests', 'Reading Requests'], ['payments', 'Mentorship Payments'], ['platforms', 'Platforms'], ['webinar', 'Webinar Registrations'], ['testimonials', 'Testimonials'], ['profits', 'Profit Screenshots'], ['gallery', 'Gallery']];
 const STATUS_LABEL = { PENDING_REVIEW: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected', PROCESSING: 'Processing', READY: 'Ready', FAILED: 'Failed' };
 const fmt = d => (d ? new Date(d).toLocaleString() : '—');
 
@@ -296,6 +299,9 @@ export default function AdminReading() {
       {tab === 'payments' && <PaymentsTab />}
       {tab === 'platforms' && <PlatformsTab />}
       {tab === 'webinar' && <WebinarTab />}
+      {tab === 'testimonials' && <TestimonialsTab />}
+      {tab === 'profits' && <ProfitShotsTab />}
+      {tab === 'gallery' && <GalleryTab />}
     </section>
   );
 }

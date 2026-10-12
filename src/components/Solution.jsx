@@ -36,6 +36,7 @@ export default function Solution() {
               <li><span>Entering anywhere</span><i>→</i><span>Waiting for a setup</span></li>
               <li><span>Hoping it works</span><i>→</i><span>Defining risk first</span></li>
             </ul>
+            <p className="hook-callout rv d4">You don't need to win every single trade to make a living. You just need to keep your <span className="hl">losses incredibly small.</span></p>
           </div>
           <div ref={visRef} className="sol-vis rv d1" role="img" aria-label="Market structure visualization: a flowing pale lime ribbon behind a candlestick uptrend, with structure points, a setup zone, risk levels and an execution marker">
             <svg ref={chartRef} className={played ? 'drawn' : undefined} viewBox="0 0 700 600" preserveAspectRatio="xMidYMid meet" aria-hidden="true">

@@ -82,6 +82,7 @@ export const PLATFORMS_FALLBACK = [
   {
     slug: 'gocharting',
     name: 'GoCharting',
+    logo: '/platforms/gocharting.png',
     description: 'Advanced charting and order-flow platform. Sign up through our link.',
     category: 'Charting',
     referralUrl: 'https://gocharting.com/sign-up?utm_ref=RDWFUBXL',
@@ -90,6 +91,7 @@ export const PLATFORMS_FALLBACK = [
   {
     slug: 'coinglass',
     name: 'Coinglass',
+    logo: '/platforms/coinglass.png',
     description: 'Crypto derivatives data: open interest, funding and liquidations.',
     category: 'Charting',
     referralUrl: 'https://www.coinglass.com/?ref_code=TRADEBIT',

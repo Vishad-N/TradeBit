@@ -23,6 +23,15 @@ export default function Problem() {
           <li className="err"><span className="code meta">ERR · 04</span><span className="word">No Structure</span><span className="frag"><svg viewBox="0 0 300 46" aria-hidden="true"><circle cx="20" cy="30" r="2.5" fill="#DCE8C0" fillOpacity=".6"/><circle cx="60" cy="10" r="2.5" fill="#DCE8C0" fillOpacity=".6"/><circle cx="96" cy="36" r="2.5" fill="#DCE8C0" fillOpacity=".6"/><circle cx="140" cy="16" r="2.5" fill="#DCE8C0" fillOpacity=".6"/><circle cx="180" cy="28" r="2.5" fill="#DCE8C0" fillOpacity=".6"/><text x="210" y="27" fill="#DCE8C0" fillOpacity=".6" fontSize="12" fontFamily="Space Grotesk, sans-serif">HH? HL? —</text></svg><span className="meta">Trend · undefined</span></span></li>
           <li className="err"><span className="code meta">ERR · 05</span><span className="word">Poor Risk Control</span><span className="frag"><svg viewBox="0 0 300 46" aria-hidden="true"><line x1="0" x2="300" y1="12" y2="12" stroke="#DCE8C0" strokeOpacity=".5" strokeDasharray="6 4"/><line x1="0" x2="300" y1="34" y2="34" stroke="#DCE8C0" strokeOpacity=".5" strokeDasharray="6 4"/><line x1="120" x2="160" y1="6" y2="40" stroke="#DCE8C0" strokeOpacity=".8"/><line x1="160" x2="120" y1="6" y2="40" stroke="#DCE8C0" strokeOpacity=".8"/><text x="176" y="27" fill="#DCE8C0" fillOpacity=".6" fontSize="12" fontFamily="Space Grotesk, sans-serif">STOP · NONE</text></svg><span className="meta">Size · by feeling</span></span></li>
         </ol>
+        <div className="prob-hooks">
+          <p className="hook-sniper rv">
+            <span className="meta">The 99%</span>
+            <span className="hook-big">lose money chasing <s>every single green candle.</s></span>
+            <span className="meta">The 1%</span>
+            <span className="hook-big">wait patiently like <b>snipers</b> for the perfect institutional setup.</span>
+          </p>
+          <p className="hook-fix rv d2">Most traders focus 100% on the entries, but <b>99% of them fail</b> because they have zero risk management. <a href="#method">Let's fix your strategy →</a></p>
+        </div>
       </div>
     </section>
   )

@@ -7,17 +7,18 @@ import { TELEGRAM_URL } from '../config/learn.js';
 // Any page can open the 1% Club popup by dispatching this window event (see the /1-percent-club page).
 export const OPEN_CLUB_EVENT = 'tb:open-club';
 
-export const NAV_LINKS = [
-  ['#why', 'Why Us'],
-  ['#method', 'Method'],
-  ['#learn', 'Learn'],
-  ['#mentor', 'Mentor'],
-  ['#platform', 'Platform'],
-  ['#faq', 'FAQ'],
-];
+// In-page section links (scroll-spy ids). The header no longer lists any: it links to pages only.
+// Kept as an empty list because the landing page's scroll-spy reads it.
+export const NAV_LINKS = [];
 
-// Route links live outside NAV_LINKS: that list drives the landing page's scroll-spy, which only understands #ids.
-export const ROUTE_LINKS = [['/read/books', 'Books']];
+// Page links shown in the header and mobile menu. `flip: true` alternates the label with "Free" (Books).
+export const ROUTE_LINKS = [
+  { to: '/about', label: 'About Us' },
+  { to: '/contact', label: 'Contact Us' },
+  { to: '/gallery', label: 'Gallery' },
+  { to: '/market-news', label: 'Market News' },
+  { to: '/read/books', label: 'Books', flip: true },
+];
 
 // Alternates between two words every 5s with a 3D flip. Both words share one grid cell so the link never jumps.
 function FlipLabel({ words, upper = false, interval = 5000 }) {
@@ -59,9 +60,11 @@ export default function Nav({ solid, activeHref, menuOpen, onToggleMenu, onClose
                   <a href={anchor(href)} className={href === activeHref ? 'act' : undefined} aria-current={href === activeHref ? 'true' : undefined}>{label.toUpperCase()}</a>
                 </li>
               ))}
-              {ROUTE_LINKS.map(([to, label]) => (
+              {ROUTE_LINKS.map(({ to, label, flip }) => (
                 <li key={to}>
-                  <Link to={to} aria-label={label} className={pathname.startsWith(to) ? 'act' : undefined} aria-current={pathname.startsWith(to) ? 'page' : undefined}><FlipLabel words={['Free', label]} upper /></Link>
+                  <Link to={to} aria-label={label} className={pathname.startsWith(to) ? 'act' : undefined} aria-current={pathname.startsWith(to) ? 'page' : undefined}>
+                    {flip ? <FlipLabel words={['Free', label]} upper /> : label.toUpperCase()}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -79,7 +82,7 @@ export default function Nav({ solid, activeHref, menuOpen, onToggleMenu, onClose
         <ol>
           <li><Link to="/1-percent-club" className="club-link" onClick={onCloseMenu}>1% Club</Link></li>
           {NAV_LINKS.map(([href, label]) => <li key={href}><a href={anchor(href)} onClick={onCloseMenu}>{label}</a></li>)}
-          {ROUTE_LINKS.map(([to, label]) => <li key={to}><Link to={to} aria-label={label} onClick={onCloseMenu}><FlipLabel words={['Free', label]} /></Link></li>)}
+          {ROUTE_LINKS.map(({ to, label, flip }) => <li key={to}><Link to={to} aria-label={label} onClick={onCloseMenu}>{flip ? <FlipLabel words={['Free', label]} /> : label}</Link></li>)}
         </ol>
         <a href={anchor('#offer')} className="btn btn-lime" style={{ justifyContent: 'center' }} onClick={onCloseMenu}>Start Your Journey <span className="ar">→</span></a>
       </div>

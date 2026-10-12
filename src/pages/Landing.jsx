@@ -14,6 +14,7 @@ import TradingPlatforms from '../components/TradingPlatforms.jsx';
 import Stories from '../components/Stories.jsx';
 import Offer from '../components/Offer.jsx';
 import FinalCta from '../components/FinalCta.jsx';
+import ProfitMarquee from '../components/ProfitMarquee.jsx';
 import Footer from '../components/Footer.jsx';
 import VideoModal from '../components/VideoModal.jsx';
 import { usePageReveal } from '../hooks/motion.js';
@@ -70,6 +71,7 @@ export default function Landing() {
         <Offer />
         <FinalCta />
       </main>
+      <ProfitMarquee />
       <Footer />
       <div className={showCta ? 'm-cta show' : 'm-cta'}><a href="#offer">START YOUR JOURNEY → <small>₹0</small></a></div>
       <VideoModal open={videoOpen} onClose={closeVideo} />

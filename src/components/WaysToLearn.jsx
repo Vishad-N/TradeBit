@@ -116,7 +116,6 @@ export default function WaysToLearn() {
             <h3>Free Resources</h3>
             <p className="w-head">Learn before you commit.</p>
             <p className="w-desc">Explore the client's free educational content and trading resources through their YouTube playlist.</p>
-            <ul className="w-facts"><li>Free to watch</li><li>YouTube playlist</li><li>Self-paced</li></ul>
             <a className={`btn btn-dark${freeOn ? '' : ' is-off'}`} href={freeOn ? LEARN.youtubePlaylistUrl : undefined} aria-disabled={!freeOn || undefined} target="_blank" rel="noopener noreferrer">
               Explore Free Resources <Ar />
             </a>
@@ -131,8 +130,7 @@ export default function WaysToLearn() {
             <h3>Complete Course</h3>
             <p className="w-head">Learn the full framework.</p>
             <p className="w-desc">Access the client's complete structured trading course through Classplus.</p>
-            <ul className="w-facts"><li>Hosted on Classplus</li><li>Full framework</li><li>Structured lectures</li></ul>
-            <a className={`btn btn-dark${courseOn ? '' : ' is-off'}`} href={courseOn ? LEARN.classplusUrl : undefined} aria-disabled={!courseOn || undefined} target="_blank" rel="noopener noreferrer">
+            <a className={`btn btn-pale${courseOn ? '' : ' is-off'}`} href={courseOn ? LEARN.classplusUrl : undefined} aria-disabled={!courseOn || undefined} target="_blank" rel="noopener noreferrer">
               Explore The Course <Ar />
             </a>
           </article>
@@ -143,10 +141,9 @@ export default function WaysToLearn() {
           <article className="wcard">
             <header className="w-top"><span className="meta">03 / Private</span><span className="w-num" aria-hidden="true">03</span></header>
             <MentorArt />
-            <h3>1:1 Mentorship</h3>
+            <h3>1% Club</h3>
             <p className="w-head">Learn directly with the mentor.</p>
             <p className="w-desc">Get personalized trading guidance and private 1:1 mentorship managed through Telegram.</p>
-            <ul className="w-facts"><li>Private 1:1 guidance</li><li>Managed on Telegram</li><li>Paid in USDT (TRC20)</li></ul>
             <button type="button" className="btn btn-lime" onClick={apply}>Apply For 1:1 Mentorship <Ar /></button>
           </article>
           </div>

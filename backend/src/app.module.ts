@@ -9,6 +9,9 @@ import { ReadingModule } from './reading/reading.module';
 import { MentorshipModule } from './mentorship/mentorship.module';
 import { PlatformsModule } from './platforms/platforms.module';
 import { WebinarModule } from './webinar/webinar.module';
+import { TestimonialsModule } from './testimonials/testimonials.module';
+import { ProfitShotsModule } from './profit-shots/profit-shots.module';
+import { GalleryModule } from './gallery/gallery.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -22,6 +25,9 @@ import { HealthModule } from './health/health.module';
     MentorshipModule,
     PlatformsModule,
     WebinarModule,
+    TestimonialsModule,
+    ProfitShotsModule,
+    GalleryModule,
     HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

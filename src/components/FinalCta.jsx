@@ -15,6 +15,7 @@ export default function FinalCta() {
         <span className="label rv" style={{ justifyContent: 'center' }}>The Beginning</span>
         <h2 id="final-t" className="h-xl split"><span className="ln"><span>Don't Just Watch</span></span><span className="ln"><span>The Market.</span></span><span className="ln"><span className="lime">Understand It.</span></span></h2>
         <p className="rv d2">Build knowledge. Build discipline. Build a process.</p>
+        <p className="final-hook rv d2">Ready to stop gambling and start executing? Join our community today.</p>
         <svg className="guide" viewBox="0 0 24 90" aria-hidden="true"><line x1="12" y1="0" x2="12" y2="80"/><path d="M5 74 L12 84 L19 74"/></svg>
         <a href="#offer" className="btn btn-lime btn-xl rv d3">Start Learning <span className="ar">→</span></a>
       </div>

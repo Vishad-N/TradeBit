@@ -1,0 +1,16 @@
+/* ---------- Gallery page: glass carousel stage ---------- */
+.gal{max-width:var(--max);margin:0 auto}
+.gal-title{margin:24px 0 14px}
+.gal-lead{color:var(--c-60);max-width:520px;margin-bottom:clamp(24px,3vw,40px)}
+/* No box: the canvas shares the page background and runs edge to edge. */
+.gal-stage{position:relative;height:clamp(420px,52vw,600px);width:100vw;margin-left:calc(50% - 50vw);overflow:hidden}
+.gal-loading{position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,var(--c-08) 50%,transparent 70%);background-size:200% 100%;animation:galShimmer 1.6s linear infinite}
+@keyframes galShimmer{to{background-position:-200% 0}}
+.gal-ctrl{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:22px}
+.gal-btn{width:48px;height:48px;border-radius:50%;border:1px solid var(--c-12);font-size:18px;display:grid;place-items:center;transition:background .3s,border-color .3s,transform .5s var(--ease)}
+.gal-btn:hover{background:var(--lime);border-color:var(--lime)}
+.gal-btn:active{transform:scale(.92)}
+.gal-count{color:var(--c-60)}
+.gal-grid{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:16px;height:100%;overflow:auto}
+.gal-grid img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:14px}
+@media (prefers-reduced-motion:reduce){.gal-loading{animation:none}}

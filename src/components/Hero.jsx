@@ -28,15 +28,16 @@ export default function Hero({ onPlayVideo }) {
           <span className="ln"><span><span className="hl">Differently.</span></span></span>
         </h1>
         <p className="lead rv d2">A structured approach to market structure, price action and risk management designed to help traders replace guesswork with discipline.</p>
+        <p className="hook-hero rv d2"><b>1–2 trades a day.</b> Still out-earning 90% of active traders. <a href="#why">Here is the secret →</a></p>
         <div className="hero-ctas rv d3">
           <a href="#offer" className="btn btn-dark">Start Your Journey <span className="ar">→</span></a>
           <button className="btn btn-line" type="button" onClick={onPlayVideo}><span className="ring"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg></span>Watch 2-Min Overview <span className="ar">→</span></button>
         </div>
         <ul className="checks rv d4">
-          <li><b>✓</b>Beginner Friendly</li>
-          <li><b>✓</b>Live Market Analysis</li>
-          <li><b>✓</b>Structured Learning</li>
-          <li><b>✓</b>Community Access</li>
+          <li><b>✓</b>Order Blocks &amp; FVG</li>
+          <li><b>✓</b>Liquidity Sweeps</li>
+          <li><b>✓</b>BOS / CHoCH Structure</li>
+          <li><b>✓</b>Volume Profile &amp; Order Flow</li>
         </ul>
       </div>
 

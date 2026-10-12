@@ -250,3 +250,50 @@ model WebinarRegistration {
   @@index([createdAt])
   @@index([email])
 }
+
+/// Student stories shown in the landing page's "Student Stories" section (Admin -> Testimonials).
+/// kind TEXT = written review, VIDEO = video testimonial (videoUrl is a YouTube / Vimeo / .mp4 https link).
+model Testimonial {
+  id        String   @id @default(cuid())
+  kind      String   @default("TEXT")
+  quote     String   @default("")
+  name      String
+  role      String   @default("")
+  rating    Int      @default(5)
+  videoUrl  String?
+  duration  String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kind, isActive, sortOrder])
+}
+
+/// Profit screenshots in the looping strip above the landing page footer (Admin -> Profit Screenshots).
+/// The image file lives in storage under imageKey and is served at /profit-shots/:id/image.
+model ProfitShot {
+  id        String   @id @default(cuid())
+  imageKey  String
+  caption   String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+/// Photos in the Gallery page's glass carousel (Admin -> Gallery). The file lives in storage under imageKey
+/// and is served at /gallery/:id/image. Until MIN images exist the site tops up with built-in sample photos.
+model GalleryImage {
+  id        String   @id @default(cuid())
+  imageKey  String
+  caption   String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
