@@ -158,7 +158,7 @@ export default function Stories() {
             <span className="label rv">Student Stories</span>
             <h2 id="st-t" className="h-l split"><span className="ln"><span>Clarity, In Their</span></span><span className="ln"><span>Own Words.</span></span></h2>
           </div>
-          <div className="score rv d2"><b>4.8</b><div><div className="stars" aria-label="4.8 out of 5 stars">★★★★★</div><span>from 3,200+ verified reviews</span></div></div>
+          <div className="score rv d2"><b>4.9</b><div><div className="stars" aria-label="4.9 out of 5 stars">★★★★★</div><span>from 3,200+ verified reviews</span></div></div>
         </div>
 
         <div

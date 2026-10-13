@@ -52,9 +52,9 @@ export default function ProfitMarquee() {
   const duration = `${set.length * SECONDS_PER_IMAGE}s`;
 
   return (
-    <section className="pmq" aria-label="Student profit screenshots">
+    <section className="pmq" aria-label="Mentor’s performance: profit screenshots">
       <div className="pmq-head">
-        <span className="label">Student Results</span>
+        <span className="label">Mentor’s Performance</span>
       </div>
       <div className="pmq-view">
         <ul className="pmq-track" style={{ '--pmq-dur': duration }}>

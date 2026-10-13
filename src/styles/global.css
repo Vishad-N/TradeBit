@@ -1044,3 +1044,12 @@ html{scroll-padding-top:96px}
 
 /* Small phones: the Telegram icon also lives in the menu and footer, so drop it from the bar to keep the burger on screen */
 @media (max-width:480px){.nav .tg-btn{display:none}}
+
+/* ---------- Hero: the six course modules (replaces the four ticks) ---------- */
+.mods{margin-top:clamp(28px,3.2vw,44px);max-width:640px}
+.mods-label{display:block;color:var(--c-60);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--c-12)}
+.mods-list{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px clamp(18px,2.4vw,34px);counter-reset:none}
+.mods-list li{display:flex;gap:12px;align-items:flex-start;font-size:13.5px;font-weight:600;letter-spacing:.01em;line-height:1.4;color:var(--c)}
+.mods-list b{flex:none;width:26px;height:26px;border-radius:50%;background:var(--c);color:var(--lime);display:grid;place-items:center;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:-2px}
+.mods-list li:hover b{background:var(--lime);color:var(--c)}
+@media (max-width:520px){.mods-list{grid-template-columns:1fr}}

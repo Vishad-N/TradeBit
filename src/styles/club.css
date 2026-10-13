@@ -218,3 +218,68 @@
   .cl-g-price{padding:22px 18px}
   .cl-g-btn{width:100%;justify-self:stretch;justify-content:space-between}
 }
+
+
+/* ---------- Final call to action: headline + seat card over a rising staircase ---------- */
+.cl-final{text-align:left;padding-bottom:clamp(70px,8vw,120px)}
+.cl-final .cl-final-in{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(28px,5vw,88px);align-items:center;padding-top:clamp(70px,8vw,120px)}
+.cl-final-copy{min-width:0}
+.cl-final .cl-h2{font-size:clamp(40px,5.8vw,94px);line-height:.92;margin-top:22px}
+.cl-final .cl-lead{margin:22px 0 0;max-width:500px}
+
+.cl-steps{position:absolute;left:0;right:0;bottom:0;width:100%;height:clamp(150px,20vw,300px);pointer-events:none}
+.cl-steps .line{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 2.6s var(--ease)}
+.cl-steps .area{opacity:0;transition:opacity 1.6s ease .9s}
+.cl-steps .dot{opacity:0;transition:opacity .6s ease}
+.cl-steps.in .line{stroke-dashoffset:0}
+.cl-steps.in .area{opacity:1}
+.cl-steps.in .dot{opacity:1;transition-delay:calc(.3s + var(--n,0) * .3s)}
+.cl-steps .dot:nth-of-type(1){--n:1}.cl-steps .dot:nth-of-type(2){--n:2}.cl-steps .dot:nth-of-type(3){--n:3}.cl-steps .dot:nth-of-type(4){--n:4}.cl-steps .dot:nth-of-type(5){--n:5}.cl-steps .dot:nth-of-type(6){--n:6}.cl-steps .dot:nth-of-type(7){--n:7}
+
+.cl-proof{list-style:none;display:flex;flex-wrap:wrap;gap:18px clamp(22px,3vw,44px);margin-top:clamp(28px,3.4vw,44px);padding-top:clamp(20px,2.4vw,28px);border-top:1px solid rgba(243,244,239,.14)}
+.cl-proof li{display:flex;align-items:center;gap:12px}
+.cl-proof b{font-size:clamp(34px,3.6vw,56px);font-weight:500;letter-spacing:-.05em;line-height:.9;color:#B8D83D;font-variant-numeric:tabular-nums}
+.cl-proof span{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;line-height:1.5;color:var(--cs)}
+
+.cl-seat{position:relative;overflow:hidden;display:grid;gap:18px;padding:clamp(22px,2.6vw,38px);border-radius:28px 72px 28px 28px;
+  background:linear-gradient(160deg,rgba(243,244,239,.09),rgba(243,244,239,.03));border:1px solid rgba(184,216,61,.4);
+  box-shadow:0 40px 90px -50px rgba(0,0,0,.9),inset 0 1px 0 rgba(243,244,239,.1);backdrop-filter:blur(6px)}
+.cl-seat::before{content:"";position:absolute;right:-70px;top:-70px;width:240px;aspect-ratio:1;border-radius:50%;border:1px solid rgba(184,216,61,.22);box-shadow:0 0 0 38px rgba(184,216,61,.05);pointer-events:none}
+.cl-seat>*{position:relative}
+.cl-seat-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.cl-seat-top .meta{color:var(--cs)}
+.cl-seat-tag{padding:6px 12px;border-radius:100px;background:rgba(184,216,61,.14);border:1px solid rgba(184,216,61,.45);font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#B8D83D}
+.cl-seat-price{display:flex;align-items:baseline;gap:16px}
+.cl-seat-price s{font-size:clamp(20px,2vw,28px);color:rgba(243,244,239,.4);text-decoration-thickness:2px}
+.cl-seat-price b{font-size:clamp(64px,7vw,112px);font-weight:500;letter-spacing:-.06em;line-height:.85;color:#B8D83D}
+.cl-seat-list{list-style:none;display:grid;gap:12px;padding:18px 0;border-top:1px solid rgba(243,244,239,.12);border-bottom:1px solid rgba(243,244,239,.12)}
+.cl-seat-list li{display:flex;align-items:flex-start;gap:12px;font-size:15px;line-height:1.45;color:rgba(243,244,239,.86)}
+.cl-seat-list i{flex:none;width:22px;height:22px;border-radius:50%;background:#B8D83D;color:#151814;display:grid;place-items:center;margin-top:1px}
+.cl-seat-list i svg{width:12px;height:12px}
+.cl-seat-btn{width:100%;justify-content:space-between}
+.cl-seat-link{justify-self:start;font-size:12px;color:var(--cs);border-bottom:1px solid rgba(184,216,61,.5);padding-bottom:2px}
+.cl-seat-link:hover{color:#B8D83D}
+.cl-final .cl-final-disc{grid-column:1 / -1;margin:clamp(8px,2vw,24px) auto 0;text-align:center;position:relative}
+
+@media (max-width:999px){
+  .cl-final .cl-final-in{grid-template-columns:1fr}
+  .cl-final .cl-h2{font-size:clamp(38px,9.4vw,72px)}
+}
+@media (prefers-reduced-motion:reduce){
+  .cl-steps .line,.cl-steps .area,.cl-steps .dot{transition:none;stroke-dashoffset:0;opacity:1}
+}
+
+/* keep the staircase below the text: the section reserves room for it, and the stats sit in one tidy row */
+.cl-steps{height:clamp(110px,15vw,210px)}
+.cl-final{padding-bottom:calc(clamp(110px,15vw,210px) + clamp(28px,3vw,48px))}
+.cl-proof{display:grid;grid-template-columns:repeat(3,auto);justify-content:start;gap:16px clamp(24px,4vw,56px)}
+.cl-proof li{flex-direction:column;align-items:flex-start;gap:10px}
+@media (max-width:420px){.cl-proof{grid-template-columns:repeat(2,auto)}}
+
+/* Level steps: the beginner is a bearish (down) candle, the seasoned pro is the one enlarged step. */
+.cl-levels{height:92px;gap:8px;align-items:flex-end}
+.cl-levels i:nth-child(1){position:relative;flex:.8;height:34%;background:transparent;border:2.5px solid var(--cd);border-radius:4px}
+.cl-levels i:nth-child(1)::before,.cl-levels i:nth-child(1)::after{content:"";position:absolute;left:50%;width:2.5px;margin-left:-1.25px;background:var(--cd)}
+.cl-levels i:nth-child(1)::before{bottom:100%;height:22px}   /* upper wick (the candle opened high) */
+.cl-levels i:nth-child(1)::after{top:100%;height:10px}       /* lower wick */
+.cl-levels i:nth-child(5){flex:1.7;height:100%;border-radius:8px;box-shadow:0 0 0 3px var(--lime),0 0 0 5px var(--cd)}

@@ -33,12 +33,17 @@ export default function Hero({ onPlayVideo }) {
           <a href="#offer" className="btn btn-dark">Start Your Journey <span className="ar">→</span></a>
           <button className="btn btn-line" type="button" onClick={onPlayVideo}><span className="ring"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg></span>Watch 2-Min Overview <span className="ar">→</span></button>
         </div>
-        <ul className="checks rv d4">
-          <li><b>✓</b>Order Blocks &amp; FVG</li>
-          <li><b>✓</b>Liquidity Sweeps</li>
-          <li><b>✓</b>BOS / CHoCH Structure</li>
-          <li><b>✓</b>Volume Profile &amp; Order Flow</li>
-        </ul>
+        <div className="mods rv d4">
+          <span className="mods-label meta">Inside the course · 6 modules</span>
+          <ol className="mods-list" aria-label="The six course modules">
+            <li><b>1</b><span>Market Foundation &amp; Price Action Mastery</span></li>
+            <li><b>2</b><span>Smart Money Concepts (SMC)</span></li>
+            <li><b>3</b><span>Inner Circle Trader (ICT) Concepts &amp; Liquidity in Depth</span></li>
+            <li><b>4</b><span>Order Flow &amp; Volume Profile</span></li>
+            <li><b>5</b><span>Trade Management, Psychology &amp; News Impact</span></li>
+            <li><b>6</b><span>20 High Probability Winning Setups</span></li>
+          </ol>
+        </div>
       </div>
 
       <div className="hero-form" role="img" aria-label="Annotated candlestick chart showing an uptrend with higher highs, higher lows, a resistance breakout and a support zone, set on a charcoal architectural form">

@@ -74,10 +74,10 @@ export default function Platform() {
                   <div className="prog"><svg width="84" height="84" viewBox="0 0 84 84"><circle cx="42" cy="42" r="34" stroke="rgba(243,244,239,.12)" strokeWidth="7" fill="none"/><circle cx="42" cy="42" r="34" stroke="#B8D83D" strokeWidth="7" fill="none" strokeDasharray="213.6" strokeDashoffset="89.7" strokeLinecap="round" transform="rotate(-90 42 42)"/><text x="42" y="47" textAnchor="middle" fill="#F3F4EF" fontSize="16" fontFamily="Space Grotesk, sans-serif">58%</text></svg>
                     <div className="mods"><div><span>Market Structure</span><span>100%</span></div><div><span>Price Action</span><span>100%</span></div><div><span>Trade Setups</span><span>100%</span></div><div className="k"><span>Risk Management</span><span>64%</span></div></div></div>
                 </div>
-                <div className="cd2 chartc"><h5><span>Live analysis · NIFTY 50 · 1D</span><span style={{ color: '#B8D83D' }}>Structure · Bullish</span></h5><svg className="drawn" viewBox="0 0 560 168" preserveAspectRatio="none" dangerouslySetInnerHTML={html(uiChart())} /></div>
+                <div className="cd2 chartc"><h5><span>Live analysis · Gold (XAUUSD) · 1D</span><span style={{ color: '#B8D83D' }}>Structure · Bullish</span></h5><svg className="drawn" viewBox="0 0 560 168" preserveAspectRatio="none" dangerouslySetInnerHTML={html(uiChart())} /></div>
                 <div style={{ display: 'grid', gap: '12px' }}>
                   <div className="cd2"><h5><span>Trading journal</span><span>This week</span></h5>
-                    <table><tbody><tr><td>RELIANCE · Long</td><td className="m">Plan ✓</td><td className="k">+2.1R</td></tr><tr><td>HDFCBANK · Long</td><td className="m">Plan ✓</td><td className="m">−1.0R</td></tr><tr><td>GOLD · Short</td><td className="m">Plan ✓</td><td className="k">+1.6R</td></tr></tbody></table></div>
+                    <table><tbody><tr><td>Ethereum · Long</td><td className="m">Plan ✓</td><td className="k">+2.1R</td></tr><tr><td>Gold (XAUUSD) · Long</td><td className="m">Plan ✓</td><td className="m">−1.0R</td></tr><tr><td>Bitcoin · Short</td><td className="m">Plan ✓</td><td className="k">+1.6R</td></tr></tbody></table></div>
                   <div className="cd2"><h5><span>Position calculator</span><span>Risk 1%</span></h5>
                     <div className="calc"><div><small>Account</small><b>₹5,00,000</b></div><div><small>Stop distance</small><b>₹118</b></div><div className="res"><small>Position size</small><b>42 units · ₹4,956 at risk</b></div></div></div>
                   <div className="comm"><div className="av"><i></i><i></i><i></i></div>148 students online · 3 new chart reviews</div>
@@ -90,7 +90,7 @@ export default function Platform() {
             <div className="scale-ui pui" style={phoneStyle} role="img" aria-label="TradeBit mobile app with upcoming session, chart, journal stats and community">
               <div className="hd"><b>Today</b><span style={{ color: '#B8D83D' }}>● Live 8:30</span></div>
               <div className="cd2"><small>Up next</small><div style={{ fontSize: '15px', fontWeight: '600', margin: '6px 0 2px' }}>Weekly Outlook — Session 38</div><div style={{ color: 'rgba(243,244,239,.42)' }}>Starts in 02:14:30</div></div>
-              <div className="cd2"><small>NIFTY 50 · 1D</small><svg className="drawn" viewBox="0 0 260 110" dangerouslySetInnerHTML={html(phoneChart())} /></div>
+              <div className="cd2"><small>XAUUSD · 1D</small><svg className="drawn" viewBox="0 0 260 110" dangerouslySetInnerHTML={html(phoneChart())} /></div>
               <div className="cd2"><small>Journal · Plan adherence</small><div className="big">86%</div><div className="row"><span>Trades logged</span><b>34</b></div><div className="row"><span>Avg. planned R</span><b>2.3R</b></div></div>
               <div className="cd2"><small>Community</small><div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}><div className="av"><i></i><i></i><i></i></div><span style={{ color: 'rgba(243,244,239,.62)' }}>148 online</span></div></div>
               <div className="tabs"><span className="on">Home</span><span>Learn</span><span>Journal</span><span>Tools</span></div>

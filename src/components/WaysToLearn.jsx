@@ -32,7 +32,7 @@ function PlaylistPreview() {
   );
 }
 
-// ---- 02 · a real course screenshot when supplied; otherwise a line illustration. Always links to Classplus. ----
+// ---- 02 · a real course screenshot when supplied; otherwise a line illustration. Always links to the course. ----
 function CourseArt() {
   return (
     <svg viewBox="0 0 400 225" fill="none" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
@@ -56,7 +56,7 @@ function CoursePreview() {
   const media = (
     <div className="w-media w-course">
       {LEARN.classplusPreviewUrl
-        ? <img src={LEARN.classplusPreviewUrl} alt="Preview of the complete course on Classplus" loading="lazy" decoding="async" />
+        ? <img src={LEARN.classplusPreviewUrl} alt="Preview of the complete course" loading="lazy" decoding="async" />
         : <CourseArt />}
       <ul className="w-tags" aria-label="What the course includes"><li>Course</li><li>Lectures</li><li>Structured learning</li></ul>
     </div>
@@ -100,7 +100,7 @@ export default function WaysToLearn() {
 
       <div className="wrap">
         <div className="ways-head">
-          <img className="ways-person" src="/mentors/ways.webp" alt="" width="640" height="1026" loading="lazy" decoding="async" />
+          <img className="ways-person" src="/mentors/ways.webp" alt="" width="640" height="866" loading="lazy" decoding="async" />
           <span className="label rv">Ways To Learn</span>
           <h2 id="ways-t" className="h-l split"><span className="ln"><span>Choose The Path</span></span><span className="ln"><span>That Fits <span className="hl">You.</span></span></span></h2>
           <p className="ways-lead rv d1">Choose the learning path that fits you.</p>
@@ -115,7 +115,7 @@ export default function WaysToLearn() {
             <PlaylistPreview />
             <h3>Free Resources</h3>
             <p className="w-head">Learn before you commit.</p>
-            <p className="w-desc">Explore the client's free educational content and trading resources through their YouTube playlist.</p>
+            <p className="w-desc">Explore free educational content and trading resources on our YouTube playlist.</p>
             <a className={`btn btn-dark${freeOn ? '' : ' is-off'}`} href={freeOn ? LEARN.youtubePlaylistUrl : undefined} aria-disabled={!freeOn || undefined} target="_blank" rel="noopener noreferrer">
               Explore Free Resources <Ar />
             </a>
@@ -129,7 +129,7 @@ export default function WaysToLearn() {
             <CoursePreview />
             <h3>Complete Course</h3>
             <p className="w-head">Learn the full framework.</p>
-            <p className="w-desc">Access the client's complete structured trading course through Classplus.</p>
+            <p className="w-desc">Access our complete, structured trading course.</p>
             <a className={`btn btn-pale${courseOn ? '' : ' is-off'}`} href={courseOn ? LEARN.classplusUrl : undefined} aria-disabled={!courseOn || undefined} target="_blank" rel="noopener noreferrer">
               Explore The Course <Ar />
             </a>
@@ -143,7 +143,7 @@ export default function WaysToLearn() {
             <MentorArt />
             <h3>1% Club</h3>
             <p className="w-head">Learn directly with the mentor.</p>
-            <p className="w-desc">Get personalized trading guidance and private 1:1 mentorship managed through Telegram.</p>
+            <p className="w-desc">Get personalized trading guidance and private 1:1 mentorship, directly with the mentor.</p>
             <button type="button" className="btn btn-lime" onClick={apply}>Apply For 1:1 Mentorship <Ar /></button>
           </article>
           </div>

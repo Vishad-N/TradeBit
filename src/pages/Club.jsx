@@ -173,7 +173,7 @@ export default function Club() {
           </div>
           <div className="cl-hero-art rv d2">
             <div className="cl-portrait">
-              <img src="/mentors/ways.webp" alt="Satyendra Kushwaha, founder of TradeBit India" width="640" height="1026" decoding="async" />
+              <img src="/mentors/ways.webp" alt="Satyendra Kushwaha, founder of TradeBit India" width="640" height="866" decoding="async" />
               <div className="cl-chip"><b>Satyendra Kushwaha</b><span>Founder · TradeBit India</span></div>
             </div>
           </div>
@@ -198,19 +198,19 @@ export default function Club() {
         </div>
       </section>
 
-      {/* ---------------- 60 DAYS (dark, rounded slab) ---------------- */}
+      {/* ---------------- 90 DAYS (dark, rounded slab) ---------------- */}
       <section className="cl-days" aria-labelledby="cl-days-t">
         <div className="cl-slab">
           <div className="cl-orbit cl-orbit-sm" data-par="0.05"><Orbit /></div>
           <div className="cl-days-grid">
             <div className="cl-big rv">
-              <b><Counter as="span" to={60} /></b>
+              <b><Counter as="span" to={90} /></b>
               <span>days</span>
             </div>
             <div>
               <span className="label rv">How long to see results?</span>
-              <h2 id="cl-days-t" className="cl-h2 cl-h2-l split"><span className="ln"><span>Real change</span></span><span className="ln"><span>inside <span className="lime">two months.</span></span></span></h2>
-              <p className="cl-lead rv d1">Many members see incredible improvements, and secure funded accounts, within their first 60 days.</p>
+              <h2 id="cl-days-t" className="cl-h2 cl-h2-l split"><span className="ln"><span>Real change</span></span><span className="ln"><span>inside <span className="lime">three months.</span></span></span></h2>
+              <p className="cl-lead rv d1">Many members see incredible improvements, and secure funded accounts, within their first 90 days.</p>
               <p className="cl-lead rv d2">The result follows the commitment: show up, apply the process consistently, and let the edge compound.</p>
             </div>
           </div>
@@ -266,7 +266,7 @@ export default function Club() {
             <h2 id="cl-res-t" className="cl-h2 cl-h2-l split"><span className="ln"><span>What the 1%</span></span><span className="ln"><span>looks like <span className="lime">in numbers.</span></span></span></h2>
           </div>
           <div className="cl-stats">
-            <div className="rv"><b><Counter as="span" to={60} /></b><span>days to real improvement<br />and funded accounts</span></div>
+            <div className="rv"><b><Counter as="span" to={90} /></b><span>days to real improvement<br />and funded accounts</span></div>
             <div className="rv d1"><b><Counter as="span" to={7} suf="+" /></b><span>years of live-market<br />experience behind it</span></div>
             <div className="rv d2"><b>5–7</b><span>figure portfolios<br />scaled by members</span></div>
           </div>
@@ -339,15 +339,57 @@ export default function Club() {
         </div>
       </section>
 
-      {/* ---------------- FINAL CTA ---------------- */}
+      {/* ---------------- FINAL CTA (dark): the headline on the left, the seat on the right ---------------- */}
       <section className="cl-final" aria-labelledby="cl-fin-t">
         <div className="cl-orbit cl-orbit-lg" data-par="0.04"><Orbit /></div>
+
+        {/* A steady staircase of higher highs: what "consistency" looks like on a chart. Draws itself in. */}
+        <svg className="cl-steps rv" viewBox="0 0 1200 300" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="cl-steps-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#B8D83D" stopOpacity=".18" />
+              <stop offset="1" stopColor="#B8D83D" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path className="area" d="M0 270 L120 262 L160 230 L280 238 L320 205 L440 212 L480 176 L600 184 L640 148 L760 156 L800 118 L920 126 L960 86 L1080 94 L1120 56 L1200 48 V300 H0 Z" fill="url(#cl-steps-fill)" />
+          <path className="line" pathLength="1" d="M0 270 L120 262 L160 230 L280 238 L320 205 L440 212 L480 176 L600 184 L640 148 L760 156 L800 118 L920 126 L960 86 L1080 94 L1120 56 L1200 48" fill="none" stroke="#B8D83D" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+          {[[160, 230], [320, 205], [480, 176], [640, 148], [800, 118], [960, 86], [1120, 56]].map(([x, y]) => (
+            <circle key={x} className="dot" cx={x} cy={y} r="5" fill="#151814" stroke="#B8D83D" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+          ))}
+        </svg>
+
         <div className="cl-wrap cl-final-in">
-          <span className="cl-badge rv"><i aria-hidden="true">★</i> The 1% Club</span>
-          <h2 id="cl-fin-t" className="cl-h2 cl-h2-xl split"><span className="ln"><span>Consistency is the</span></span><span className="ln"><span>secret of the <span className="lime">top 1%.</span></span></span></h2>
-          <p className="cl-lead rv d1">They did not find a magic indicator. They found a process, and they never stopped applying it. Your seat is one click away.</p>
-          <div className="rv d2"><JoinButton className="btn btn-lime btn-xl cl-glow">Register Now</JoinButton></div>
-          <Disclaimer tone="dark" className="cl-disclaim" />
+          <div className="cl-final-copy">
+            <span className="cl-badge rv"><i aria-hidden="true">★</i> The 1% Club</span>
+            <h2 id="cl-fin-t" className="cl-h2 split">
+              <span className="ln"><span>Consistency is</span></span>
+              <span className="ln"><span>the secret of</span></span>
+              <span className="ln"><span>the <span className="lime">top 1%.</span></span></span>
+            </h2>
+            <p className="cl-lead rv d1">They did not find a magic indicator. They found a process, and they never stopped applying it. Your seat is one click away.</p>
+            <ul className="cl-proof rv d2">
+              <li><b>7+</b><span>years of live-market<br />experience</span></li>
+              <li><b>90</b><span>day money-back<br />guarantee*</span></li>
+              <li><b>100</b><span>seats only,<br />first come first served</span></li>
+            </ul>
+          </div>
+
+          <aside className="cl-seat rv d2" aria-label="Your seat in the 1% Club">
+            <div className="cl-seat-top">
+              <span className="meta">Your seat</span>
+              <span className="cl-seat-tag">Limited to the first 100 traders</span>
+            </div>
+            <div className="cl-seat-price"><s>$2,000</s><b>$499</b></div>
+            <ul className="cl-seat-list">
+              <li><i><Tick /></i>90-day 100% money-back guarantee*</li>
+              <li><i><Tick /></i>Live sessions and step-by-step modules</li>
+              <li><i><Tick /></i>Order flow, SMC &amp; ICT and risk frameworks</li>
+            </ul>
+            <JoinButton className="btn btn-lime btn-xl cl-glow cl-seat-btn">Register Now</JoinButton>
+            <a className="cl-seat-link" href="#guarantee">*Terms apply. Read the guarantee</a>
+          </aside>
+
+          <Disclaimer tone="dark" className="cl-disclaim cl-final-disc" />
         </div>
       </section>
     </div>

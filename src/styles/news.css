@@ -2,7 +2,7 @@
    Promise -> what we cover -> what moves prices -> the one action (charcoal band). */
 .mn{max-width:var(--max);margin:0 auto;display:grid;gap:clamp(40px,5.5vw,84px)}
 
-.mn-hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(20px,4vw,72px);align-items:end}
+.mn-hero{position:relative;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(20px,4vw,72px);align-items:end}
 .mn-hero .label{grid-column:1 / -1}
 .mn .mn-title{margin:0;font-size:clamp(36px,5.6vw,92px);line-height:.92;text-wrap:balance}
 .mn-intro{display:grid;gap:16px;font-size:clamp(15px,1.3vw,18px);line-height:1.65;color:var(--c-80)}
@@ -56,3 +56,14 @@
   .mn-ticker{font-size:10.5px}
 }
 @media (prefers-reduced-motion:reduce){.mn-catalysts ol li{transition:none}}
+
+/* hero art: sits in the empty top-right, behind the copy */
+.mn-hero>*:not(.mn-wave){position:relative;z-index:1}
+.mn-wave{position:absolute;right:0;top:-20px;width:min(60%,780px);height:auto;max-height:52%;z-index:0;pointer-events:none;overflow:visible}
+.mn-trace{stroke-dasharray:3000;stroke-dashoffset:3000;animation:mnDraw 2.8s var(--ease) .3s forwards}
+.mn-flags{opacity:0;animation:mnFade .8s ease 1.4s forwards}
+.mn-dot{opacity:0;animation:mnFade .5s ease 3s forwards}
+@keyframes mnDraw{to{stroke-dashoffset:0}}
+@keyframes mnFade{to{opacity:1}}
+@media (max-width:899px){.mn-wave{position:relative;order:-1;width:100%;max-height:none;top:0;margin-bottom:6px}}
+@media (prefers-reduced-motion:reduce){.mn-trace{animation:none;stroke-dashoffset:0}.mn-flags,.mn-dot{animation:none;opacity:1}}

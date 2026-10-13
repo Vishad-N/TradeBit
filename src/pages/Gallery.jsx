@@ -228,13 +228,31 @@ export default function Gallery() {
 
   return (
     <section className="gal" aria-labelledby="gal-t">
-      <header className="gal-hero">
-        <span className="label">The 1% Club Lifestyle</span>
-        <h1 id="gal-t" className="h-l gal-title">
-          <span className="gal-t1">Dubai wasn't built on average mindsets.</span>
-          <span className="gal-t2">The 1% Club isn't either.</span>
-          <span className="gal-t3"><span className="hl">Elevate your vision.</span></span>
-        </h1>
+      <header className="gal-top">
+        {/* Line art that ties the headline to the photo and carries the eye down into the gallery. */}
+        <svg className="gal-link" viewBox="0 0 1200 760" preserveAspectRatio="none" aria-hidden="true">
+          <g fill="none" stroke="#151814" strokeOpacity=".1">
+            <circle cx="930" cy="330" r="250" vectorEffect="non-scaling-stroke" />
+            <circle cx="930" cy="330" r="330" vectorEffect="non-scaling-stroke" />
+            <circle cx="930" cy="330" r="410" vectorEffect="non-scaling-stroke" />
+          </g>
+          <path className="gl-line" d="M70 612 H560 C690 612 700 470 760 470" fill="none" stroke="#B8D83D" strokeWidth="2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          <circle className="gl-node" cx="760" cy="470" r="6" fill="#151814" stroke="#B8D83D" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+          <path className="gl-drop" d="M930 700 V760" fill="none" stroke="#151814" strokeOpacity=".5" strokeDasharray="3 7" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+        </svg>
+
+        <div className="gal-hero">
+          <span className="label">The 1% Club Lifestyle</span>
+          <h1 id="gal-t" className="h-l gal-title">
+            <span className="gal-t1">Dubai wasn't built on average mindsets.</span>
+            <span className="gal-t2">The 1% Club isn't either.</span>
+            <span className="gal-t3"><span className="hl">Elevate your vision.</span></span>
+          </h1>
+        </div>
+
+        <figure className="gal-burj">
+          <img src="/gallery/burj-khalifa.webp" alt="The Burj Khalifa rising into the night sky, Dubai" width="800" height="1200" decoding="async" />
+        </figure>
       </header>
       <p className="gal-hint meta">{narrow ? 'Tap a photo to open it · swipe to browse' : 'Drag to explore · click a photo to open it · Esc to close'}</p>
 

@@ -22,6 +22,25 @@ export default function MarketNews() {
     <div className="mn">
       {/* HERO: one promise, one supporting paragraph */}
       <section className="mn-hero" aria-labelledby="mn-t">
+        {/* A volatility trace: a calm line that spikes on three market-moving events, then settles into a trend. */}
+        <svg className="mn-wave" viewBox="0 0 640 260" preserveAspectRatio="xMaxYMid meet" aria-hidden="true">
+          <g fill="none" stroke="#151814" strokeOpacity=".09">
+            <circle cx="540" cy="110" r="70" />
+            <circle cx="540" cy="110" r="120" />
+            <circle cx="540" cy="110" r="170" />
+          </g>
+          <g stroke="#151814" strokeOpacity=".12" strokeDasharray="3 7">
+            <line x1="0" y1="130" x2="640" y2="130" />
+          </g>
+          {/* event flags */}
+          <g className="mn-flags" fontFamily="Space Grotesk, system-ui, sans-serif" fontSize="10" fontWeight="600" letterSpacing="1.2">
+            <g><line x1="150" y1="40" x2="150" y2="226" stroke="#151814" strokeOpacity=".28" strokeDasharray="2 5" /><rect x="150" y="26" width="108" height="22" rx="11" fill="#F3F4EF" stroke="#151814" /><text x="163" y="41" fill="#151814">RATE DECISION</text></g>
+            <g><line x1="330" y1="60" x2="330" y2="226" stroke="#151814" strokeOpacity=".28" strokeDasharray="2 5" /><rect x="330" y="46" width="84" height="22" rx="11" fill="#F3F4EF" stroke="#151814" /><text x="343" y="61" fill="#151814">EARNINGS</text></g>
+            <g><line x1="470" y1="30" x2="470" y2="226" stroke="#151814" strokeOpacity=".28" strokeDasharray="2 5" /><rect x="470" y="16" width="80" height="22" rx="11" fill="#B8D83D" stroke="#151814" /><text x="483" y="31" fill="#151814">BREAKING</text></g>
+          </g>
+          <path className="mn-trace" d="M0 150 L40 146 L70 152 L100 140 L130 144 L150 70 L162 200 L178 120 L196 168 L224 136 L260 148 L300 138 L322 142 L330 96 L342 188 L358 124 L384 150 L420 134 L452 140 L470 40 L482 208 L498 96 L520 150 L548 112 L580 96 L612 70 L640 52" fill="none" stroke="#151814" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+          <circle className="mn-dot" cx="640" cy="52" r="6" fill="#B8D83D" stroke="#151814" strokeWidth="2" />
+        </svg>
         <span className="label">Market News</span>
         <h1 id="mn-t" className="h-l mn-title">Master the market moves <span className="hl">before they happen.</span></h1>
         <div className="mn-intro">

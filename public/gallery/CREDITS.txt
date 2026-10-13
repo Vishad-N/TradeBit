@@ -1,3 +1,5 @@
 Placeholder gallery photos of Dubai, from Unsplash (https://unsplash.com), used under the Unsplash License
 (free to use, no attribution required). They are shown only until real images are uploaded in
 Admin -> Gallery. Replace or remove them once you have your own photos.
+
+burj-khalifa.webp: Unsplash photo "Burj Khalifa skyscraper in Dubai" (unsplash.com/photos/XFEJPXUqbYc), Unsplash License.
