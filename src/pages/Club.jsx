@@ -74,6 +74,49 @@ const DIFFERENT = [
   'A high-performance community that raises your standard',
 ];
 
+const SHIELD = (
+  <svg viewBox="0 0 48 56" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M24 3 6 10v14c0 14 8 24 18 29 10-5 18-15 18-29V10z" />
+    <path d="m16 28 6 6 11-13" />
+  </svg>
+);
+
+// How to qualify, in the order the guarantee describes it.
+const QUALIFY = [
+  { n: '01', t: 'Join the 1% Club', d: 'Enrol in the mentorship programme.' },
+  { n: '02', t: 'Complete the modules', d: 'Work through the step-by-step training modules.' },
+  { n: '03', t: 'Attend the live sessions', d: 'Be there for the live sessions, not just the recordings.' },
+  { n: '04', t: 'Apply the risk rules', d: 'Strictly apply the core risk-management rules.' },
+];
+
+const MASTER = [
+  { t: 'Institutional order flow, price action, SMC & ICT', d: 'Move away from retail indicators. Learn how big banks and institutions move the markets.' },
+  { t: 'Advanced risk mitigation frameworks', d: 'The exact mathematical formulas used to ensure a single bad day never wipes out your trading account.' },
+  { t: 'High-probability setup architecture', d: 'Spot, track and execute trades with a high risk-to-reward ratio: minimum 1:2 or 1:3.' },
+  { t: 'The 1% psychology matrix', d: 'Master emotional control, beat FOMO (fear of missing out) and eliminate revenge trading for good.' },
+];
+
+const TERMS = [
+  { t: 'Mandatory active participation', items: [
+    'Traders must remain actively engaged throughout the entire 3-month (90 days) mentorship period.',
+    'All educational live sessions, webinars and recorded modules provided under the free education framework must be completed.',
+  ] },
+  { t: 'Strict trade replication (execution policy)', items: [
+    "The money-back guarantee is applicable only if you execute the exact trades provided directly by the mentor.",
+    'Traders must copy the exact entry price, stop loss (SL) and target points as instructed.',
+    "Zero personal modification: taking independent trades outside the mentor's recommendations, altering the stop loss, or closing a position early without the mentor's explicit update will immediately void the money-back guarantee.",
+  ] },
+  { t: 'Trade attendance & accountability', items: [
+    "The mentor will provide trade setups based on their account execution. If a trader fails to execute or misses a trade provided by the mentor, it will be considered the trader's sole responsibility.",
+    'To qualify for a refund, the trader must have executed at least 90% of the total official trades broadcasted in the club during the 3-month period.',
+  ] },
+  { t: 'Verification & refund process', items: [
+    "To claim a 100% refund after 3 months, the trader must submit a verified P&L ledger/statement (their respective broker link) covering the entire 90-day period.",
+    "The refund will be processed only if the verified ledger proves a net loss while strictly maintaining the same risk management and trades as the mentor.",
+    'Any signs of over-leveraging, changing lot sizes against instructions, or trading personal setups will result in the immediate rejection of the refund claim.',
+  ] },
+];
+
 const Tick = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 8.500l3.200 3L13 4.500" /></svg>;
 
 export default function Club() {
@@ -124,6 +167,9 @@ export default function Club() {
               <JoinButton className="btn btn-lime btn-xl cl-glow">Register Now</JoinButton>
               <a className="cl-ghost" href="#what">What is the 1% Club?</a>
             </div>
+            <p className="cl-guar-line rv d3">
+              <span aria-hidden="true">🛡️</span> 90-day 100% money-back guarantee <a href="#guarantee">See the terms</a>
+            </p>
           </div>
           <div className="cl-hero-art rv d2">
             <div className="cl-portrait">
@@ -224,6 +270,72 @@ export default function Club() {
             <div className="rv d1"><b><Counter as="span" to={7} suf="+" /></b><span>years of live-market<br />experience behind it</span></div>
             <div className="rv d2"><b>5–7</b><span>figure portfolios<br />scaled by members</span></div>
           </div>
+        </div>
+      </section>
+
+      {/* ---------------- MONEY-BACK GUARANTEE (light) ---------------- */}
+      <section className="cl-guar" id="guarantee" aria-labelledby="cl-g-t">
+        <div className="cl-wrap">
+          <div className="cl-g-top">
+            <div className="cl-g-head">
+              <span className="cl-g-shield rv" aria-hidden="true">{SHIELD}</span>
+              <span className="label rv">Risk-free</span>
+              <h2 id="cl-g-t" className="cl-h2 split"><span className="ln"><span>Our iron‑clad 90‑day</span></span><span className="ln"><span><span className="cl-mark">100% money‑back</span></span></span><span className="ln"><span>guarantee.</span></span></h2>
+              <p className="cl-g-lead rv d1">We do not want your money if we cannot deliver real financial transformation to your trading account. We are putting our own capital and reputation on the line.</p>
+            </div>
+
+            <aside className="cl-g-price rv d2" aria-label="Offer">
+              <span className="meta">Learn the secret strategies of the top 1% traders</span>
+              <div className="cl-g-amt"><s>$2,000</s><b>$499</b></div>
+              <p>Originally $2,000, now just $499. 100% money-back guarantee included.</p>
+              <JoinButton className="btn btn-lime cl-g-btn">Secure your risk-free spot</JoinButton>
+              <small>Limited to the first 100 traders, due to high demand and live server capacity.</small>
+            </aside>
+          </div>
+
+          <div className="cl-g-promise rv">
+            <h3>Here is our promise</h3>
+            <ol className="cl-g-steps">
+              {QUALIFY.map(s => (
+                <li key={s.n}><span aria-hidden="true">{s.n}</span><b>{s.t}</b><p>{s.d}</p></li>
+              ))}
+            </ol>
+            <p className="cl-g-clause">
+              If you follow our exact framework and fail to become a net-profitable trader within 3 months, we will refund <strong>100% of your $499</strong>.
+              No friction. No hidden excuses. If you don't make money, we don't keep yours.
+            </p>
+            <p className="cl-g-ast">* Terms &amp; conditions apply. The guarantee is valid only for active students who attend the sessions, follow the mandated risk-management rules and provide a verified broker P&amp;L ledger showing executed trades that correspond to the taught strategies. <a href="#guarantee-terms">Read the full terms</a></p>
+          </div>
+
+          <div className="cl-g-master">
+            <h3 className="rv">What you will master inside the 1% Club</h3>
+            <ul>
+              {MASTER.map((m, i) => (
+                <li key={m.t} className={`rv d${i % 4}`}><i aria-hidden="true"><Tick /></i><b>{m.t}</b><p>{m.d}</p></li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="cl-g-close rv">
+            <p>You either emerge as a highly skilled, profitable trader, or you get your money back. <strong>You have absolute zero risk.</strong></p>
+            <JoinButton className="btn btn-dark">Secure your risk-free spot for $499</JoinButton>
+          </div>
+
+          <details className="cl-g-terms" id="guarantee-terms">
+            <summary><span>Terms &amp; conditions: 1% Club money-back guarantee</span><i aria-hidden="true">+</i></summary>
+            <div className="cl-g-terms-in">
+              <p>By enrolling in the 1% Club mentorship programme at TradeBit India, you agree to the following terms regarding our 90-day 100% money-back guarantee.</p>
+              <ol>
+                {TERMS.map((t, i) => (
+                  <li key={t.t}>
+                    <h4><span>{String(i + 1).padStart(2, '0')}</span>{t.t}</h4>
+                    <ul>{t.items.map(x => <li key={x}>{x}</li>)}</ul>
+                  </li>
+                ))}
+              </ol>
+              <p className="cl-g-note"><strong>Note:</strong> the refund guarantee is strictly valid only for active traders who replicate our exact trades, stop-losses and instructions. Independent trading during the mentorship voids the guarantee.</p>
+            </div>
+          </details>
         </div>
       </section>
 

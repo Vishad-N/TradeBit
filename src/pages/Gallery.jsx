@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import LiquidGlassCarousel from '../components/LiquidGlassCarousel.tsx';
+import Disclaimer from '../components/Disclaimer.jsx';
 import { prefersReducedMotion } from '../hooks/motion.js';
 import { API_URL } from '../services/api.js';
 import '../styles/gallery.css';
@@ -37,79 +39,175 @@ function useGalleryImages() {
   return state;
 }
 
-// Phone layout: the WebGL glass carousel is a poor fit for a small touch screen, so phones get a native one.
-// A featured photo, then a two-column grid whose second column is nudged down; tapping opens a swipeable viewer.
-function PhoneGallery({ items }) {
-  const [open, setOpen] = useState(null); // index of the photo in the viewer, or null
+// Full-screen viewer shared by the phone grid and the no-WebGL strip: swipe / arrows / Esc, page scroll locked.
+function PhotoViewer({ items, index, onClose, onStep }) {
   const touch = useRef(null);
   const n = items.length;
 
-  const step = useCallback(d => setOpen(i => (i === null ? i : (i + d + n) % n)), [n]);
-
   useEffect(() => {
-    if (open === null) return;
     const onKey = e => {
-      if (e.key === 'Escape') setOpen(null);
-      if (e.key === 'ArrowRight') step(1);
-      if (e.key === 'ArrowLeft') step(-1);
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') onStep(1);
+      if (e.key === 'ArrowLeft') onStep(-1);
     };
     window.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden'; // the page behind the viewer must not scroll
     return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
-  }, [open, step]);
+  }, [onClose, onStep]);
 
+  return (
+    <div
+      className="gp-view"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Photo viewer"
+      onClick={e => e.target === e.currentTarget && onClose()}
+      onTouchStart={e => { touch.current = e.touches[0].clientX; }}
+      onTouchEnd={e => {
+        if (touch.current === null) return;
+        const dx = e.changedTouches[0].clientX - touch.current;
+        touch.current = null;
+        if (Math.abs(dx) > 50) onStep(dx < 0 ? 1 : -1);
+      }}
+    >
+      <button type="button" className="gp-x" aria-label="Close viewer" onClick={onClose}>✕</button>
+      <img key={items[index].src} src={items[index].src} alt={items[index].alt} />
+      <div className="gp-nav">
+        <button type="button" aria-label="Previous photo" onClick={() => onStep(-1)}>←</button>
+        <span>{index + 1} / {n}</span>
+        <button type="button" aria-label="Next photo" onClick={() => onStep(1)}>→</button>
+      </div>
+    </div>
+  );
+}
+
+// Viewer state in one place: which photo is open, and how to step through them.
+function useViewer(n) {
+  const [open, setOpen] = useState(null);
+  const step = useCallback(d => setOpen(i => (i === null ? i : (i + d + n) % n)), [n]);
+  const close = useCallback(() => setOpen(null), []);
+  return { open, setOpen, step, close };
+}
+
+// Phone layout: the WebGL glass carousel is a poor fit for a small touch screen, so phones get a native one.
+// A featured photo, then a two-column grid whose second column is nudged down; tapping opens a swipeable viewer.
+function PhoneGallery({ items }) {
+  const v = useViewer(items.length);
   const [feature, ...rest] = items;
   return (
     <>
       <div className="gp">
         {feature && (
-          <button type="button" className="gp-item gp-feature" onClick={() => setOpen(0)} aria-label="Open photo 1">
+          <button type="button" className="gp-item gp-feature" onClick={() => v.setOpen(0)} aria-label="Open photo 1">
             <img src={feature.src} alt={feature.alt} />
             <span className="gp-tag">01</span>
           </button>
         )}
         <div className="gp-grid">
           {rest.map((it, i) => (
-            <button key={it.src} type="button" className="gp-item" onClick={() => setOpen(i + 1)} aria-label={`Open photo ${i + 2}`}>
+            <button key={it.src} type="button" className="gp-item" onClick={() => v.setOpen(i + 1)} aria-label={`Open photo ${i + 2}`}>
               <img src={it.src} alt={it.alt} loading="lazy" decoding="async" />
               <span className="gp-tag">{String(i + 2).padStart(2, '0')}</span>
             </button>
           ))}
         </div>
       </div>
-
-      {open !== null && (
-        <div
-          className="gp-view"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Photo viewer"
-          onClick={e => e.target === e.currentTarget && setOpen(null)}
-          onTouchStart={e => { touch.current = e.touches[0].clientX; }}
-          onTouchEnd={e => {
-            if (touch.current === null) return;
-            const dx = e.changedTouches[0].clientX - touch.current;
-            touch.current = null;
-            if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1);
-          }}
-        >
-          <button type="button" className="gp-x" aria-label="Close viewer" onClick={() => setOpen(null)}>✕</button>
-          <img key={items[open].src} src={items[open].src} alt={items[open].alt} />
-          <div className="gp-nav">
-            <button type="button" aria-label="Previous photo" onClick={() => step(-1)}>←</button>
-            <span>{open + 1} / {n}</span>
-            <button type="button" aria-label="Next photo" onClick={() => step(1)}>→</button>
-          </div>
-        </div>
-      )}
+      {v.open !== null && <PhotoViewer items={items} index={v.open} onClose={v.close} onStep={v.step} />}
     </>
+  );
+}
+
+// Desktop fallback when the browser has WebGL switched off: the same curved path (photos rise into view from the
+// right and sink away on the left) built from plain CSS transforms, so it needs no GPU context. Drag or use the
+// arrows; click a photo to open it.
+function CurvedStrip({ items }) {
+  const scroller = useRef(null);
+  const cards = useRef([]);
+  const v = useViewer(items.length);
+  const drag = useRef(null);
+  const moved = useRef(false);
+
+  // Place every card on the curve from its distance to the middle of the strip.
+  const place = useCallback(() => {
+    const el = scroller.current;
+    if (!el) return;
+    const mid = el.getBoundingClientRect().left + el.clientWidth / 2;
+    const half = el.clientWidth / 2;
+    cards.current.forEach(c => {
+      if (!c) return;
+      const r = c.getBoundingClientRect();
+      const d = Math.max(-1.4, Math.min(1.4, (r.left + r.width / 2 - mid) / half));
+      const a = Math.abs(d);
+      const y = -Math.sign(d) * Math.pow(a, 2.2) * 150; // right side up, left side down
+      c.style.transform = `translateY(${y.toFixed(1)}px) rotate(${(d * 5).toFixed(2)}deg) scale(${(1 - a * 0.07).toFixed(3)})`;
+    });
+  }, []);
+
+  useEffect(() => {
+    place();
+    let raf = 0;
+    const tick = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(place); };
+    const el = scroller.current;
+    el.addEventListener('scroll', tick, { passive: true });
+    window.addEventListener('resize', tick);
+    return () => { el.removeEventListener('scroll', tick); window.removeEventListener('resize', tick); cancelAnimationFrame(raf); };
+  }, [place, items]);
+
+  const by = dir => scroller.current?.scrollBy({ left: dir * 340, behavior: 'smooth' });
+
+  return (
+    <div className="gs">
+      {/* A glass lens drawn without WebGL: an SVG turbulence filter bends whatever scrolls beneath it. */}
+      <svg className="gs-defs" width="0" height="0" aria-hidden="true" focusable="false">
+        <defs>
+          <filter id="gs-glass" x="-20%" y="-20%" width="140%" height="140%" colorInterpolationFilters="sRGB">
+            <feTurbulence type="fractalNoise" baseFrequency="0.0035 0.007" numOctaves="1" seed="11" result="noise" />
+            <feGaussianBlur in="noise" stdDeviation="10" result="soft" />
+            <feDisplacementMap in="SourceGraphic" in2="soft" scale="44" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </defs>
+      </svg>
+      <div className="gs-stage">
+      <div
+        className="gs-scroll"
+        ref={scroller}
+        onPointerDown={e => { if (e.pointerType === 'mouse') { drag.current = { x: e.clientX, left: scroller.current.scrollLeft }; moved.current = false; } }}
+        onPointerMove={e => {
+          if (!drag.current) return;
+          const dx = e.clientX - drag.current.x;
+          if (Math.abs(dx) > 4) moved.current = true;
+          scroller.current.scrollLeft = drag.current.left - dx;
+        }}
+        onPointerUp={() => { drag.current = null; }}
+        onPointerLeave={() => { drag.current = null; }}
+      >
+        <ul className="gs-track">
+          {items.map((it, i) => (
+            <li key={it.src} ref={el => { cards.current[i] = el; }}>
+              <button type="button" onClick={() => { if (!moved.current) v.setOpen(i); }} aria-label={`Open photo ${i + 1}`}>
+                <img src={it.src} alt={it.alt} draggable="false" loading="lazy" decoding="async" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="gs-lens" aria-hidden="true" />
+      </div>
+      <div className="gal-ctrl">
+        <button type="button" className="gal-btn" onClick={() => by(-1)} aria-label="Scroll left">←</button>
+        <span className="gal-count meta">{items.length} photos</span>
+        <button type="button" className="gal-btn" onClick={() => by(1)} aria-label="Scroll right">→</button>
+      </div>
+      {v.open !== null && <PhotoViewer items={items} index={v.open} onClose={v.close} onStep={v.step} />}
+    </div>
   );
 }
 
 export default function Gallery() {
   const { loading, images, min } = useGalleryImages();
   const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0); // bumping this remounts the carousel (a fresh WebGL context)
   const carousel = useRef(null);
   const reduce = useMemo(() => prefersReducedMotion(), []);
 
@@ -130,19 +228,33 @@ export default function Gallery() {
 
   return (
     <section className="gal" aria-labelledby="gal-t">
-      <span className="label">Gallery</span>
-      <h1 id="gal-t" className="h-l gal-title">Moments &amp; Places</h1>
-      <p className="gal-lead">{narrow ? 'Tap a photo to open it, then swipe to browse.' : 'Drag to explore. Click a photo to open it, and click again (or press Esc) to close.'}</p>
+      <header className="gal-hero">
+        <span className="label">The 1% Club Lifestyle</span>
+        <h1 id="gal-t" className="h-l gal-title">
+          <span className="gal-t1">Dubai wasn't built on average mindsets.</span>
+          <span className="gal-t2">The 1% Club isn't either.</span>
+          <span className="gal-t3"><span className="hl">Elevate your vision.</span></span>
+        </h1>
+      </header>
+      <p className="gal-hint meta">{narrow ? 'Tap a photo to open it · swipe to browse' : 'Drag to explore · click a photo to open it · Esc to close'}</p>
 
-      <div className={`gal-stage${narrow ? ' is-phone' : ''}`}>
+      <div className={`gal-stage${narrow ? ' is-phone' : ''}${failed && !narrow ? ' is-fallback' : ''}`}>
         {loading ? (
           <div className="gal-loading" aria-hidden="true" />
         ) : narrow ? (
           <PhoneGallery items={items} />
         ) : failed ? (
-          <ul className="gal-grid">
-            {items.map(i => <li key={i.src}><img src={i.src} alt={i.alt} loading="lazy" /></li>)}
-          </ul>
+          <>
+            <CurvedStrip items={items} />
+            <p className="gal-gpu-note" role="status">
+              <strong>The glass effect needs hardware acceleration, and this browser has it turned off.</strong>{' '}
+              Turn on &ldquo;Use graphics acceleration when available&rdquo; in your browser&rsquo;s System settings, restart the
+              browser, then reload this page. You can check with <a href="https://get.webgl.org" target="_blank" rel="noopener noreferrer">get.webgl.org</a>.
+            </p>
+            <button type="button" className="gal-retry" onClick={() => { setFailed(false); setAttempt(a => a + 1); }}>
+              Try the glass effect again
+            </button>
+          </>
         ) : (
           <LiquidGlassCarousel
             ref={carousel}
@@ -157,7 +269,12 @@ export default function Gallery() {
             entry={{ enabled: !reduce, enterFrom: 'alternate' }}
             interaction={{ wheel: false, drag: true, clickToFocus: true }}
             curve={narrow ? 0.22 : 0.3}
-            onError={() => setFailed(true)}
+            key={attempt}
+            onError={() => {
+              // One automatic retry (a context freed a moment ago may be available now) before falling back to the grid.
+              if (attempt < 1) setTimeout(() => setAttempt(a => a + 1), 500);
+              else setFailed(true);
+            }}
           />
         )}
       </div>
@@ -169,6 +286,34 @@ export default function Gallery() {
           <button type="button" className="gal-btn" onClick={() => carousel.current?.step(1)} aria-label="Next photo">→</button>
         </div>
       )}
+
+      {/* The story behind the photos, then the one action */}
+      <section className="gal-story" aria-labelledby="gal-story-t">
+        <div className="gal-story-head">
+          <span className="label">From dream to reality</span>
+          <h2 id="gal-story-t" className="h-m">This is the 1% Club lifestyle.</h2>
+        </div>
+        <div className="gal-story-body">
+          <p>
+            What you see here isn't just a collection of dream lifestyle pictures. It is the ultimate proof of what <b>high-probability
+            trading</b> can build. From the skylines of Dubai to global horizons, these moments represent <b>freedom, consistency, and a
+            vision achieved.</b>
+          </p>
+          <p className="gal-pull">I didn't start at the top, but master-level discipline got me here.</p>
+          <p>
+            At Trade Bit India, we don't just teach you how to analyze charts. We train you to completely rewrite your future. Take a look
+            at what is possible when you stop gambling and start trading like a pro.
+          </p>
+        </div>
+      </section>
+
+      <section className="gal-cta" aria-labelledby="gal-cta-t">
+        <div className="gal-cta-rings" aria-hidden="true"><i /><i /><i /></div>
+        <h2 id="gal-cta-t" className="gal-cta-title">Your seat in the <span className="lime">1% Club</span> is waiting.</h2>
+        <Link to="/1-percent-club" className="btn btn-lime">Claim Your Seat <span className="ar">→</span></Link>
+      </section>
+
+      <Disclaimer className="gal-disclaimer" />
 
       {/* The canvas is not readable by assistive tech, so the photos are also listed here. */}
       <ul className="sr-only">

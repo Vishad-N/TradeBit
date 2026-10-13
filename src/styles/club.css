@@ -132,3 +132,89 @@
 
 .cl-hero-grid>*,.cl-two>*,.cl-who-grid>*,.cl-days-grid>*{min-width:0}
 @media (max-width:620px){.cl-hero .btn-xl{width:100%;justify-content:center}.cl-hero h1{font-size:clamp(34px,10.5vw,52px)}}
+
+
+/* ---------- Money-back guarantee ----------
+   Light section between the dark results and the dark final call: claim -> offer -> how to qualify -> what you get
+   -> the terms, kept visible right under the promise instead of buried. */
+.cl-guar-line{margin-top:20px;font-size:13px;color:var(--cs)}
+.cl-guar-line a{margin-left:8px;color:#B8D83D;border-bottom:1px solid rgba(184,216,61,.5)}
+
+.cl-guar{padding:clamp(70px,9vw,130px) 0;background:var(--cl);color:var(--cd)}
+.cl-g-top{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:clamp(24px,4vw,72px);align-items:start}
+.cl-g-shield{display:grid;place-items:center;width:64px;height:72px;margin-bottom:18px;color:var(--cd)}
+.cl-g-shield svg{width:100%;height:100%}
+.cl-guar .cl-h2{font-size:clamp(30px,4vw,62px)}
+.cl-mark{background:linear-gradient(transparent 60%,#B8D83D 60%);padding:0 .06em}
+.cl-g-lead{max-width:540px;margin-top:20px;font-size:clamp(16px,1.4vw,19px);line-height:1.6;color:rgba(21,24,20,.72)}
+
+.cl-g-price{background:var(--cd);color:var(--cl);border-radius:28px 72px 28px 28px;padding:clamp(24px,3vw,40px);display:grid;gap:14px;position:relative;overflow:hidden}
+.cl-g-price::before{content:"";position:absolute;right:-60px;top:-60px;width:220px;aspect-ratio:1;border-radius:50%;border:1px solid rgba(220,232,192,.14);box-shadow:0 0 0 36px rgba(220,232,192,.04)}
+.cl-g-price>*{position:relative}
+.cl-g-price .meta{color:rgba(243,244,239,.6)}
+.cl-g-amt{display:flex;align-items:baseline;gap:16px}
+.cl-g-amt s{font-size:clamp(20px,2vw,28px);color:rgba(243,244,239,.45);text-decoration-thickness:2px}
+.cl-g-amt b{font-size:clamp(56px,6vw,92px);font-weight:500;letter-spacing:-.05em;line-height:.9;color:#B8D83D}
+.cl-g-price p{font-size:15px;color:rgba(243,244,239,.78)}
+.cl-g-btn{justify-self:start;margin-top:4px}
+.cl-g-price small{font-size:12px;line-height:1.5;color:rgba(243,244,239,.55)}
+
+.cl-g-promise{margin-top:clamp(40px,5vw,72px);padding:clamp(22px,3vw,44px);background:rgba(220,232,192,.45);border-radius:28px}
+.cl-g-promise h3{font-size:clamp(20px,2vw,28px);font-weight:500;letter-spacing:-.02em}
+.cl-g-steps{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.6vw,22px);margin-top:22px}
+.cl-g-steps li{padding:18px 18px 20px;background:var(--cl);border-radius:20px;border:1px solid rgba(21,24,20,.1)}
+.cl-g-steps li>span{display:block;font-size:34px;font-weight:500;letter-spacing:-.05em;line-height:.9;color:transparent;-webkit-text-stroke:1px rgba(21,24,20,.45)}
+.cl-g-steps b{display:block;margin-top:12px;font-size:15px;font-weight:600;line-height:1.3}
+.cl-g-steps p{margin-top:6px;font-size:13.5px;line-height:1.5;color:rgba(21,24,20,.66)}
+.cl-g-clause{margin-top:24px;max-width:860px;font-size:clamp(17px,1.6vw,22px);font-weight:500;letter-spacing:-.015em;line-height:1.4}
+.cl-g-clause strong{font-weight:600;background:linear-gradient(transparent 62%,#B8D83D 62%)}
+.cl-g-ast{margin-top:16px;max-width:860px;font-size:12.5px;line-height:1.6;color:rgba(21,24,20,.7)}
+.cl-g-ast a{border-bottom:1px solid #B8D83D;font-weight:600;white-space:nowrap}
+
+.cl-g-master{margin-top:clamp(40px,5vw,72px)}
+.cl-g-master h3{font-size:clamp(22px,2.4vw,34px);font-weight:500;letter-spacing:-.025em;text-transform:uppercase}
+.cl-g-master ul{list-style:none;margin-top:22px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,1.6vw,22px)}
+.cl-g-master li{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;padding:clamp(18px,2vw,26px);border:1px solid rgba(21,24,20,.12);border-radius:22px}
+.cl-g-master li i{grid-row:1 / span 2;width:34px;height:34px;border-radius:50%;background:#B8D83D;color:var(--cd);display:grid;place-items:center}
+.cl-g-master li i svg{width:16px;height:16px}
+.cl-g-master li b{font-size:clamp(16px,1.35vw,19px);font-weight:600;letter-spacing:-.01em;line-height:1.3;align-self:end}
+.cl-g-master li p{font-size:14.5px;line-height:1.55;color:rgba(21,24,20,.68)}
+
+.cl-g-close{margin-top:clamp(36px,4.5vw,60px);display:flex;align-items:center;justify-content:space-between;gap:20px 40px;flex-wrap:wrap}
+.cl-g-close p{max-width:660px;font-size:clamp(20px,2.2vw,32px);font-weight:500;letter-spacing:-.025em;line-height:1.2}
+.cl-g-close strong{font-weight:500;color:#5d6f12}
+
+.cl-g-terms{margin-top:clamp(36px,4.5vw,60px);border:1px solid rgba(21,24,20,.16);border-radius:22px;background:var(--cl)}
+.cl-g-terms summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+.cl-g-terms summary::-webkit-details-marker{display:none}
+.cl-g-terms summary i{font-style:normal;font-size:22px;line-height:1;transition:transform .4s var(--ease)}
+.cl-g-terms[open] summary i{transform:rotate(45deg)}
+.cl-g-terms-in{padding:0 24px 26px;display:grid;gap:18px;font-size:14.5px;line-height:1.65;color:rgba(21,24,20,.8)}
+.cl-g-terms-in>ol{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 32px}
+.cl-g-terms-in h4{display:flex;gap:10px;align-items:baseline;font-size:15px;font-weight:600;color:var(--cd)}
+.cl-g-terms-in h4 span{font-size:12px;letter-spacing:.14em;color:#5d6f12}
+.cl-g-terms-in ul{margin:8px 0 0;padding-left:18px;display:grid;gap:6px;list-style:disc}
+.cl-g-note{padding:14px 16px;border-left:3px solid #B8D83D;background:rgba(220,232,192,.45);border-radius:0 14px 14px 0}
+
+@media (max-width:999px){
+  .cl-g-top{grid-template-columns:1fr}
+  .cl-g-steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:640px){
+  .cl-g-steps,.cl-g-master ul,.cl-g-terms-in>ol{grid-template-columns:1fr}
+  .cl-g-close{flex-direction:column;align-items:flex-start}
+}
+@media (prefers-reduced-motion:reduce){.cl-g-terms summary i{transition:none}}
+
+/* the closing line and button must never push past the screen edge on phones */
+.cl-g-close>*{min-width:0;max-width:100%}
+@media (max-width:640px){
+  .cl-g-close p{font-size:clamp(19px,5.6vw,26px)}
+  .cl-g-close .btn{width:100%;justify-content:space-between;white-space:normal;text-align:left}
+}
+.cl-g-price>*{min-width:0;max-width:100%}
+.cl-g-btn{white-space:normal;text-align:left}
+@media (max-width:420px){
+  .cl-g-price{padding:22px 18px}
+  .cl-g-btn{width:100%;justify-self:stretch;justify-content:space-between}
+}

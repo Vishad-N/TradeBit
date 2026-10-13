@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 // Shown prices. The payment page reads the live fee from the backend (MENTORSHIP_PRICE_USDT); keep the two in step.
 const PRICE_NOW = 499;
-const PRICE_WAS = 1999;
+const PRICE_WAS = 2000;
 const SAVE_PERCENT = Math.round((1 - PRICE_NOW / PRICE_WAS) * 100);
 
 const INCLUDES = [

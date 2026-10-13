@@ -539,6 +539,50 @@ interface PanelRect {
     centerX: number
 }
 
+// Whether the browser can give us a WebGL context at all (hardware acceleration off, GPU blocklisted, etc.).
+function hasWebGL(): boolean {
+    try {
+        const c = document.createElement("canvas")
+        const gl = (c.getContext("webgl2") || c.getContext("webgl")) as WebGLRenderingContext | null
+        if (!gl) return false
+        gl.getExtension("WEBGL_lose_context")?.loseContext() // do not leave the probe context alive
+        return true
+    } catch {
+        return false
+    }
+}
+
+// A stand-in for THREE.WebGLRenderer that only owns a 2D canvas. The engine's layout, motion and timelines are
+// unchanged; the pictures are painted and the lens is computed on the CPU in softPaint() instead of on the GPU.
+function makeSoftRenderer() {
+    const canvas = document.createElement("canvas")
+    return {
+        domElement: canvas,
+        capabilities: { getMaxAnisotropy: () => 1 },
+        setPixelRatio() {},
+        getPixelRatio: () => 1,
+        setSize(w: number, h: number) {
+            canvas.width = w
+            canvas.height = h
+            canvas.style.width = `${w}px`
+            canvas.style.height = `${h}px`
+        },
+        setClearColor() {},
+        compile() {},
+        initTexture() {},
+        setRenderTarget() {},
+        clear() {},
+        render() {},
+        dispose() {},
+        forceContextLoss() {},
+    }
+}
+
+const smoothstep = (e0: number, e1: number, x: number) => {
+    const t = clamp01((x - e0) / (e1 - e0))
+    return t * t * (3 - 2 * t)
+}
+
 function createEngine(mount: HTMLElement, getParams: () => Params) {
     let pp = getParams()
     let disposed = false
@@ -546,7 +590,10 @@ function createEngine(mount: HTMLElement, getParams: () => Params) {
     let W = Math.max(1, mount.clientWidth)
     let H = Math.max(1, mount.clientHeight)
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    const soft = !hasWebGL()
+    const renderer: any = soft
+        ? makeSoftRenderer()
+        : new THREE.WebGLRenderer({ antialias: true, alpha: true })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
     renderer.setSize(W, H)
 
@@ -748,9 +795,11 @@ function createEngine(mount: HTMLElement, getParams: () => Params) {
     const lensQuad = new THREE.Mesh(lensGeo, lensMat)
     lensScene.add(lensQuad)
 
-    try {
-        renderer.compile(lensScene, lensCam)
-    } catch {}
+    if (!soft) {
+        try {
+            renderer.compile(lensScene, lensCam)
+        } catch {}
+    }
 
     let ringKey = ""
     function syncLens(now: number) {
@@ -1451,6 +1500,228 @@ function createEngine(mount: HTMLElement, getParams: () => Params) {
     }
 
     // ---- frame ----
+    // ---- software path: the same picture, painted on a 2D canvas ----
+    const sceneCv = document.createElement("canvas")
+    const lensCv = document.createElement("canvas")
+    let lensBuf: ImageData | null = null
+    let lastSoft = 0
+    const hexRgb = (hex: string): [number, number, number] => {
+        const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
+        if (!m) return [0.72, 0.85, 0.24]
+        const n = parseInt(m[1], 16)
+        return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255]
+    }
+
+    function softPaint(now: number) {
+        // The lens is the expensive part, so repaint at ~30fps; layout and motion still run every frame.
+        if (now - lastSoft < 33) return
+        lastSoft = now
+
+        const out = el as HTMLCanvasElement
+        if (out.width !== W || out.height !== H) {
+            out.width = W
+            out.height = H
+        }
+        if (sceneCv.width !== W || sceneCv.height !== H) {
+            sceneCv.width = W
+            sceneCv.height = H
+        }
+        const cs = sceneCv.getContext("2d")!
+        const co = out.getContext("2d", { willReadFrequently: true })!
+
+        // 1) the cards, exactly where the engine placed them
+        cs.fillStyle = pp.background
+        cs.fillRect(0, 0, W, H)
+        const live = pool.filter((p) => p.mesh.visible && p.mat.map && (p.mat.map as THREE.Texture).image)
+        live.sort((a, b) => Number(pool.indexOf(a) === focusState.poolIdx) - Number(pool.indexOf(b) === focusState.poolIdx))
+        for (const p of live) {
+            const tex = p.mat.map as THREE.Texture
+            const img = tex.image as CanvasImageSource & { width: number; height: number; naturalWidth?: number; naturalHeight?: number }
+            const iw = (img as HTMLImageElement).naturalWidth || img.width
+            const ih = (img as HTMLImageElement).naturalHeight || img.height
+            if (!iw || !ih) continue
+            const w = p.mesh.scale.x
+            const h = p.mesh.scale.y
+            const cx = W / 2 + p.mesh.position.x
+            const cy = H / 2 - p.mesh.position.y
+            cs.drawImage(
+                img,
+                tex.offset.x * iw,
+                (1 - tex.offset.y - tex.repeat.y) * ih,
+                tex.repeat.x * iw,
+                tex.repeat.y * ih,
+                cx - w / 2,
+                cy - h / 2,
+                w,
+                h
+            )
+        }
+
+        // 2) the bend: shift columns up on the right, down on the left
+        const fx = focusState.lensFx
+        const curve = pp.curve * fx
+        co.fillStyle = pp.background
+        co.fillRect(0, 0, W, H)
+        if (curve > 0.001) {
+            const STEP = 2
+            for (let x = 0; x < W; x += STEP) {
+                const sN = ((x + STEP / 2) / W - 0.5) * 2
+                const wy = curve * Math.sign(sN) * Math.pow(Math.abs(sN), pp.curvePow)
+                co.drawImage(sceneCv, x, 0, STEP, H, x, -wy * H, STEP, H)
+            }
+        } else {
+            co.drawImage(sceneCv, 0, 0)
+        }
+
+        // 3) the glass lens, computed per pixel on its rim (the interior is untouched, as in the shader)
+        if (fx < 0.01) return
+        const L = pp.lens
+        const sx = L.sizeX
+        const sy = L.sizeY
+        const ang = (L.rotation * Math.PI) / 180 + ((L.spin * Math.PI) / 180) * now * 0.001
+        const ca = Math.cos(ang)
+        const sa = Math.sin(ang)
+        const ex = Math.sqrt((ca * sx) ** 2 + (sa * sy) ** 2) * H
+        const ey = Math.sqrt((sa * sx) ** 2 + (ca * sy) ** 2) * H
+        const x0 = Math.max(0, Math.floor(W / 2 - ex))
+        const x1 = Math.min(W, Math.ceil(W / 2 + ex))
+        const y0 = Math.max(0, Math.floor(H / 2 - ey))
+        const y1 = Math.min(H, Math.ceil(H / 2 + ey))
+        if (x1 <= x0 || y1 <= y0) return
+
+        const K = 2
+        const lw = Math.ceil((x1 - x0) / K)
+        const lh = Math.ceil((y1 - y0) / K)
+        if (!lensBuf || lensBuf.width !== lw || lensBuf.height !== lh) lensBuf = new ImageData(lw, lh)
+        const dst = lensBuf.data
+        dst.fill(0)
+        const src = co.getImageData(0, 0, W, H).data
+
+        const disp = L.dispersion * fx
+        const tang = L.rimTangential * fx
+        const inward = L.rimInward * fx
+        const pullK = L.zoom * fx * 0.3
+        const rs = (sx + sy) * 0.5
+        const rimK = L.rimStart
+        const [br, bg, bb] = hexRgb(L.ringColor)
+        const glowK = L.glow / 17
+        const ringAmt = L.ring * fx * glowK * 1.8
+        const auraAmt = 0.2 * L.ring * fx * glowK
+        const tR = Math.min(0.49, Math.max(0.1, L.ringRadius))
+        const rW = Math.max(L.ringWidth, 0.003)
+        const gs = Math.max(L.novaSize * L.glow * 0.003, 0.004)
+        const novaK = L.whiteGlow * glowK * 1.15
+        const t = now * 0.001
+        const NS = 6
+        const wr = new Float32Array(NS)
+        const wg = new Float32Array(NS)
+        const wb = new Float32Array(NS)
+        let sumR = 0
+        let sumG = 0
+        let sumB = 0
+        for (let i = 0; i < NS; i++) {
+            const tt = i / (NS - 1)
+            wr[i] = Math.exp(-(((tt - 0) / 0.38) ** 2))
+            wg[i] = Math.exp(-(((tt - 0.5) / 0.38) ** 2))
+            wb[i] = Math.exp(-(((tt - 1) / 0.38) ** 2))
+            sumR += wr[i]
+            sumG += wg[i]
+            sumB += wb[i]
+        }
+        const wrap = (x: number, hi: number) => (x < 0 ? 0 : x > hi ? hi : x)
+
+        for (let ly = 0; ly < lh; ly++) {
+            const Y = y0 + ly * K + K / 2
+            const py = (H / 2 - Y) / H
+            for (let lx = 0; lx < lw; lx++) {
+                const X = x0 + lx * K + K / 2
+                const px = (X - W / 2) / H
+                const rx = ca * px + sa * py
+                const ry = -sa * px + ca * py
+                const dist = Math.hypot(rx / sx, ry / sy)
+                if (dist > 1 || dist < rimK) continue // outside the lens, or the untouched interior
+
+                const nd = dist
+                const offx = (X - W / 2) / W
+                const offy = (H / 2 - Y) / H
+                const len = Math.hypot(offx, offy) + 1e-6
+                const rdx = offx / len
+                const rdy = offy / len
+                const angle = Math.atan2(ry, rx)
+                const rimStrength = smoothstep(rimK, 1, nd)
+                const fluid = Math.sin(angle * L.rimFreq1) * 0.55 + Math.sin(angle * L.rimFreq2) * 0.25
+                const pull = pullK * nd * nd
+                let bu = 0.5 + offx * (1 - pull) + -rdy * fluid * rimStrength * rs * tang - rdx * rimStrength * rs * inward
+                let bv = 0.5 + offy * (1 - pull) + rdx * fluid * rimStrength * rs * tang - rdy * rimStrength * rs * inward
+                // the same bend the scene was given, evaluated at this pixel's column
+                const sN = (X / W - 0.5) * 2
+                bv -= curve * Math.sign(sN) * Math.pow(Math.abs(sN), pp.curvePow)
+
+                const rimMask = smoothstep(0.55, 1, nd)
+                const dx = offx * disp * 0.004 * rimMask
+                const dy = offy * disp * 0.004 * rimMask
+
+                let r = 0
+                let g = 0
+                let b = 0
+                if (disp < 0.01 || rimMask < 0.002) {
+                    const ix = wrap(Math.round(bu * W), W - 1)
+                    const iy = wrap(Math.round((1 - bv) * H - 0.5), H - 1)
+                    const o = (iy * W + ix) * 4
+                    r = src[o] / 255
+                    g = src[o + 1] / 255
+                    b = src[o + 2] / 255
+                } else {
+                    for (let i = 0; i < NS; i++) {
+                        const tt = i / (NS - 1) - 0.5
+                        const ix = wrap(Math.round((bu + dx * tt) * W), W - 1)
+                        const iy = wrap(Math.round((1 - (bv + dy * tt)) * H - 0.5), H - 1)
+                        const o = (iy * W + ix) * 4
+                        r += (src[o] / 255) * wr[i]
+                        g += (src[o + 1] / 255) * wg[i]
+                        b += (src[o + 2] / 255) * wb[i]
+                    }
+                    r /= sumR
+                    g /= sumG
+                    b /= sumB
+                }
+
+                // the shader's finishing touches: centre shade, soft white nova, shimmering lime ring
+                const shade = 0.91 + 0.09 * smoothstep(0, 0.38, nd)
+                r *= shade
+                g *= shade
+                b *= shade
+                const r2 = nd * nd * 0.25
+                const nova = (Math.exp(-r2 / gs) + Math.exp(-r2 / (gs * 7)) * 0.18) * novaK
+                r += nova
+                g += nova
+                b += nova
+                const dC = nd * 0.5
+                let ring = Math.exp(-(((dC - tR) / rW) ** 2)) * ringAmt
+                if (L.shimmer) ring *= Math.sin(angle * L.shimmerFreq + t * L.shimmerSpeed) * L.shimmerDepth + (1 - L.shimmerDepth)
+                const aura = Math.exp(-(((dC - tR) / (rW * 4)) ** 2)) * auraAmt
+                r += br * (ring + aura)
+                g += bg * (ring + aura)
+                b += bb * (ring + aura)
+
+                const o = (ly * lw + lx) * 4
+                dst[o] = Math.min(255, Math.max(0, r * 255))
+                dst[o + 1] = Math.min(255, Math.max(0, g * 255))
+                dst[o + 2] = Math.min(255, Math.max(0, b * 255))
+                dst[o + 3] = smoothstep(1, 0.93, nd) * 255
+            }
+        }
+
+        if (lensCv.width !== lw || lensCv.height !== lh) {
+            lensCv.width = lw
+            lensCv.height = lh
+        }
+        lensCv.getContext("2d")!.putImageData(lensBuf, 0, 0)
+        co.imageSmoothingEnabled = true
+        co.imageSmoothingQuality = "high"
+        co.drawImage(lensCv, x0, y0, lw * K, lh * K)
+    }
+
     let layoutKey = ""
     let last = performance.now()
     let onScreen = true
@@ -1516,13 +1787,18 @@ function createEngine(mount: HTMLElement, getParams: () => Params) {
             openFocus()
         }
 
-        // Scene -> linear render target -> lens pass on the canvas.
-        renderer.setRenderTarget(rt)
-        renderer.clear()
-        renderer.render(scene, camera)
-        renderer.setRenderTarget(null)
-        syncLens(now)
-        renderer.render(lensScene, lensCam)
+        if (soft) {
+            // No GPU context: paint the cards, the bend and the lens on a 2D canvas.
+            softPaint(now)
+        } else {
+            // Scene -> linear render target -> lens pass on the canvas.
+            renderer.setRenderTarget(rt)
+            renderer.clear()
+            renderer.render(scene, camera)
+            renderer.setRenderTarget(null)
+            syncLens(now)
+            renderer.render(lensScene, lensCam)
+        }
 
         refreshHover()
     }
@@ -1598,6 +1874,8 @@ function createEngine(mount: HTMLElement, getParams: () => Params) {
         lensGeo.dispose()
         lensMat.dispose()
         renderer.dispose()
+        // dispose() frees buffers but keeps the WebGL context alive; browsers cap live contexts (about 16), so release it.
+        renderer.forceContextLoss()
         if (el.parentNode === mount) mount.removeChild(el)
     }
 
@@ -1622,7 +1900,8 @@ const LiquidGlassCarousel = forwardRef<LiquidGlassCarouselHandle, LiquidGlassCar
         let engine: Engine | null = null
         try {
             engine = createEngine(mount, () => paramsRef.current)
-        } catch {
+        } catch (e) {
+            console.error('[gallery] could not start the WebGL carousel:', e)
             errorRef.current?.()
             return
         }

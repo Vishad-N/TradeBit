@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { readingApi } from '../../services/readingApi.js';
 import TaskCard from './TaskCard.jsx';
 import BookReader from './BookReader.jsx';
+import BooksArt from './BooksArt.jsx';
 
 const POLL_MS = 20000;
 
@@ -24,20 +25,23 @@ function MentorshipNotice({ state }) {
 function BooksIntro() {
   return (
     <header className="bk-intro">
-      <span className="label">Free Books</span>
-      <h1 className="h-l bk-title">
-        Master high-probability <span className="hl">SMC, ICT</span> and advanced price action strategies,{' '}
-        <em>without spending a single rupee.</em>
-      </h1>
-      <div className="bk-body">
-        <h2 className="bk-sub">Unlock elite knowledge: the premium books library</h2>
-        <p>
-          Information is power, and we believe it should be accessible to everyone. This exclusive folder houses a handpicked
-          collection of high-value books designed to give you an edge in your field. From transformative self-help to deeply
-          technical masterpieces, your next intellectual leap is just a click away.
-        </p>
-        <p className="bk-callout"><span aria-hidden="true">🎯</span> Don't leave your growth to chance. Explore the folder, read instantly, and start learning without boundaries.</p>
+      <div className="bk-copy">
+        <span className="label">Free Books</span>
+        <h1 className="h-l bk-title">
+          Master high-probability <span className="hl">SMC, ICT</span> and advanced price action strategies,{' '}
+          <em>without spending a single rupee.</em>
+        </h1>
+        <div className="bk-body">
+          <h2 className="bk-sub">Unlock elite knowledge: the premium books library</h2>
+          <p>
+            Information is power, and we believe it should be accessible to everyone. This exclusive folder houses a handpicked
+            collection of high-value books designed to give you an edge in your field. From transformative self-help to deeply
+            technical masterpieces, your next intellectual leap is just a click away.
+          </p>
+          <p className="bk-callout"><span aria-hidden="true">🎯</span> Don't leave your growth to chance. Explore the folder, read instantly, and start learning without boundaries.</p>
+        </div>
       </div>
+      <div className="bk-art" aria-hidden="false"><BooksArt /></div>
     </header>
   );
 }

@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const h2Style = { fontSize: '24px', fontWeight: '500', color: 'var(--c)', marginTop: '40px', marginBottom: '20px' };
 const pStyle = { marginBottom: '20px' };
 const ulStyle = { marginBottom: '20px', paddingLeft: '24px', listStyle: 'disc' };
@@ -8,12 +10,21 @@ export default function Refund() {
       <span className="label">LEGAL</span>
       <h1 className="h-l" style={{ marginTop: '24px', marginBottom: '40px' }}>Refund and Cancellation Policy</h1>
       <div className="legal-content" style={{ color: 'var(--c-80)', lineHeight: '1.6', fontSize: '18px' }}>
-        <p style={pStyle}>Last Updated: October 10, 2026</p>
+        <p style={pStyle}>Last Updated: October 13, 2026</p>
         <p style={pStyle}>Thank you for choosing TradeBit India for your trading education journey. Please read this policy carefully before purchasing any of our courses, masterclasses, or mentorship programs.</p>
 
         <h2 style={h2Style}>1. No Refund Policy for Digital Educational Content</h2>
         <p style={pStyle}>Due to the nature of digital content, online courses, and downloadable materials, TradeBit India operates under a strict NO REFUND policy.</p>
-        <p style={pStyle}>Once a user purchases a course or enrolls in a program, immediate access to the intellectual property, video lectures, and educational resources is granted. Therefore, we do not offer refunds, exchanges, or cancellations under any circumstances.</p>
+        <p style={pStyle}>Once a user purchases a course or enrolls in a program, immediate access to the intellectual property, video lectures, and educational resources is granted. Therefore, we do not offer refunds, exchanges, or cancellations under any circumstances, except as stated in the exception below and in Section 3.</p>
+
+        <p style={pStyle}>
+          <strong>Exception: 1% Club money-back guarantee.</strong> The 1% Club mentorship program carries a separate 90-day 100% money-back
+          guarantee. It applies only to students who meet its terms: active participation for the full 90 days, replication of the mentor's
+          exact trades, execution of at least 90% of the official trades broadcast in the club, and submission of a verified broker P&amp;L ledger
+          proving a net loss while following the stated risk management. Those terms apply to that program in place of this section, and are
+          set out in full on the <Link to="/1-percent-club#guarantee">1% Club page</Link>. This exception does not extend to any other
+          course, masterclass or program.
+        </p>
 
         <h2 style={h2Style}>2. Pre-Purchase Evaluation</h2>
         <p style={pStyle}>We encourage all students to evaluate our teaching style and content quality before making a purchase. You can do this by:</p>
