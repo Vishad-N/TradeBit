@@ -5,6 +5,61 @@ import { prefersReducedMotion, useStrokeLengths } from '../hooks/motion.js';
 // Bitcoin hero SVG is paused for now; re-enable by restoring this import and the <BitcoinAsset /> line below.
 // import { BitcoinAsset } from './FloatingAssets.jsx';
 
+// Rotating hero headlines. Every entry is exactly 3 lines (keeps the block height constant, so
+// nothing below it shifts); the last line carries the payoff and gets the lime highlight.
+const HEADLINES = [
+  ['Read The', 'Market.', 'Differently.'],
+  ['99% lose because', 'they guess.', 'Learn the math.'],
+  ['Stop guessing.', 'Start learning.', 'Decode the charts.'],
+  ['Stop gambling.', 'Start trading.', 'Charts, not luck.'],
+  ['Tips make', 'brokers rich.', 'Skills make you rich.'],
+  ['Protect your capital.', 'Invest in your', 'brain first.'],
+  ["You don't need luck.", 'You need a mechanical', 'trading plan.'],
+];
+const DWELL = 5200;
+const EXIT = 450;
+
+function HeroHeadline() {
+  const [idx, setIdx] = useState(0);
+  const [leaving, setLeaving] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [reduced] = useState(() => prefersReducedMotion());
+
+  useEffect(() => {
+    if (reduced || paused) return undefined;
+    let swap;
+    const dwell = setTimeout(() => {
+      setLeaving(true);
+      swap = setTimeout(() => { setIdx((i) => (i + 1) % HEADLINES.length); setLeaving(false); }, EXIT);
+    }, DWELL);
+    return () => { clearTimeout(dwell); clearTimeout(swap); };
+  }, [idx, paused, reduced]);
+
+  const go = (i) => { setLeaving(false); setIdx(i); };
+  const lines = HEADLINES[idx];
+
+  return (
+    <div className="hh-wrap" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
+      <h1 id="hero-t" className="hh">
+        <span className="hh-sr">Read The Market. Differently.</span>
+        <span className={'hh-stage' + (leaving ? ' out' : '')} key={idx} aria-hidden="true">
+          {lines.map((t, i) => (
+            <span className="hh-ln" key={i}><span style={{ '--i': i }}>{i === 2 ? <span className="hl">{t}</span> : t}</span></span>
+          ))}
+        </span>
+      </h1>
+      <div className="hh-dots" role="group" aria-label="Choose headline">
+        {HEADLINES.map((_, i) => (
+          <button key={i} type="button" className={'hh-dot' + (i === idx ? ' on' : '')} style={{ '--dwell': DWELL + 'ms' }}
+            aria-label={`Headline ${i + 1} of ${HEADLINES.length}`} aria-current={i === idx ? 'true' : undefined} onClick={() => go(i)}>
+            <i></i>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Hero({ onPlayVideo }) {
   const chartRef = useRef(null);
   const [drawn, setDrawn] = useState(false);
@@ -22,11 +77,7 @@ export default function Hero({ onPlayVideo }) {
       {/* <BitcoinAsset /> */}
       <div className="hero-copy">
         <span className="label rv">The Modern Trading Framework</span>
-        <h1 id="hero-t" className="h-xl split">
-          <span className="ln"><span>Read The</span></span>
-          <span className="ln"><span>Market.</span></span>
-          <span className="ln"><span><span className="hl">Differently.</span></span></span>
-        </h1>
+        <HeroHeadline />
         <p className="lead rv d2">A structured approach to market structure, price action and risk management designed to help traders replace guesswork with discipline.</p>
         <p className="hook-hero rv d2"><b>1–2 trades a day.</b> Still out-earning 90% of active traders. <a href="#why">Here is the secret →</a></p>
         <div className="hero-ctas rv d3">

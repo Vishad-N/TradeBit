@@ -121,6 +121,28 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .hero-grid-bg{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(var(--c-08) 1px,transparent 1px),linear-gradient(90deg,var(--c-08) 1px,transparent 1px);background-size:96px 96px;mask-image:linear-gradient(100deg,#000 0%,transparent 48%);-webkit-mask-image:linear-gradient(100deg,#000 0%,transparent 48%);opacity:.55}
 .hero-copy{position:relative;z-index:3;max-width:640px}
 .hero h1{margin:30px 0 30px;font-size:clamp(44px,7vw,114px)}
+/* rotating headline: 3 fixed lines, masked slide-up in / slide-up out, lime underline draws on the payoff line */
+.hero h1.hh{margin:30px 0 0;font-weight:500;text-transform:uppercase;letter-spacing:-.035em;line-height:.94;font-size:clamp(34px,3.9vw,62px)}
+.hh-wrap{margin:0 0 30px}
+.hh-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.hh-stage{display:block;min-height:calc(3 * .94em)}
+.hh-ln{display:block;overflow:hidden;padding:.02em 0 .08em;margin:-.02em 0 -.08em}
+.hh-ln>span{display:inline-block;max-width:100%;transform:translateY(108%);animation:hh-in 1s var(--ease) forwards;animation-delay:calc(var(--i) * .1s)}
+.hh-stage.out .hh-ln>span{animation:hh-out .45s cubic-bezier(.7,0,.84,0) forwards;animation-delay:calc(var(--i) * .05s)}
+.hh-ln:last-child>span{color:var(--c)}
+.hh .hl::after{transform:scaleX(0);animation:hh-line 1s var(--ease) .55s forwards}
+.hh-stage.out .hl::after{animation:none;transform:scaleX(0)}
+@keyframes hh-in{to{transform:none}}
+@keyframes hh-out{from{transform:none}to{transform:translateY(-108%)}}
+@keyframes hh-line{to{transform:scaleX(1)}}
+.hh-dots{display:flex;gap:2px;margin-top:22px}
+.hh-dot{width:28px;height:24px;padding:0;border:0;background:none;cursor:pointer;display:grid;align-items:center}
+.hh-dot i{display:block;height:2px;background:var(--c-40);opacity:.45;position:relative;overflow:hidden;transition:opacity .3s}
+.hh-dot:hover i,.hh-dot:focus-visible i{opacity:1}
+.hh-dot.on i{opacity:1}
+.hh-dot.on i::after{content:"";position:absolute;inset:0;background:var(--c);transform:scaleX(0);transform-origin:left;animation:hh-prog var(--dwell) linear forwards}
+.hh-wrap:hover .hh-dot.on i::after,.hh-wrap:focus-within .hh-dot.on i::after{animation-play-state:paused}
+@keyframes hh-prog{to{transform:scaleX(1)}}
 .hero-ctas{display:flex;flex-wrap:wrap;align-items:center;gap:18px 26px;margin-top:40px}
 .checks{list-style:none;display:grid;grid-template-columns:repeat(2,max-content);gap:12px 34px;margin-top:44px;font-size:13px;font-weight:600;letter-spacing:.04em}
 .checks li{display:flex;gap:10px;align-items:center}
@@ -752,6 +774,9 @@ footer{background:var(--c);color:var(--l-60);border-top:1px solid var(--lime);pa
   .rv,.split .ln>span,.cd,.fd{opacity:1!important;transform:none!important}
   .dr,.z-chart .ln{stroke-dashoffset:0!important}
   .hl::after{transform:scaleX(1)}
+  .hh-ln>span{transform:none!important}
+  .hh .hl::after{transform:scaleX(1)!important}
+  .hh-dot.on i::after{transform:scaleX(1)}
 }
 
 /* ---------- 20 � Floating SVGs ---------- */
