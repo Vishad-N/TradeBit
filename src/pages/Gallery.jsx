@@ -229,30 +229,51 @@ export default function Gallery() {
   return (
     <section className="gal" aria-labelledby="gal-t">
       <header className="gal-top">
-        {/* Line art that ties the headline to the photo and carries the eye down into the gallery. */}
-        <svg className="gal-link" viewBox="0 0 1200 760" preserveAspectRatio="none" aria-hidden="true">
-          <g fill="none" stroke="#151814" strokeOpacity=".1">
-            <circle cx="930" cy="330" r="250" vectorEffect="non-scaling-stroke" />
-            <circle cx="930" cy="330" r="330" vectorEffect="non-scaling-stroke" />
-            <circle cx="930" cy="330" r="410" vectorEffect="non-scaling-stroke" />
-          </g>
-          <path className="gl-line" d="M70 612 H560 C690 612 700 470 760 470" fill="none" stroke="#B8D83D" strokeWidth="2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          <circle className="gl-node" cx="760" cy="470" r="6" fill="#151814" stroke="#B8D83D" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-          <path className="gl-drop" d="M930 700 V760" fill="none" stroke="#151814" strokeOpacity=".5" strokeDasharray="3 7" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
-        </svg>
-
         <div className="gal-hero">
           <span className="label">The 1% Club Lifestyle</span>
           <h1 id="gal-t" className="h-l gal-title">
             <span className="gal-t1">Dubai wasn't built on average mindsets.</span>
             <span className="gal-t2">The 1% Club isn't either.</span>
-            <span className="gal-t3"><span className="hl">Elevate your vision.</span></span>
+            <span className="gal-t3"><span className="hl">Elevate your <span className="gal-vision">vision.</span></span></span>
           </h1>
         </div>
 
-        <figure className="gal-burj">
-          <img src="/gallery/burj-khalifa.webp" alt="The Burj Khalifa rising into the night sky, Dubai" width="800" height="1200" decoding="async" />
-        </figure>
+        {/* The Dubai skyline, climbed by a trade that ends at the tip of the Burj: ambition drawn as a chart. */}
+        <svg className="gal-sky" viewBox="0 0 640 430" role="img" aria-label="Dubai skyline with a rising trade line reaching the top of the Burj Khalifa">
+          <circle cx="470" cy="190" r="150" fill="#DCE8C0" />
+          <g fill="none" stroke="#151814" strokeOpacity=".09">
+            <circle cx="470" cy="190" r="190" />
+            <circle cx="470" cy="190" r="235" />
+          </g>
+          <g className="sk-far" fill="#151814" fillOpacity=".16">
+            <rect x="196" y="258" width="34" height="122" />
+            <rect x="232" y="228" width="26" height="152" />
+            <rect x="262" y="276" width="30" height="104" />
+            <rect x="404" y="240" width="30" height="140" />
+            <rect x="438" y="270" width="36" height="110" />
+            <rect x="478" y="214" width="28" height="166" />
+            <rect x="510" y="262" width="34" height="118" />
+            <rect x="548" y="236" width="26" height="144" />
+            <rect x="578" y="284" width="40" height="96" />
+          </g>
+          <g className="sk-sail" fill="#151814" fillOpacity=".34">
+            <path d="M92 380 C92 300 108 232 154 186 L154 380 Z" />
+            <rect x="153" y="150" width="2.5" height="40" />
+          </g>
+          <path className="sk-mid" d="M326 380 V236 L342 206 L358 236 V380 Z" fill="#151814" fillOpacity=".5" />
+          <path className="sk-burj" fill="#151814" d="M280 380 V312 H292 V268 H304 V226 H316 V176 H326 V122 H333 V70 L336 8 L339 70 V122 H346 V176 H356 V226 H368 V268 H380 V312 H392 V380 Z" transform="translate(-34 0)" />
+          <rect x="60" y="379" width="560" height="3" rx="1.5" fill="#151814" />
+
+          <polyline className="sk-trade" points="26,372 70,350 104,358 150,312 188,326 236,262 270,276 306,196 334,206 302,120 302,8" fill="none" stroke="#B8D83D" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+          <g className="sk-entry">
+            <circle cx="26" cy="372" r="6" fill="#F3F4EF" stroke="#151814" strokeWidth="2.5" />
+          </g>
+          <g className="sk-tag">
+            <circle cx="302" cy="8" r="8" fill="#B8D83D" stroke="#151814" strokeWidth="2.5" />
+            <rect x="320" y="-5" width="112" height="26" rx="13" fill="#151814" />
+            <text x="334" y="12.5" fontFamily="Space Grotesk, system-ui, sans-serif" fontSize="11" fontWeight="700" letterSpacing="1.6" fill="#B8D83D">TARGET HIT</text>
+          </g>
+        </svg>
       </header>
       <p className="gal-hint meta">{narrow ? 'Tap a photo to open it · swipe to browse' : 'Drag to explore · click a photo to open it · Esc to close'}</p>
 
@@ -283,7 +304,7 @@ export default function Gallery() {
             cardHeight={narrow ? 320 : 440}
             gap={narrow ? 10 : 14}
             lens={{ shape: 'circle', width: narrow ? 0.7 : 0.5, height: 1, rotation: 65, dispersion: 11, ringColor: '#B8D83D' }}
-            motion={{ sensitivity: 5, glide: 5, snap: true }}
+            motion={{ sensitivity: 8, glide: 1.5, snap: true }}
             entry={{ enabled: !reduce, enterFrom: 'alternate' }}
             interaction={{ wheel: false, drag: true, clickToFocus: true }}
             curve={narrow ? 0.22 : 0.3}

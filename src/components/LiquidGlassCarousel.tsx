@@ -392,14 +392,14 @@ function makeParams(p: LiquidGlassCarouselProps) {
         shrinkDecay: 0.06,
 
         ease,
-        snapEase: ease * 0.56,
+        snapEase: ease * 0.85,
         wheelSpeed: 0.28 * sens,
         dragSpeed: 0.32 * sens,
         touchDrag: 1.0,
         touchEase: 0.22,
-        friction: 0.865,
+        friction: 0.9,
         snap: m.snap !== false,
-        snapIdleMs: 120,
+        snapIdleMs: 70,
         clickSlop: 6,
         touchClickSlop: 12,
         flickIdleMs: 90,
@@ -1514,7 +1514,8 @@ function createEngine(mount: HTMLElement, getParams: () => Params) {
 
     function softPaint(now: number) {
         // The lens is the expensive part, so repaint at ~30fps; layout and motion still run every frame.
-        if (now - lastSoft < 33) return
+        const moving = dragging || Math.abs(target - scroll) > 0.4 || Math.abs(velocity) > 0.2 || entryActive || focusState.active
+        if (now - lastSoft < (moving ? 16 : 66)) return
         lastSoft = now
 
         const out = el as HTMLCanvasElement
@@ -1589,13 +1590,16 @@ function createEngine(mount: HTMLElement, getParams: () => Params) {
         const y1 = Math.min(H, Math.ceil(H / 2 + ey))
         if (x1 <= x0 || y1 <= y0) return
 
-        const K = 2
+        // Drawn coarser while things move (cheap, you cannot see the difference), crisp again once it settles.
+        const K = moving ? 3 : 2
         const lw = Math.ceil((x1 - x0) / K)
         const lh = Math.ceil((y1 - y0) / K)
         if (!lensBuf || lensBuf.width !== lw || lensBuf.height !== lh) lensBuf = new ImageData(lw, lh)
         const dst = lensBuf.data
         dst.fill(0)
-        const src = co.getImageData(0, 0, W, H).data
+        const RW = x1 - x0
+        const RH = y1 - y0
+        const src = co.getImageData(x0, y0, RW, RH).data
 
         const disp = L.dispersion * fx
         const tang = L.rimTangential * fx
@@ -1612,7 +1616,7 @@ function createEngine(mount: HTMLElement, getParams: () => Params) {
         const gs = Math.max(L.novaSize * L.glow * 0.003, 0.004)
         const novaK = L.whiteGlow * glowK * 1.15
         const t = now * 0.001
-        const NS = 6
+        const NS = 4
         const wr = new Float32Array(NS)
         const wg = new Float32Array(NS)
         const wb = new Float32Array(NS)
@@ -1665,18 +1669,18 @@ function createEngine(mount: HTMLElement, getParams: () => Params) {
                 let g = 0
                 let b = 0
                 if (disp < 0.01 || rimMask < 0.002) {
-                    const ix = wrap(Math.round(bu * W), W - 1)
-                    const iy = wrap(Math.round((1 - bv) * H - 0.5), H - 1)
-                    const o = (iy * W + ix) * 4
+                    const ix = wrap(Math.round(bu * W) - x0, RW - 1)
+                    const iy = wrap(Math.round((1 - bv) * H - 0.5) - y0, RH - 1)
+                    const o = (iy * RW + ix) * 4
                     r = src[o] / 255
                     g = src[o + 1] / 255
                     b = src[o + 2] / 255
                 } else {
                     for (let i = 0; i < NS; i++) {
                         const tt = i / (NS - 1) - 0.5
-                        const ix = wrap(Math.round((bu + dx * tt) * W), W - 1)
-                        const iy = wrap(Math.round((1 - (bv + dy * tt)) * H - 0.5), H - 1)
-                        const o = (iy * W + ix) * 4
+                        const ix = wrap(Math.round((bu + dx * tt) * W) - x0, RW - 1)
+                        const iy = wrap(Math.round((1 - (bv + dy * tt)) * H - 0.5) - y0, RH - 1)
+                        const o = (iy * RW + ix) * 4
                         r += (src[o] / 255) * wr[i]
                         g += (src[o + 1] / 255) * wg[i]
                         b += (src[o + 2] / 255) * wb[i]

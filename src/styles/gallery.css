@@ -137,3 +137,29 @@
 .gal-burj img{border-radius:0;
   -webkit-mask-image:radial-gradient(ellipse 49% 47% at 50% 47%,#000 30%,rgba(0,0,0,.6) 62%,transparent 100%);
   mask-image:radial-gradient(ellipse 49% 47% at 50% 47%,#000 30%,rgba(0,0,0,.6) 62%,transparent 100%)}
+
+/* ---------- Hero: headline with the photo inside "vision", and a skyline climbed by a trade ---------- */
+.gal-top{position:relative;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(16px,3vw,56px);align-items:center;min-height:clamp(380px,40vw,560px)}
+.gal-top .gal-hero{max-width:none}
+.gal-top .gal-title{font-size:clamp(28px,4.3vw,72px)}
+/* the Burj photo, clipped to the letters of the last line */
+.gal-vision{background-image:url("/gallery/burj-khalifa.webp");background-size:cover;background-position:50% 30%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+
+.gal-sky{width:100%;max-width:640px;height:auto;justify-self:end;overflow:visible}
+.gal-sky .sk-burj,.gal-sky .sk-mid,.gal-sky .sk-sail,.gal-sky .sk-far{transform-box:fill-box;transform-origin:50% 100%;animation:skRise 1s var(--ease) backwards}
+.gal-sky .sk-far{animation-delay:.1s}.gal-sky .sk-sail{animation-delay:.25s}.gal-sky .sk-mid{animation-delay:.4s}.gal-sky .sk-burj{animation-delay:.55s}
+.gal-sky .sk-trade{stroke-dasharray:1200;stroke-dashoffset:1200;animation:skDraw 2.4s cubic-bezier(.45,.05,.2,1) 1.1s forwards}
+.gal-sky .sk-tag,.gal-sky .sk-entry{opacity:0;animation:skPop .5s ease forwards}
+.gal-sky .sk-entry{animation-delay:1s}.gal-sky .sk-tag{animation-delay:3.4s}
+@keyframes skRise{from{transform:scaleY(.2);opacity:0}to{transform:scaleY(1);opacity:1}}
+@keyframes skDraw{to{stroke-dashoffset:0}}
+@keyframes skPop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:899px){
+  .gal-top{grid-template-columns:1fr;min-height:0}
+  .gal-sky{max-width:420px;justify-self:start}
+}
+@media (prefers-reduced-motion:reduce){
+  .gal-sky *{animation:none!important}
+  .gal-sky .sk-trade{stroke-dashoffset:0}
+  .gal-sky .sk-tag,.gal-sky .sk-entry{opacity:1}
+}
