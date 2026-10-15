@@ -1078,3 +1078,56 @@ html{scroll-padding-top:96px}
 .mods-list b{flex:none;width:26px;height:26px;border-radius:50%;background:var(--c);color:var(--lime);display:grid;place-items:center;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:-2px}
 .mods-list li:hover b{background:var(--lime);color:var(--c)}
 @media (max-width:520px){.mods-list{grid-template-columns:1fr}}
+
+/* ---------- VIP COMMUNITY POPUP (black + metallic gold + emerald) ---------- */
+/* Lime at rest; gold floods in from the centre outwards on hover/focus */
+.btn.vip-cta,.nav:not(.solid) .btn.vip-cta{position:relative;overflow:hidden;isolation:isolate;border:0;background:var(--lime);color:var(--c);cursor:pointer}
+.vip-cta::before{content:"";position:absolute;left:50%;top:50%;z-index:-1;width:260%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#f3d98b,#d4af37 60%,#b8921f);transform:translate(-50%,-50%) scale(0);transition:transform .7s var(--ease)}
+.vip-cta:hover::before,.vip-cta:focus-visible::before{transform:translate(-50%,-50%) scale(1)}
+.vip-cta:hover,.vip-cta:focus-visible{box-shadow:0 0 0 8px rgba(212,175,55,.25)}
+@media (prefers-reduced-motion:reduce){.vip-cta::before{transition:none}}
+.vip{position:fixed;inset:0;z-index:220;display:flex;padding:clamp(10px,2.4vh,32px) clamp(12px,3vw,32px);overflow-y:auto;background:rgba(6,8,7,.86);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:clubfade .3s var(--ease) both}
+.vip.closing{animation:clubfadeout .26s var(--ease) both}
+.vip-box{--gold:#d4af37;--gold-hi:#f3d98b;--em:#10b981;--ink:#0b0d0c;position:relative;width:min(760px,100%);margin:auto;max-height:calc(100dvh - 2 * clamp(10px,2.4vh,32px));display:flex;flex-direction:column;border-radius:26px;overflow:hidden;background:radial-gradient(120% 70% at 50% 0,#1a1608,var(--ink) 60%);color:#f4f1e6;border:1px solid rgba(212,175,55,.35);box-shadow:0 60px 120px -40px rgba(0,0,0,.8);animation:clubrise .5s var(--ease) both}
+.vip.closing .vip-box{animation:clubsink .26s var(--ease) both}
+.vip-x{position:absolute;top:14px;right:14px;z-index:3;width:40px;height:40px;border-radius:50%;border:1px solid rgba(212,175,55,.4);background:rgba(0,0,0,.4);color:var(--gold-hi);cursor:pointer;transition:transform .3s var(--ease),background .3s}
+.vip-x:hover{transform:rotate(90deg);background:rgba(212,175,55,.2)}
+.vip-x:focus-visible,.vip-btn:focus-visible,.vip-code button:focus-visible{outline:2px solid var(--gold-hi);outline-offset:3px}
+.vip-head{padding:clamp(20px,3.4vh,34px) clamp(20px,4vw,40px) 14px;text-align:center}
+.vip-tag{display:inline-block;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:var(--ink);background:linear-gradient(135deg,var(--gold-hi),var(--gold));padding:7px 12px;border-radius:100px}
+.vip-head h2{margin:14px 0 10px;font-size:clamp(30px,6vw,52px);font-weight:600;letter-spacing:-.035em;line-height:1;text-transform:uppercase}
+.vip-head h2 span{display:block;background:linear-gradient(90deg,var(--gold-hi),var(--gold) 50%,var(--em));-webkit-background-clip:text;background-clip:text;color:transparent}
+.vip-head p{margin:0 auto;max-width:520px;color:rgba(244,241,230,.72);font-size:clamp(13.5px,1.9vh,15px)}
+.vip-scroll{flex:1;min-height:0;overflow-y:auto;padding:6px clamp(20px,4vw,40px) 16px}
+.vip-h{margin:18px 0 10px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:var(--gold)}
+.vip-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.vip-card{padding:14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(212,175,55,.2)}
+.vip-card h4{margin:0 0 4px;font-size:14px;font-weight:600;color:var(--gold-hi)}
+.vip-card p{margin:0 0 8px;font-size:12px;color:rgba(244,241,230,.6)}
+.vip-card ul{list-style:none;margin:0;padding:0;display:grid;gap:5px}
+.vip-card li{position:relative;padding-left:16px;font-size:12.5px}
+.vip-card li::before{content:"✓";position:absolute;left:0;color:var(--em);font-weight:700}
+.vip-steps{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.vip-steps li{display:flex;gap:14px;align-items:flex-start;padding:12px 14px;border-radius:14px;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.22)}
+.vip-steps b{flex:none;font-size:13px;color:var(--ink);background:var(--em);border-radius:50%;width:32px;height:32px;display:grid;place-items:center}
+.vip-steps strong{display:block;font-size:14px}
+.vip-steps span{font-size:12.5px;color:rgba(244,241,230,.65)}
+.vip-code{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:10px;padding:10px 14px;border-radius:14px;border:1px dashed rgba(212,175,55,.5)}
+.vip-code span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(244,241,230,.6)}
+.vip-code code{font-size:16px;font-weight:700;letter-spacing:.12em;color:var(--gold-hi)}
+.vip-code button{margin-left:auto;padding:7px 14px;border-radius:100px;border:1px solid var(--gold);background:transparent;color:var(--gold-hi);font-weight:600;font-size:12px;cursor:pointer}
+.vip-foot{padding:14px clamp(20px,4vw,40px) clamp(14px,2.4vh,22px);border-top:1px solid rgba(212,175,55,.25);background:rgba(0,0,0,.35)}
+.vip-req{margin:0 0 10px;text-align:center;font-size:13px;color:rgba(244,241,230,.8)}
+.vip-req b{color:var(--gold-hi);font-size:15px}
+.vip-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vip-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:54px;padding:14px 16px;border-radius:14px;font-weight:700;font-size:14.5px;text-align:center;text-decoration:none;transition:transform .3s var(--ease),box-shadow .3s}
+.vip-btn:hover{transform:translateY(-2px)}
+.vip-btn-gold{background:linear-gradient(135deg,var(--gold-hi),var(--gold) 55%,#a8821a);color:#15130a;box-shadow:0 10px 30px -12px rgba(212,175,55,.7)}
+.vip-btn-green{background:linear-gradient(135deg,#34d399,var(--em));color:#04130c;box-shadow:0 10px 30px -12px rgba(16,185,129,.7)}
+.vip-fine{margin:10px 0 0;font-size:11px;line-height:1.45;color:rgba(244,241,230,.45);text-align:center}
+@media (max-width:640px){
+  .vip-cards{grid-template-columns:1fr}
+  .vip-actions{grid-template-columns:1fr}
+  .vip-box{border-radius:20px}
+}
+@media (prefers-reduced-motion:reduce){.vip,.vip-box,.vip.closing,.vip.closing .vip-box{animation:none}}

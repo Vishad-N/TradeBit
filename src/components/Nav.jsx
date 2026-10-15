@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import BrandMark from './BrandMark.jsx';
 import ClubModal from './ClubModal.jsx';
-import { START_LEARNING_URL, TELEGRAM_URL } from '../config/learn.js';
+import VipModal from './VipModal.jsx';
+import { TELEGRAM_URL } from '../config/learn.js';
 
 // Any page can open the 1% Club popup by dispatching this window event (see the /1-percent-club page).
 export const OPEN_CLUB_EVENT = 'tb:open-club';
@@ -39,6 +40,7 @@ function FlipLabel({ words, upper = false, interval = 5000 }) {
 export default function Nav({ solid, activeHref, menuOpen, onToggleMenu, onCloseMenu }) {
   const { pathname } = useLocation();
   const [clubOpen, setClubOpen] = useState(false);
+  const [vipOpen, setVipOpen] = useState(false);
   useEffect(() => {
     const open = () => setClubOpen(true);
     window.addEventListener(OPEN_CLUB_EVENT, open);
@@ -73,7 +75,7 @@ export default function Nav({ solid, activeHref, menuOpen, onToggleMenu, onClose
             <a href={TELEGRAM_URL} className="tg-btn" target="_blank" rel="noopener noreferrer" aria-label="Join our Telegram channel" title="Join our Telegram channel">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.9 4.3 18.7 19.5c-.2 1.1-.9 1.4-1.8.9l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5L18 7.4c.4-.3-.1-.5-.6-.2L6.3 14.2l-4.8-1.5c-1-.3-1.1-1 .2-1.5L20.4 3.9c.9-.3 1.7.2 1.5 1.1z" fill="currentColor"/></svg>
             </a>
-            <a href={START_LEARNING_URL} className="btn btn-lime nav-cta" target="_blank" rel="noopener noreferrer">Start Learning <span className="ar">→</span></a>
+            <button type="button" className="btn btn-lime nav-cta vip-cta" aria-haspopup="dialog" onClick={() => setVipOpen(true)}>VIP Community <span className="ar">→</span></button>
             <button className="burger" type="button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} aria-controls="mmenu" onClick={onToggleMenu}><i></i><i></i></button>
           </div>
         </div>
@@ -84,9 +86,10 @@ export default function Nav({ solid, activeHref, menuOpen, onToggleMenu, onClose
           {NAV_LINKS.map(([href, label]) => <li key={href}><a href={anchor(href)} onClick={onCloseMenu}>{label}</a></li>)}
           {ROUTE_LINKS.map(({ to, label, flip }) => <li key={to}><Link to={to} aria-label={label} onClick={onCloseMenu}>{flip ? <FlipLabel words={['Free', label]} /> : label}</Link></li>)}
         </ol>
-        <a href={START_LEARNING_URL} className="btn btn-lime" style={{ justifyContent: 'center' }} target="_blank" rel="noopener noreferrer" onClick={onCloseMenu}>Start Learning <span className="ar">→</span></a>
+        <button type="button" className="btn btn-lime vip-cta" style={{ justifyContent: 'center' }} aria-haspopup="dialog" onClick={() => { onCloseMenu(); setVipOpen(true); }}>VIP Community <span className="ar">→</span></button>
       </div>
       <ClubModal open={clubOpen} onClose={() => setClubOpen(false)} />
+      <VipModal open={vipOpen} onClose={() => setVipOpen(false)} />
     </>
   );
 }

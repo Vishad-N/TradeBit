@@ -179,7 +179,7 @@ function ReaderPage() {
 
 // Admins land on the dashboard; "View as reader" (?view=reader) shows them the page readers see.
 export default function ReadBooks() {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading, isAdmin, logout } = useAuth();
   const [params] = useSearchParams();
   const asReader = params.get('view') === 'reader';
 
@@ -190,6 +190,18 @@ export default function ReadBooks() {
         <div className="rd-adminbar" role="status">
           <span>Viewing as a reader</span>
           <Link className="rd-link" to="/admin/reading">← Back to admin dashboard</Link>
+          <button type="button" className="rd-link rd-logout" onClick={logout}>Log out</button>
+        </div>
+        <ReaderPage />
+      </>
+    );
+  }
+  if (user) {
+    return (
+      <>
+        <div className="rd-adminbar" role="status">
+          <span>Signed in as {user.name || user.email}</span>
+          <button type="button" className="rd-link rd-logout" onClick={logout}>Log out</button>
         </div>
         <ReaderPage />
       </>

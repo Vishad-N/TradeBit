@@ -12,8 +12,9 @@ const playlistId = (env.VITE_YOUTUBE_PLAYLIST_ID || 'PLOhfC5cp83nw').trim();
 // Telegram channel for the "Get Started Now" button. Same link as TELEGRAM_URL in backend/.env; VITE_TELEGRAM_URL overrides it.
 export const TELEGRAM_URL = (env.VITE_TELEGRAM_URL || 'https://t.me/tradebitindia_Official').trim();
 
-// Where every "Start Learning" button leads: the TradeBit India Telegram community. VITE_START_LEARNING_URL overrides it.
-export const START_LEARNING_URL = (env.VITE_START_LEARNING_URL || 'https://t.me/+FJMQdSqSu8o0YzJl').trim();
+// Where the "Start Learning" button leads: the public TradeBit India Telegram channel. VITE_START_LEARNING_URL overrides it.
+// Never put the VIP (1% Club) channel link here or anywhere public: it is only sent to approved mentorship customers.
+export const START_LEARNING_URL = (env.VITE_START_LEARNING_URL || 'https://t.me/tradebitindia_Official').trim();
 
 // WhatsApp number for the sticky chat button (country code + number, digits only). VITE_WHATSAPP_NUMBER overrides it.
 export const WHATSAPP_NUMBER = (env.VITE_WHATSAPP_NUMBER || '917805888599').replace(/\D/g, '');
