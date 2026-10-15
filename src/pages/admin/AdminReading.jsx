@@ -262,7 +262,7 @@ function RequestsTab() {
 
 // ---------------------------------------------------------------- Page
 export default function AdminReading() {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading, isAdmin, logout } = useAuth();
   const [tab, setTab] = useState('requests');
 
   if (loading) return <section className="rd-section"><p>Loading…</p></section>;
@@ -287,7 +287,11 @@ export default function AdminReading() {
     <section className="rd-section">
       <span className="label">Admin</span>
       <h1 className="h-l rd-title">Reading</h1>
-      <p><Link className="rd-link" to="/read/books?view=reader">View as reader →</Link></p>
+      <p>
+        <Link className="rd-link" to="/read/books?view=reader">View as reader →</Link>
+        {' · '}
+        <button type="button" className="rd-link rd-logout" onClick={logout}>Log out</button>
+      </p>
       <div className="rd-tabs" role="tablist">
         {TABS.map(([id, label]) => (
           <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>{label}</button>
