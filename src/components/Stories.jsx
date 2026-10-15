@@ -63,7 +63,7 @@ function useReviews() {
     const timer = setTimeout(() => ctrl.abort(), 5000);
     fetch(`${API_URL}/testimonials`, { signal: ctrl.signal })
       .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then(data => setReviews(withTopUp((data.reviews || []).map(r => ({ ...r, photo: r.photo ? `${API_URL}${r.photo}` : null })))))
+      .then(data => setReviews(withTopUp((data.reviews || []).map(r => ({ ...r, photo: r.photo ? (r.photo.startsWith('/testimonials/') ? `${API_URL}${r.photo}` : r.photo) : null })))))
       .catch(() => { /* keep the built-in reviews */ })
       .finally(() => clearTimeout(timer));
     return () => { ctrl.abort(); clearTimeout(timer); };

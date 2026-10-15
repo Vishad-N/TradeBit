@@ -1,4 +1,4 @@
-import { LEARN, TELEGRAM_URL } from '../config/learn.js';
+import { useSiteLinks } from '../context/SiteLinksContext.jsx';
 import Disclaimer from '../components/Disclaimer.jsx';
 import '../styles/news.css';
 
@@ -16,7 +16,8 @@ const CATALYSTS = [
 const TICKER = ['Macroeconomic shifts', 'Central bank policy', 'Corporate earnings', 'Geopolitics', 'Breaking global updates', 'High-impact events'];
 
 export default function MarketNews() {
-  const alertsUrl = TELEGRAM_URL || LEARN.youtubePlaylistUrl;
+  const { telegram, youtube } = useSiteLinks();
+  const alertsUrl = telegram || youtube;
 
   return (
     <div className="mn">

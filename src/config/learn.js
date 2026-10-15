@@ -12,10 +12,6 @@ const playlistId = (env.VITE_YOUTUBE_PLAYLIST_ID || 'PLOhfC5cp83nw').trim();
 // Telegram channel for the "Get Started Now" button. Same link as TELEGRAM_URL in backend/.env; VITE_TELEGRAM_URL overrides it.
 export const TELEGRAM_URL = (env.VITE_TELEGRAM_URL || 'https://t.me/tradebitindia_Official').trim();
 
-// Where the "Start Learning" button leads: the public TradeBit India Telegram channel. VITE_START_LEARNING_URL overrides it.
-// Never put the VIP (1% Club) channel link here or anywhere public: it is only sent to approved mentorship customers.
-export const START_LEARNING_URL = (env.VITE_START_LEARNING_URL || 'https://t.me/tradebitindia_Official').trim();
-
 // WhatsApp number for the sticky chat button (country code + number, digits only). VITE_WHATSAPP_NUMBER overrides it.
 export const WHATSAPP_NUMBER = (env.VITE_WHATSAPP_NUMBER || '917805888599').replace(/\D/g, '');
 export const WHATSAPP_MESSAGE = 'Hi TradeBit India, I would like to know more about your trading courses.';
@@ -36,4 +32,15 @@ export const LEARN = {
   youtubeEmbedUrl: playlistId ? `https://www.youtube-nocookie.com/embed/videoseries?list=${encodeURIComponent(playlistId)}&rel=0&modestbranding=1` : '',
   classplusUrl: (env.VITE_CLASSPLUS_URL || '').trim(),
   classplusPreviewUrl: (env.VITE_CLASSPLUS_PREVIEW_URL || '').trim(),
+};
+
+// Built-in links. Admin -> Social Links overrides any of these (see SiteLinksContext); an empty one is hidden.
+export const DEFAULT_LINKS = {
+  telegram: TELEGRAM_URL,
+  youtube: LEARN.youtubePlaylistUrl,
+  twitter: TWITTER_URL,
+  facebook: FACEBOOK_URL,
+  discord: DISCORD_URL,
+  instagram: INSTAGRAM_URL,
+  tradingview: TRADINGVIEW_URL,
 };

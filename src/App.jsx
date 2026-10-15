@@ -20,11 +20,13 @@ import SiteLayout from './components/SiteLayout.jsx';
 import ScrollToTop from './components/ScrollToTop.jsx';
 import WhatsAppButton from './components/WhatsAppButton.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
+import { SiteLinksProvider } from './context/SiteLinksContext.jsx';
 
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <SiteLinksProvider>
         <ScrollToTop />
         <WhatsAppButton />
         <Routes>
@@ -47,6 +49,7 @@ export default function App() {
             <Route path="/admin/reading" element={<AdminReading />} />
           </Route>
         </Routes>
+        </SiteLinksProvider>
       </AuthProvider>
     </BrowserRouter>
   );

@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import BrandMark from './BrandMark.jsx';
 import ClubModal from './ClubModal.jsx';
-import VipModal from './VipModal.jsx';
-import { TELEGRAM_URL } from '../config/learn.js';
+import VipModal, { OPEN_VIP_EVENT } from './VipModal.jsx';
+import { useSiteLinks } from '../context/SiteLinksContext.jsx';
 
 // Any page can open the 1% Club popup by dispatching this window event (see the /1-percent-club page).
 export const OPEN_CLUB_EVENT = 'tb:open-club';
@@ -41,10 +41,16 @@ export default function Nav({ solid, activeHref, menuOpen, onToggleMenu, onClose
   const { pathname } = useLocation();
   const [clubOpen, setClubOpen] = useState(false);
   const [vipOpen, setVipOpen] = useState(false);
+  const { telegram: TELEGRAM_URL } = useSiteLinks();
   useEffect(() => {
     const open = () => setClubOpen(true);
+    const openVip = () => setVipOpen(true);
     window.addEventListener(OPEN_CLUB_EVENT, open);
-    return () => window.removeEventListener(OPEN_CLUB_EVENT, open);
+    window.addEventListener(OPEN_VIP_EVENT, openVip);
+    return () => {
+      window.removeEventListener(OPEN_CLUB_EVENT, open);
+      window.removeEventListener(OPEN_VIP_EVENT, openVip);
+    };
   }, []);
   // Off the landing page, section links go back to the landing page's anchors.
   const anchor = href => (pathname === '/' ? href : `/${href}`);

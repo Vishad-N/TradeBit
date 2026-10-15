@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import BrandMark from './BrandMark.jsx';
 import Disclaimer from './Disclaimer.jsx';
-import { DISCORD_URL, FACEBOOK_URL, INSTAGRAM_URL, LEARN, TELEGRAM_URL, TRADINGVIEW_URL, TWITTER_URL } from '../config/learn.js';
+import { useSiteLinks } from '../context/SiteLinksContext.jsx';
 
 const ICONS = {
   telegram: <path d="M21.9 4.3 18.7 19.5c-.2 1.1-.9 1.4-1.8.9l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5L18 7.4c.4-.3-.1-.5-.6-.2L6.3 14.2l-4.8-1.5c-1-.3-1.1-1 .2-1.5L20.4 3.9c.9-.3 1.7.2 1.5 1.1z" fill="currentColor" />,
@@ -13,19 +13,20 @@ const ICONS = {
   tradingview: <path d="M3 17l6-6 4 4 8-8M16 7h5v5" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />,
 };
 
-// Social / community buttons under the footer blurb. Same idea as a button with variants:
-// `primary` is the filled call-to-action, the rest are outline buttons with a label.
+// Social / community buttons under the footer blurb. `primary` is the filled call-to-action, the rest are
+// outline buttons. The links come from Admin -> Social Links; a button with no link is hidden.
 const SOCIALS = [
-  { key: 'telegram', label: 'Join Telegram', href: TELEGRAM_URL, variant: 'primary' },
-  { key: 'youtube', label: 'YouTube', href: LEARN.youtubePlaylistUrl },
-  { key: 'twitter', label: 'Twitter', href: TWITTER_URL },
-  { key: 'facebook', label: 'Facebook', href: FACEBOOK_URL },
-  { key: 'discord', label: 'Discord', href: DISCORD_URL },
-  { key: 'instagram', label: 'Instagram', href: INSTAGRAM_URL },
-  { key: 'tradingview', label: 'TradingView', href: TRADINGVIEW_URL },
-].filter(s => s.href);
+  { key: 'telegram', label: 'Join Telegram', variant: 'primary' },
+  { key: 'youtube', label: 'YouTube' },
+  { key: 'twitter', label: 'Twitter' },
+  { key: 'facebook', label: 'Facebook' },
+  { key: 'discord', label: 'Discord' },
+  { key: 'instagram', label: 'Instagram' },
+  { key: 'tradingview', label: 'TradingView' },
+];
 
 export default function Footer() {
+  const links = useSiteLinks();
   return (
     <footer>
       <div className="wrap">
@@ -34,8 +35,8 @@ export default function Footer() {
             <BrandMark />
             <p>Trading education built on structure, risk and discipline — for people who want to understand the market, not gamble on it.</p>
             <div className="f-social" role="group" aria-label="TradeBit on other platforms">
-              {SOCIALS.map(({ key, label, href, variant }) => (
-                <a key={key} className={`fbtn${variant === 'primary' ? ' fbtn-primary' : ''}`} href={href} target="_blank" rel="noopener noreferrer">
+              {SOCIALS.filter(s => links[s.key]).map(({ key, label, variant }) => (
+                <a key={key} className={`fbtn${variant === 'primary' ? ' fbtn-primary' : ''}`} href={links[key]} target="_blank" rel="noopener noreferrer">
                   <svg viewBox="0 0 24 24" aria-hidden="true">{ICONS[key]}</svg>
                   {label}
                 </a>

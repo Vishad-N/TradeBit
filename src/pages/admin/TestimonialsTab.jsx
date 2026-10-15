@@ -118,7 +118,7 @@ export default function TestimonialsTab() {
             <tbody>
               {rows.map(t => (
                 <tr key={t.id}>
-                  <td data-label="Student">{t.photoKey && <img src={`${API_URL}/testimonials/${t.id}/photo?v=${new Date(t.updatedAt).getTime()}`} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', float: 'left', marginRight: 10 }} onError={e => { e.currentTarget.style.display = 'none'; }} />}<strong>{t.name}</strong><small>{t.quote.slice(0, 90)}{t.quote.length > 90 ? '…' : ''}</small></td>
+                  <td data-label="Student">{(t.photoKey || t.photoUrl) && <img src={t.photoKey ? `${API_URL}/testimonials/${t.id}/photo?v=${new Date(t.updatedAt).getTime()}` : t.photoUrl} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', float: 'left', marginRight: 10 }} onError={e => { e.currentTarget.style.display = 'none'; }} />}<strong>{t.name}</strong><small>{t.quote.slice(0, 90)}{t.quote.length > 90 ? '…' : ''}</small></td>
                   <td data-label="Type">{t.kind === 'VIDEO' ? 'Video' : `Written · ${t.rating}★`}</td>
                   <td data-label="Order">{t.sortOrder}</td>
                   <td data-label="Visible">{t.isActive ? 'Yes' : 'No'}</td>

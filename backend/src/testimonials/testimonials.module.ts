@@ -78,7 +78,7 @@ export class TestimonialsService {
       rating: t.rating,
       videoUrl: t.videoUrl,
       duration: t.duration,
-      photo: t.photoKey ? `/testimonials/${t.id}/photo?v=${t.updatedAt.getTime()}` : null,
+      photo: t.photoKey ? `/testimonials/${t.id}/photo?v=${t.updatedAt.getTime()}` : t.photoUrl,
     });
     return {
       reviews: rows.filter((t) => t.kind === 'TEXT').map(pick),

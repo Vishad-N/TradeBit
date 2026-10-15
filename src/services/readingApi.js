@@ -69,3 +69,8 @@ adminApi.deleteGalleryImage = (id) => api.delete(`/admin/gallery/${id}`);
 
 adminApi.setTestimonialPhoto = (id, form) => api.upload(`/admin/testimonials/${id}/photo`, form);
 adminApi.clearTestimonialPhoto = (id) => api.delete(`/admin/testimonials/${id}/photo`);
+
+// Social links (Admin -> Social Links). Public GET returns only the links that were set by an admin.
+export const siteLinksApi = { get: () => api.get('/site-links') };
+adminApi.siteLinks = () => api.get('/admin/site-links');
+adminApi.saveSiteLinks = (data) => api.patch('/admin/site-links', data);

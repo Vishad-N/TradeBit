@@ -264,6 +264,8 @@ model Testimonial {
   duration  String?
   /// Optional avatar, stored in storage and served at /testimonials/:id/photo
   photoKey  String?
+  /// Or a static site file such as /reviews/prince-pal.webp (used by the seeded reviews). photoKey wins when both are set.
+  photoUrl  String?
   isActive  Boolean  @default(true)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
@@ -298,4 +300,12 @@ model GalleryImage {
   updatedAt DateTime @updatedAt
 
   @@index([isActive, sortOrder])
+}
+
+/// Social / community links editable in Admin -> Social Links. One row per key (telegram, instagram, ...).
+/// A missing row means "use the site's built-in default link"; an empty url is never stored.
+model SiteLink {
+  key       String   @id
+  url       String
+  updatedAt DateTime @updatedAt
 }

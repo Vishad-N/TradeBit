@@ -12,6 +12,7 @@ import { WebinarModule } from './webinar/webinar.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { ProfitShotsModule } from './profit-shots/profit-shots.module';
 import { GalleryModule } from './gallery/gallery.module';
+import { SiteLinksModule } from './site-links/site-links.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -28,6 +29,7 @@ import { HealthModule } from './health/health.module';
     TestimonialsModule,
     ProfitShotsModule,
     GalleryModule,
+    SiteLinksModule,
     HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

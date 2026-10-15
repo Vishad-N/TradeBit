@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { TELEGRAM_URL, WHATSAPP_MESSAGE, WHATSAPP_NUMBER } from '../config/learn.js';
+import { WHATSAPP_MESSAGE, WHATSAPP_NUMBER } from '../config/learn.js';
+import { useSiteLinks } from '../context/SiteLinksContext.jsx';
 import '../styles/contact.css';
 
 const EMAIL = 'support@tradebitindia.com';
@@ -11,6 +12,7 @@ const Icon = ({ children }) => (
 );
 
 export default function Contact() {
+  const { telegram: TELEGRAM_URL } = useSiteLinks();
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
 
   // The fastest channel first and visually strongest; the rest follow in a quieter style.

@@ -21,6 +21,10 @@ const STEPS = [
   { n: '03', t: 'Verify on WhatsApp', d: 'Send the screenshot to our official WhatsApp team. Once verified, your VIP access is unlocked.' },
 ];
 
+// Any button can open the VIP popup by dispatching this window event (the nav listens for it).
+export const OPEN_VIP_EVENT = 'tb:open-vip';
+export const openVip = () => window.dispatchEvent(new Event(OPEN_VIP_EVENT));
+
 // "VIP Community" popup. Opened from the nav. Two actions: open an XM account, then verify on WhatsApp.
 export default function VipModal({ open, onClose }) {
   const [closing, setClosing] = useState(false);
