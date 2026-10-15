@@ -139,7 +139,7 @@ function RegisterForm({ onDone }) {
       </div>
       <div className="up-fld">
         <label htmlFor="up-email">Email</label>
-        <input id="up-email" ref={el => (refs.current.email = el)} type="email" value={v.email} onChange={set('email')} autoComplete="email" placeholder="you@example.com" aria-invalid={bad.email || undefined} />
+        <input id="up-email" ref={el => (refs.current.email = el)} type="email" value={v.email} onChange={set('email')} autoComplete="email" placeholder="support@tradebitindia.com" aria-invalid={bad.email || undefined} />
         <span className="up-err">{FIELD_RULES.email.error}</span>
       </div>
       <div className="up-fld">

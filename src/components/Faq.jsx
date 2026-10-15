@@ -40,7 +40,7 @@ export default function Faq() {
         <div className="faq-side">
           <span className="label">FAQ</span>
           <h2 id="faq-t" className="h-m">Questions?<br />Answered.</h2>
-          <p>Still unsure? Write to <a href="mailto:hello@tradebit.academy">hello@tradebit.academy</a> — a real person replies within one working day.</p>
+          <p>Still unsure? Write to <a href="mailto:support@tradebitindia.com">support@tradebitindia.com</a> — a real person replies within one working day.</p>
         </div>
         <div className="qa-cols">
           {COLUMNS.map((items, c) => (

@@ -36,7 +36,7 @@ const FIELDS = [
     label: 'Email',
     type: 'email',
     autoComplete: 'email',
-    placeholder: 'you@example.com',
+    placeholder: 'support@tradebitindia.com',
     error: 'Enter a valid email address.',
     isValid: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()),
   },

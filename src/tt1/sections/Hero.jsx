@@ -2,6 +2,7 @@ import Reveal from '../shared/Reveal.jsx'
 import ReserveButton from '../components/ReserveButton.jsx'
 import { BitcoinAsset } from '../components/FloatingAssets.jsx'
 import EntryChart from '../components/HeroArt.jsx'
+import HeroPlaylist from '../components/HeroPlaylist.jsx'
 
 export default function Hero({ ref }) {
   return (
@@ -25,7 +26,10 @@ export default function Hero({ ref }) {
                 <ReserveButton>Reserve my free seat</ReserveButton>
               </div>
             </div>
-            <EntryChart />
+            <div className="hside">
+              <HeroPlaylist />
+              <EntryChart />
+            </div>
           </div>
         </Reveal>
       </div>

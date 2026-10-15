@@ -71,10 +71,10 @@ function MentorArt() {
   return (
     <div className="w-media w-mentor" aria-hidden="true">
       <svg viewBox="0 0 400 225" fill="none" preserveAspectRatio="xMidYMid slice">
-        <path d="M70 225 V118 C70 70 108 36 156 36 C204 36 242 70 242 118 V225" stroke="#DCE8C0" strokeOpacity=".4" strokeWidth="1.5" />
-        <path d="M104 225 V132 C104 96 132 70 168 70 C204 70 232 96 232 132 V225" stroke="#DCE8C0" strokeOpacity=".2" />
+        <path d="M70 225 V118 C70 70 108 36 156 36 C204 36 242 70 242 118 V225" stroke="#151814" strokeOpacity=".35" strokeWidth="1.5" />
+        <path d="M104 225 V132 C104 96 132 70 168 70 C204 70 232 96 232 132 V225" stroke="#151814" strokeOpacity=".18" />
         <path d="M206 225 V150 C206 120 226 100 254 100 C282 100 302 120 302 150 V225Z" fill="#B8D83D" />
-        <ellipse cx="200" cy="116" rx="176" ry="48" transform="rotate(-14 200 116)" stroke="#B8D83D" strokeWidth="1.4" />
+        <ellipse cx="200" cy="116" rx="176" ry="48" transform="rotate(-14 200 116)" stroke="#151814" strokeWidth="1.4" />
         <circle cx="352" cy="86" r="5" fill="#B8D83D" />
       </svg>
     </div>
