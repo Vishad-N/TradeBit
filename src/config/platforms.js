@@ -38,6 +38,15 @@ export const PLATFORMS_FALLBACK = [
     referralCode: 'ETK5U8',
   },
   {
+    slug: 'coinswitch',
+    name: 'CoinSwitch PRO',
+    logo: '/platforms/coinswitch.png',
+    description: 'Trade crypto on CoinSwitch PRO. Sign up through our link.',
+    category: 'FIU Registered',
+    referralUrl: 'https://coinswitch.co/pro/signup?code=TyriWNc',
+    referralCode: 'TyriWNc',
+  },
+  {
     slug: 'coindcx',
     name: 'CoinDCX',
     logo: '/platforms/coindcx.png',
