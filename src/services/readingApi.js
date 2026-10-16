@@ -21,6 +21,7 @@ export const readingApi = {
 export const adminApi = {
   books: () => api.get('/admin/books'),
   uploadBook: (form) => api.upload('/admin/books', form),
+  addBookFromLink: (data) => api.post('/admin/books/from-link', data),
   updateBook: (id, data) => api.patch(`/admin/books/${id}`, data),
   reprocessBook: (id) => api.post(`/admin/books/${id}/reprocess`),
   deleteBook: (id) => api.delete(`/admin/books/${id}`),

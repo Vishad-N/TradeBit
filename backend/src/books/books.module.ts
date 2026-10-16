@@ -23,13 +23,21 @@ import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { AuthGuard, Roles } from '../auth/auth.guard';
 import { PdfProcessor } from './pdf-processor';
+import { fetchPdfFromLink } from './link-fetch';
 
 type UploadedPdf = { buffer: Buffer; size: number };
 const MAX_PDF_BYTES = (Number(process.env.MAX_PDF_MB) || 50) * 1024 * 1024;
+// Books added from a link are downloaded by the server, so they can be larger than a browser upload.
+const MAX_LINK_PDF_BYTES = (Number(process.env.MAX_LINK_PDF_MB) || 300) * 1024 * 1024;
+const LINK_PREFIX = 'link:';
 
 export class CreateBookDto {
   @IsString() @MinLength(1) @MaxLength(200) title: string;
   @IsOptional() @IsString() @MaxLength(2000) description?: string;
+}
+
+export class CreateBookFromLinkDto extends CreateBookDto {
+  @IsString() @MinLength(8) @MaxLength(1000) url: string;
 }
 
 export class UpdateBookDto {
@@ -87,18 +95,33 @@ export class BooksService {
     return this.prisma.book.findUniqueOrThrow({ where: { id: book.id }, select: bookSelect });
   }
 
+  /**
+   * Adds a book from a link (Google Drive "anyone with the link", Dropbox, or any direct https link). The server
+   * downloads the PDF in the background and converts it exactly like an uploaded one. The original is not stored
+   * (small storage plans reject large files); only the link is kept so "Retry" can download it again.
+   */
+  async createFromLink(dto: CreateBookFromLinkDto) {
+    const url = dto.url.trim();
+    const book = await this.prisma.book.create({
+      data: { title: dto.title.trim(), description: dto.description?.trim() ?? '', originalFilePath: `${LINK_PREFIX}${url}`, status: 'PROCESSING' },
+    });
+    setImmediate(() => this.process(book.id, url));
+    return this.prisma.book.findUniqueOrThrow({ where: { id: book.id }, select: bookSelect });
+  }
+
   async reprocess(id: string) {
     const book = await this.prisma.book.findUnique({ where: { id } });
     if (!book) throw new NotFoundException('Book not found');
     if (book.status === 'PROCESSING') throw new BadRequestException('Book is already being processed');
-    const pdf = await this.storage.get(book.originalFilePath);
+    const source = book.originalFilePath.startsWith(LINK_PREFIX) ? book.originalFilePath.slice(LINK_PREFIX.length) : await this.storage.get(book.originalFilePath);
     await this.prisma.book.update({ where: { id }, data: { status: 'PROCESSING', processingError: null } });
-    setImmediate(() => this.process(id, pdf));
+    setImmediate(() => this.process(id, source));
     return this.prisma.book.findUniqueOrThrow({ where: { id }, select: bookSelect });
   }
 
-  private async process(bookId: string, pdf: Buffer) {
+  private async process(bookId: string, source: Buffer | string) {
     try {
+      const pdf = typeof source === 'string' ? await fetchPdfFromLink(source, MAX_LINK_PDF_BYTES) : source;
       const pageCount = await this.pdf.renderPages(pdf, (n, jpeg) => this.storage.put(pageKey(bookId, n), jpeg, 'image/jpeg'));
       await this.prisma.book.update({ where: { id: bookId }, data: { pageCount, status: 'READY', processingError: null } });
       this.log.log(`Book ${bookId} ready (${pageCount} pages)`);
@@ -142,6 +165,11 @@ class AdminBooksController {
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_PDF_BYTES, files: 1 } }))
   create(@Body() dto: CreateBookDto, @UploadedFile() file?: UploadedPdf) {
     return this.books.create(dto, file);
+  }
+
+  @Post('from-link')
+  createFromLink(@Body() dto: CreateBookFromLinkDto) {
+    return this.books.createFromLink(dto);
   }
 
   @Post(':bookId/reprocess')

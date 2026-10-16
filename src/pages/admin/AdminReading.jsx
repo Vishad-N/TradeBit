@@ -35,6 +35,7 @@ function BooksTab() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
   const fileRef = useRef(null);
+  const [link, setLink] = useState('');
 
   // Poll while any book is still being converted into pages.
   useEffect(() => {
@@ -66,6 +67,23 @@ function BooksTab() {
     }
   }
 
+  // Large books: paste a Google Drive ("Anyone with the link") or Dropbox link; the server downloads and converts it.
+  async function addFromLink(e) {
+    e.preventDefault();
+    setBusy(true);
+    setMsg(null);
+    try {
+      await adminApi.addBookFromLink({ title: title.trim(), description: description.trim(), url: link.trim() });
+      setTitle(''); setDescription(''); setLink('');
+      setMsg({ ok: 'Added. The server is downloading the PDF and processing it into pages. Watch the Status below.' });
+      reload();
+    } catch (err) {
+      setMsg({ error: err.message });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const act = fn => async () => {
     try { await fn(); reload(); } catch (err) { setMsg({ error: err.message }); }
   };
@@ -80,6 +98,13 @@ function BooksTab() {
         {msg?.error && <p className="rd-error" role="alert">{msg.error}</p>}
         {msg?.ok && <p className="rd-ok" role="status">{msg.ok}</p>}
         <button className="btn btn-lime" type="submit" disabled={busy}>{busy ? 'Uploading…' : 'Upload Book'} <span className="ar">→</span></button>
+      </form>
+
+      <form className="rd-card rd-form rd-gap" onSubmit={addFromLink}>
+        <h2 className="rd-h2">Add Large Book from a Link</h2>
+        <p>For PDFs too big to upload. Uses the Book Title and Description above. Share the file as "Anyone with the link", then paste the Google Drive or Dropbox link.</p>
+        <label className="rd-field"><span>PDF Link</span><input type="url" inputMode="url" placeholder="https://drive.google.com/file/d/…" value={link} onChange={e => setLink(e.target.value)} required maxLength={1000} /></label>
+        <button className="btn btn-dark" type="submit" disabled={busy || !title.trim()}>{busy ? 'Adding…' : 'Add from Link'} <span className="ar">→</span></button>
       </form>
 
       <h2 className="rd-h2 rd-gap">Books</h2>
