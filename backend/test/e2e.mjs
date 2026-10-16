@@ -13,7 +13,7 @@ const BASE = `http://127.0.0.1:${API_PORT}/api/v1`;
 const dataDir = mkdtempSync(join(tmpdir(), 'rd-pg-'));
 const storageDir = mkdtempSync(join(tmpdir(), 'rd-store-'));
 
-const pg = new EmbeddedPostgres({ databaseDir: dataDir, user: 'postgres', password: 'postgres', port: PG_PORT, persistent: false });
+const pg = new EmbeddedPostgres({ databaseDir: dataDir, user: 'postgres', password: 'postgres', port: PG_PORT, persistent: false, initdbFlags: ['--encoding=UTF8', '--locale=C'] });
 let server;
 let passed = 0;
 const ok = (name) => console.log(`  ✓ ${name}`, (passed++, ''));
@@ -57,6 +57,15 @@ async function call(method, path, { token, body, form, headers = {} } = {}) {
   return { status: res.status, data, headers: res.headers };
 }
 
+const LEGACY = { UNLOCKED: 'ACCESS_ACTIVE', LOCKED: 'NOT_SUBMITTED', NO_TASK: 'NO_ACTIVE_TASK', REVOKED: 'ACCESS_REVOKED', EXPIRED: 'ACCESS_EXPIRED' };
+/** The library entry for one book, shaped like the old single-book status. */
+function bookStatus(lib, bookId) {
+  const b = lib.books.find((x) => x.id === bookId);
+  if (!b) return { state: 'NO_ACTIVE_TASK', mentorshipPayment: lib.mentorshipPayment };
+  return { ...b, state: LEGACY[b.state] || b.state, book: b.state === 'UNLOCKED' ? { id: b.id } : undefined, mentorshipPayment: lib.mentorshipPayment };
+}
+const statusOf = async (token, bookId) => bookStatus((await call('GET', '/reading/library', { token })).data, bookId);
+
 async function waitFor(fn, label, ms = 30000) {
   const end = Date.now() + ms;
   while (Date.now() < end) {
@@ -88,15 +97,15 @@ async function main() {
   assert.equal(health.data.db, 'up');
   ok('health endpoint reports db up');
 
-  assert.equal((await call('GET', '/reading/me/status')).status, 401);
+  assert.equal((await call('GET', '/reading/library')).status, 401);
   ok('logged-out: status requires login (401)');
 
-  const regA = await call('POST', '/auth/register', { body: { name: 'Rahul Sharma', email: 'rahul@test.dev', password: 'password123' } });
+  const regA = await call('POST', '/auth/register', { body: { name: 'Rahul Sharma', email: 'rahul@test.dev', phone: '+919876543210', password: 'password123' } });
   assert.equal(regA.status, 201);
   const A = regA.data.token;
-  const B = (await call('POST', '/auth/register', { body: { name: 'Priya Rao', email: 'priya@test.dev', password: 'password123' } })).data.token;
-  const C = (await call('POST', '/auth/register', { body: { name: 'Amit Das', email: 'amit@test.dev', password: 'password123' } })).data.token;
-  assert.equal((await call('POST', '/auth/register', { body: { name: 'Rahul Again', email: 'rahul@test.dev', password: 'password123' } })).status, 409);
+  const B = (await call('POST', '/auth/register', { body: { name: 'Priya Rao', email: 'priya@test.dev', phone: '+919876543210', password: 'password123' } })).data.token;
+  const C = (await call('POST', '/auth/register', { body: { name: 'Amit Das', email: 'amit@test.dev', phone: '+919876543210', password: 'password123' } })).data.token;
+  assert.equal((await call('POST', '/auth/register', { body: { name: 'Rahul Again', email: 'rahul@test.dev', phone: '+919876543210', password: 'password123' } })).status, 409);
   ok('register works, duplicate email rejected');
 
   assert.equal((await call('POST', '/auth/register', { body: { name: 'Eve', email: 'eve@test.dev', password: 'password123', role: 'ADMIN' } })).status, 400);
@@ -116,9 +125,9 @@ async function main() {
   ok('normal user gets 403 (no token 401) on admin APIs');
 
   console.log('Book upload + processing');
-  const noTaskStatus = await call('GET', '/reading/me/status', { token: A });
-  assert.equal(noTaskStatus.data.state, 'NO_ACTIVE_TASK');
-  ok('no task yet -> NO_ACTIVE_TASK');
+  const emptyLib = await call('GET', '/reading/library', { token: A });
+  assert.deepEqual(emptyLib.data.books, []);
+  ok('no books yet -> empty library');
 
   const badForm = new FormData();
   badForm.append('title', 'Fake');
@@ -142,11 +151,13 @@ async function main() {
   assert.equal(ready.pageCount, 5);
   assert.ok(!JSON.stringify(ready).includes('originalFilePath'));
   ok('PDF processed into 5 pages, status READY, storage path not exposed');
+  assert.equal((await statusOf(A, bookId)).state, 'NO_ACTIVE_TASK');
+  ok('book listed, but no task yet -> NO_TASK');
 
   console.log('Global task + per-user submissions');
   const task = (await call('POST', '/admin/tasks', { token: ADMIN, body: { bookId, title: 'Complete the Chapter 1 Reading Activity', description: 'Read the instructions and complete the activity.' } })).data;
-  const sA = (await call('GET', '/reading/me/status', { token: A })).data;
-  const sB = (await call('GET', '/reading/me/status', { token: B })).data;
+  const sA = (await statusOf(A, bookId));
+  const sB = (await statusOf(B, bookId));
   assert.equal(sA.state, 'NOT_SUBMITTED');
   assert.equal(sA.task.id, task.id);
   assert.equal(sB.task.id, task.id);
@@ -159,13 +170,13 @@ async function main() {
 
   const sub1 = await call('POST', `/reading/tasks/${task.id}/submit`, { token: A, body: { userId: 'someone-else' } });
   assert.equal(sub1.status, 201);
-  assert.equal(sub1.data.state, 'PENDING_REVIEW'); // the body is ignored; the row belongs to the token's user
+  assert.equal(bookStatus(sub1.data, bookId).state, 'PENDING_REVIEW'); // the body is ignored; the row belongs to the token's user
   const subA = await call('POST', `/reading/tasks/${task.id}/submit`, { token: A });
-  assert.equal(subA.data.state, 'PENDING_REVIEW');
+  assert.equal(bookStatus(subA.data, bookId).state, 'PENDING_REVIEW');
   const subA2 = await call('POST', `/reading/tasks/${task.id}/submit`, { token: A });
-  assert.equal(subA2.data.state, 'PENDING_REVIEW');
-  assert.equal((await call('POST', `/reading/tasks/${task.id}/submit`, { token: B })).data.state, 'PENDING_REVIEW');
-  assert.equal((await call('POST', `/reading/tasks/${task.id}/submit`, { token: C })).data.state, 'PENDING_REVIEW');
+  assert.equal(bookStatus(subA2.data, bookId).state, 'PENDING_REVIEW');
+  assert.equal(bookStatus((await call('POST', `/reading/tasks/${task.id}/submit`, { token: B })).data, bookId).state, 'PENDING_REVIEW');
+  assert.equal(bookStatus((await call('POST', `/reading/tasks/${task.id}/submit`, { token: C })).data, bookId).state, 'PENDING_REVIEW');
   assert.equal((await call('POST', `/reading/tasks/nope/submit`, { token: A })).status, 404);
   ok('submit -> PENDING_REVIEW, duplicate submit is idempotent, userId in the body ignored (row belongs to the token user), unknown task 404');
 
@@ -180,9 +191,9 @@ async function main() {
 
   assert.equal((await call('PATCH', `/admin/reading/requests/${reqOf('rahul@test.dev').id}/approve`, { token: ADMIN })).data.status, 'APPROVED');
   assert.equal((await call('PATCH', `/admin/reading/requests/${reqOf('amit@test.dev').id}/reject`, { token: ADMIN, body: { reason: 'Please complete the activity again.' } })).data.status, 'REJECTED');
-  assert.equal((await call('GET', '/reading/me/status', { token: A })).data.state, 'ACCESS_ACTIVE');
-  assert.equal((await call('GET', '/reading/me/status', { token: B })).data.state, 'PENDING_REVIEW');
-  const sC = (await call('GET', '/reading/me/status', { token: C })).data;
+  assert.equal((await statusOf(A, bookId)).state, 'ACCESS_ACTIVE');
+  assert.equal((await statusOf(B, bookId)).state, 'PENDING_REVIEW');
+  const sC = (await statusOf(C, bookId));
   assert.equal(sC.state, 'REJECTED');
   assert.equal(sC.rejectionReason, 'Please complete the activity again.');
   ok('A approved, B still pending, C rejected with reason (independent per user)');
@@ -224,29 +235,30 @@ async function main() {
   assert.equal((await call('PATCH', `/reading/progress/${bookId}`, { token: A, body: { currentPage: 4 } })).data.currentPage, 4);
   const resume = (await call('POST', `/reading/books/${bookId}/session`, { token: A })).data;
   assert.equal(resume.currentPage, 4);
-  assert.equal((await call('GET', '/reading/me/status', { token: A })).data.currentPage, 4);
+  assert.equal((await statusOf(A, bookId)).currentPage, 4);
   assert.equal((await call('PATCH', `/reading/progress/${bookId}`, { token: B, body: { currentPage: 2 } })).status, 403);
   ok('progress saved, clamped to page count, resumes at page 4; other user cannot write it');
 
   console.log('Rejected user can resubmit; revoke on reject');
-  assert.equal((await call('POST', `/reading/tasks/${task.id}/submit`, { token: C })).data.state, 'PENDING_REVIEW');
+  assert.equal(bookStatus((await call('POST', `/reading/tasks/${task.id}/submit`, { token: C })).data, bookId).state, 'PENDING_REVIEW');
   ok('rejected user resubmits -> PENDING_REVIEW again');
   assert.equal((await call('PATCH', `/admin/reading/requests/${reqOf('rahul@test.dev').id}/reject`, { token: ADMIN, body: {} })).data.status, 'REJECTED');
-  assert.equal((await call('GET', '/reading/me/status', { token: A })).data.state, 'ACCESS_REVOKED');
+  assert.equal((await statusOf(A, bookId)).state, 'ACCESS_REVOKED');
   assert.equal((await call('GET', `/reading/books/${bookId}/pages/1`, { token: A, headers: { 'X-Reading-Session': resume.sessionToken } })).status, 403);
   ok('rejecting an approved request revokes access immediately (page API 403)');
 
-  console.log('Task replacement keeps history');
+  console.log('Tasks are independent; the newest active task opens a locked book');
   const task2 = (await call('POST', '/admin/tasks', { token: ADMIN, body: { bookId, title: 'Chapter 2 task', description: 'New task' } })).data;
   const tasks = (await call('GET', '/admin/tasks', { token: ADMIN })).data;
-  assert.equal(tasks.filter((t) => t.isActive).length, 1);
-  assert.equal((await call('GET', '/reading/tasks/current', { token: B })).data.id, task2.id);
+  assert.equal(tasks.filter((t) => t.isActive).length, 2);
+  assert.deepEqual(tasks.find((t) => t.id === task2.id).books.map((b) => b.id), [bookId]);
+  assert.equal((await statusOf(B, bookId)).task.id, task2.id);
   assert.equal((await call('GET', '/admin/reading/requests', { token: ADMIN })).data.length, 3);
-  ok('only one active task; old submissions are kept');
+  ok('publishing a task no longer switches others off; old submissions are kept');
 
   console.log('1:1 mentorship payment flow');
-  const D = (await call('POST', '/auth/register', { body: { name: 'Dev Patel', email: 'dev@test.dev', password: 'password123' } })).data.token;
-  const E = (await call('POST', '/auth/register', { body: { name: 'Esha Roy', email: 'esha@test.dev', password: 'password123' } })).data.token;
+  const D = (await call('POST', '/auth/register', { body: { name: 'Dev Patel', email: 'dev@test.dev', phone: '+919876543210', password: 'password123' } })).data.token;
+  const E = (await call('POST', '/auth/register', { body: { name: 'Esha Roy', email: 'esha@test.dev', phone: '+919876543210', password: 'password123' } })).data.token;
   const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
   const hash = (c) => c.repeat(64);
   const today = new Date().toISOString().slice(0, 10);
@@ -288,7 +300,7 @@ async function main() {
   assert.equal((await call('POST', '/mentorship/payments', { token: E, form: payForm() })).status, 409);
   ok('submit -> PENDING (no telegram link yet); second pending blocked; same tx hash by another user blocked');
 
-  const stPending = (await call('GET', '/reading/me/status', { token: D })).data;
+  const stPending = (await statusOf(D, bookId));
   assert.deepEqual([stPending.state, stPending.mentorshipPayment], ['NOT_SUBMITTED', 'PENDING']);
   assert.equal((await call('GET', `/reading/books/${bookId}`, { token: D })).status, 403);
   assert.equal((await call('GET', '/admin/mentorship/payments', { token: D })).status, 403);
@@ -326,7 +338,7 @@ async function main() {
   assert.equal((await call('GET', '/mentorship/status', { token: E })).data.telegramUrl, undefined);
   ok('approve -> APPROVED + Telegram link, only for the approved user');
 
-  const sBook = (await call('GET', '/reading/me/status', { token: D })).data;
+  const sBook = (await statusOf(D, bookId));
   assert.equal(sBook.state, 'ACCESS_ACTIVE');
   assert.equal(sBook.book.id, bookId);
   const dSess = (await call('POST', `/reading/books/${bookId}/session`, { token: D })).data;
@@ -341,6 +353,53 @@ async function main() {
   assert.equal((await call('GET', '/mentorship/status', { token: D })).data.state, 'REJECTED');
   assert.equal((await call('GET', `/reading/books/${bookId}`, { token: D })).status, 403);
   ok('withdrawing the approval revokes mentorship + the book access it granted');
+
+  console.log('One task unlocks several books');
+  const mkBook = async (title) => {
+    const f = new FormData();
+    f.append('title', title);
+    f.append('file', new Blob([makePdf(3)], { type: 'application/pdf' }), 'b.pdf');
+    const id = (await call('POST', '/admin/books', { token: ADMIN, form: f })).data.id;
+    await waitFor(async () => ((await call('GET', '/admin/books', { token: ADMIN })).data.find((x) => x.id === id).status === 'READY' ? true : null), 'book ready');
+    return id;
+  };
+  const book2 = await mkBook('Book Two');
+  const book3 = await mkBook('Book Three');
+  assert.equal((await call('POST', '/admin/tasks', { token: ADMIN, body: { title: 'x', description: 'y' } })).status, 400);
+  assert.equal((await call('POST', '/admin/tasks', { token: ADMIN, body: { bookIds: [book2, 'nope'], title: 'x', description: 'y' } })).status, 404);
+  const multi = (await call('POST', '/admin/tasks', { token: ADMIN, body: { bookIds: [book2, book3], title: 'Bundle task', description: 'Unlocks two books' } })).data;
+  assert.deepEqual(multi.books.map((b) => b.id).sort(), [book2, book3].sort());
+  const F = (await call('POST', '/auth/register', { body: { name: 'Farah Khan', email: 'farah@test.dev', phone: '+919876543210', password: 'password123' } })).data.token;
+  const libF = (await call('GET', '/reading/library', { token: F })).data;
+  const f2 = libF.books.find((b) => b.id === book2);
+  assert.equal(f2.state, 'LOCKED');
+  assert.deepEqual(f2.task.unlocks.map((b) => b.id).sort(), [book2, book3].sort());
+  ok('library lists every book; a locked book shows its task and the other books that task unlocks');
+
+  const subF = await call('POST', `/reading/tasks/${multi.id}/submit`, { token: F });
+  assert.equal(subF.data.books.find((b) => b.id === book2).state, 'PENDING_REVIEW');
+  assert.equal(subF.data.books.find((b) => b.id === book3).state, 'PENDING_REVIEW');
+  const reqF = (await call('GET', '/admin/reading/requests?status=PENDING_REVIEW', { token: ADMIN })).data.find((r) => r.user.email === 'farah@test.dev');
+  assert.deepEqual(reqF.task.books.map((b) => b.id).sort(), [book2, book3].sort());
+  assert.equal((await call('POST', `/reading/books/${book3}/session`, { token: F })).status, 403);
+  await call('PATCH', `/admin/reading/requests/${reqF.id}/approve`, { token: ADMIN });
+  const after = (await call('GET', '/reading/library', { token: F })).data;
+  assert.equal(after.books.find((b) => b.id === book2).state, 'UNLOCKED');
+  assert.equal(after.books.find((b) => b.id === book3).state, 'UNLOCKED');
+  assert.equal(after.books.find((b) => b.id === bookId).state !== 'UNLOCKED', true);
+  assert.equal((await call('POST', `/reading/books/${book3}/session`, { token: F })).status, 201);
+  assert.equal((await call('POST', `/reading/tasks/${multi.id}/submit`, { token: F })).status, 409);
+  ok('one approval unlocks both books (other books stay locked); resubmitting is refused');
+
+  const book4 = await mkBook('Book Four');
+  assert.equal((await call('PATCH', `/admin/tasks/${multi.id}`, { token: ADMIN, body: { bookIds: [book2, book3, book4] } })).data.books.length, 3);
+  assert.equal((await call('GET', '/reading/library', { token: F })).data.books.find((b) => b.id === book4).state, 'UNLOCKED');
+  ok('a book added to the task later unlocks for users already approved');
+
+  await call('PATCH', `/admin/reading/requests/${reqF.id}/reject`, { token: ADMIN, body: {} });
+  const afterReject = (await call('GET', '/reading/library', { token: F })).data;
+  assert.equal([book2, book3, book4].every((id) => afterReject.books.find((b) => b.id === id).state === 'REVOKED'), true);
+  ok('rejecting the approval withdraws every book the task unlocked');
 
   console.log('Admin book lifecycle / unavailable');
   await call('PATCH', `/admin/reading/requests/${reqOf('rahul@test.dev').id}/approve`, { token: ADMIN });

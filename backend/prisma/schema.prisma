@@ -69,26 +69,37 @@ model Book {
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
 
-  tasks    Task[]
-  accesses ReadingAccess[]
-  progress ReadingProgress[]
-  sessions ReadingSession[]
+  taskBooks TaskBook[]
+  accesses  ReadingAccess[]
+  progress  ReadingProgress[]
+  sessions  ReadingSession[]
 }
 
-// One global task shared by every user. Submissions are per user.
+// A task shown to every user. One task can unlock several books (see TaskBook); submissions are per user.
 model Task {
   id          String   @id @default(cuid())
-  bookId      String
   title       String
   description String
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  book        Book             @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  books       TaskBook[]
   submissions TaskSubmission[]
 
   @@index([isActive])
+}
+
+/// The books a task unlocks. Approving a user's submission grants access to every book linked here.
+model TaskBook {
+  taskId    String
+  bookId    String
+  createdAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, bookId])
   @@index([bookId])
 }
 

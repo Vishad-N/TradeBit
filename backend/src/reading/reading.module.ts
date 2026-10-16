@@ -21,7 +21,7 @@ import {
 import type { Response } from 'express';
 import { randomBytes } from 'node:crypto';
 import { Prisma, SubmissionStatus } from '@prisma/client';
-import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min, MinLength } from 'class-validator';
+import { ArrayMaxSize, ArrayNotEmpty, IsArray, IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min, MinLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
@@ -33,11 +33,14 @@ class SaveProgressDto {
   @Type(() => Number) @IsInt() @Min(1) currentPage: number;
 }
 class CreateTaskDto {
-  @IsString() bookId: string;
+  /** The books this task unlocks (one or more). `bookId` is still accepted for a single book. */
+  @IsOptional() @IsArray() @ArrayNotEmpty() @ArrayMaxSize(100) @IsString({ each: true }) bookIds?: string[];
+  @IsOptional() @IsString() bookId?: string;
   @IsString() @MinLength(1) @MaxLength(200) title: string;
   @IsString() @MinLength(1) @MaxLength(5000) description: string;
 }
 class UpdateTaskDto {
+  @IsOptional() @IsArray() @ArrayNotEmpty() @ArrayMaxSize(100) @IsString({ each: true }) bookIds?: string[];
   @IsOptional() @IsString() @MinLength(1) @MaxLength(200) title?: string;
   @IsOptional() @IsString() @MinLength(1) @MaxLength(5000) description?: string;
   @IsOptional() @IsBoolean() isActive?: boolean;
@@ -46,7 +49,9 @@ class RejectDto {
   @IsOptional() @IsString() @MaxLength(500) reason?: string;
 }
 
-const taskSelect = { id: true, bookId: true, title: true, description: true, isActive: true, createdAt: true, updatedAt: true } as const;
+const taskSelect = { id: true, title: true, description: true, isActive: true, createdAt: true, updatedAt: true } as const;
+const taskBooksInclude = { books: { select: { book: { select: { id: true, title: true } } } } } as const;
+const flattenBooks = <T extends { books: { book: { id: string; title: string } }[] }>(t: T) => ({ ...t, books: t.books.map((b) => b.book) });
 const bookPublicSelect = { id: true, title: true, description: true, pageCount: true } as const;
 
 @Injectable()
@@ -86,70 +91,97 @@ export class ReadingService {
     return { book, access };
   }
 
-  private activeTask() {
-    return this.prisma.task.findFirst({
-      where: { isActive: true, book: { isActive: true, status: 'READY' } },
-      orderBy: { createdAt: 'desc' },
-      select: taskSelect,
+  /**
+   * An approved task submission unlocks every book linked to that task. Approval already granted the books linked
+   * at the time; this covers books added to the task later (only for books the user has no access row for at all).
+   */
+  private async syncTaskAccess(userId: string) {
+    const subs = await this.prisma.taskSubmission.findMany({
+      where: { userId, status: 'APPROVED' },
+      select: { reviewedAt: true, task: { select: { books: { select: { bookId: true } } } } },
     });
+    if (!subs.length) return;
+    const have = new Set((await this.prisma.readingAccess.findMany({ where: { userId }, select: { bookId: true } })).map((a) => a.bookId));
+    const days = Number(process.env.READING_ACCESS_DAYS);
+    for (const sub of subs) {
+      for (const { bookId } of sub.task.books) {
+        if (have.has(bookId)) continue;
+        have.add(bookId);
+        const base = sub.reviewedAt ?? new Date();
+        const expiresAt = days > 0 ? new Date(base.getTime() + days * 86_400_000) : null;
+        await this.prisma.readingAccess.create({ data: { userId, bookId, status: 'ACTIVE', source: 'TASK', expiresAt } }).catch(() => undefined);
+      }
+    }
   }
 
-  // ---------- user: status / task ----------
-  async currentTask() {
-    const task = await this.activeTask();
-    if (!task) throw new NotFoundException({ code: 'NO_ACTIVE_TASK', message: 'There is no active reading task right now.' });
-    return task;
-  }
+  // ---------- user: library ----------
+  /**
+   * Everything /read/books renders: every available book with this user's state for it, and for a locked book the
+   * task that opens it (plus the other books that same task unlocks).
+   */
+  async library(user: AuthUser) {
+    await this.syncMentorshipAccess(user.id);
+    await this.syncTaskAccess(user.id);
 
-  /** Single source of truth for what /read/books should render. */
-  async status(user: AuthUser) {
-    const core = await this.statusCore(user);
-    if (core.state === 'ACCESS_ACTIVE') return { ...core, mentorshipPayment: null as null | 'PENDING' | 'REJECTED' };
+    const [books, accesses, progress, submissions] = await Promise.all([
+      this.prisma.book.findMany({
+        where: { isActive: true, status: 'READY' },
+        select: { ...bookPublicSelect, taskBooks: { select: { task: { select: { ...taskSelect, books: { select: { book: { select: { id: true, title: true, isActive: true, status: true } } } } } } } } },
+        orderBy: { createdAt: 'asc' },
+      }),
+      this.prisma.readingAccess.findMany({ where: { userId: user.id } }),
+      this.prisma.readingProgress.findMany({ where: { userId: user.id } }),
+      this.prisma.taskSubmission.findMany({ where: { userId: user.id } }),
+    ]);
+    const accessBy = new Map(accesses.map((a) => [a.bookId, a]));
+    const progressBy = new Map(progress.map((p) => [p.bookId, p]));
+    const submissionBy = new Map(submissions.map((x) => [x.taskId, x]));
+    const now = new Date();
+
+    const out = books.map((b) => {
+      const access = accessBy.get(b.id);
+      const prog = progressBy.get(b.id);
+      const base = { id: b.id, title: b.title, description: b.description, pageCount: b.pageCount };
+
+      // The newest active task that links this book is the one that opens it.
+      const task = b.taskBooks.map((x) => x.task).filter((t) => t.isActive).sort((x, y) => y.createdAt.getTime() - x.createdAt.getTime())[0];
+      const taskInfo = task && {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        unlocks: task.books.map((x) => x.book).filter((x) => x.isActive && x.status === 'READY').map((x) => ({ id: x.id, title: x.title })),
+      };
+
+      if (access?.status === 'ACTIVE' && !(access.expiresAt && access.expiresAt <= now)) {
+        return { ...base, state: 'UNLOCKED' as const, currentPage: prog?.currentPage ?? 1, progressPercentage: prog?.progressPercentage ?? 0, task: null };
+      }
+      if (access?.status === 'REVOKED') return { ...base, state: 'REVOKED' as const, task: taskInfo ?? null };
+      if (access) return { ...base, state: 'EXPIRED' as const, task: taskInfo ?? null };
+      if (!task) return { ...base, state: 'NO_TASK' as const, task: null };
+
+      const sub = submissionBy.get(task.id);
+      if (!sub) return { ...base, state: 'LOCKED' as const, task: taskInfo };
+      if (sub.status === 'REJECTED') return { ...base, state: 'REJECTED' as const, task: taskInfo, rejectionReason: sub.rejectionReason };
+      // PENDING_REVIEW, or APPROVED without an access row (should not happen): treat as waiting.
+      return { ...base, state: 'PENDING_REVIEW' as const, task: taskInfo, submittedAt: sub.submittedAt };
+    });
+
     // A user waiting on a 1:1 mentorship payment should see "access pending" on the Books page too.
     const latest = await this.prisma.mentorshipPayment.findFirst({ where: { userId: user.id }, orderBy: { submittedAt: 'desc' }, select: { status: true } });
     const mentorshipPayment = latest?.status === 'PENDING' || latest?.status === 'REJECTED' ? latest.status : null;
-    return { ...core, mentorshipPayment };
-  }
-
-  private async statusCore(user: AuthUser) {
-    await this.syncMentorshipAccess(user.id);
-    const task = await this.activeTask();
-    if (!task) {
-      // No reading task, but a user with access (e.g. via mentorship) can still read.
-      const [first] = await this.myBooks(user.id);
-      if (first) {
-        const progress = await this.prisma.readingProgress.findUnique({ where: { userId_bookId: { userId: user.id, bookId: first.id } } });
-        return { state: 'ACCESS_ACTIVE' as const, task: null, book: first, currentPage: progress?.currentPage ?? 1, progressPercentage: progress?.progressPercentage ?? 0 };
-      }
-      return { state: 'NO_ACTIVE_TASK' as const };
-    }
-
-    const access = await this.prisma.readingAccess.findUnique({ where: { userId_bookId: { userId: user.id, bookId: task.bookId } } });
-    if (access) {
-      const expired = access.status === 'ACTIVE' && access.expiresAt && access.expiresAt <= new Date();
-      if (access.status === 'ACTIVE' && !expired) {
-        const book = await this.prisma.book.findUniqueOrThrow({ where: { id: task.bookId }, select: bookPublicSelect });
-        const progress = await this.prisma.readingProgress.findUnique({ where: { userId_bookId: { userId: user.id, bookId: task.bookId } } });
-        return { state: 'ACCESS_ACTIVE' as const, task, book, currentPage: progress?.currentPage ?? 1, progressPercentage: progress?.progressPercentage ?? 0 };
-      }
-      if (access.status === 'REVOKED') return { state: 'ACCESS_REVOKED' as const, task };
-      return { state: 'ACCESS_EXPIRED' as const, task };
-    }
-
-    const submission = await this.prisma.taskSubmission.findUnique({ where: { taskId_userId: { taskId: task.id, userId: user.id } } });
-    if (!submission) return { state: 'NOT_SUBMITTED' as const, task };
-    if (submission.status === 'REJECTED') return { state: 'REJECTED' as const, task, rejectionReason: submission.rejectionReason };
-    // PENDING_REVIEW, or APPROVED without an access row (should not happen): treat as waiting.
-    return { state: 'PENDING_REVIEW' as const, task, submittedAt: submission.submittedAt };
+    return { books: out, mentorshipPayment };
   }
 
   async submit(user: AuthUser, taskId: string) {
-    const task = await this.prisma.task.findUnique({ where: { id: taskId } });
+    const task = await this.prisma.task.findUnique({ where: { id: taskId }, include: { books: { select: { bookId: true } } } });
     if (!task) throw new NotFoundException({ code: 'TASK_NOT_FOUND', message: 'Task not found.' });
     if (!task.isActive) throw new ConflictException({ code: 'TASK_INACTIVE', message: 'This task is no longer active.' });
 
-    const access = await this.prisma.readingAccess.findUnique({ where: { userId_bookId: { userId: user.id, bookId: task.bookId } } });
-    if (access?.status === 'ACTIVE') throw new ConflictException({ code: 'ALREADY_HAS_ACCESS', message: 'You already have reading access.' });
+    // Nothing to do only when every book of the task is already open for this user.
+    const open = await this.prisma.readingAccess.count({
+      where: { userId: user.id, status: 'ACTIVE', bookId: { in: task.books.map((b) => b.bookId) }, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
+    });
+    if (task.books.length > 0 && open >= task.books.length) throw new ConflictException({ code: 'ALREADY_HAS_ACCESS', message: 'You already have reading access.' });
 
     // userId always comes from the authenticated session, never from the request body.
     const key = { taskId_userId: { taskId, userId: user.id } };
@@ -168,7 +200,7 @@ export class ReadingService {
         if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002')) throw e;
       }
     }
-    return this.status(user);
+    return this.library(user);
   }
 
   // ---------- user: books ----------
@@ -240,35 +272,50 @@ export class ReadingService {
   }
 
   // ---------- admin: tasks ----------
-  listTasks() {
-    return this.prisma.task.findMany({ select: { ...taskSelect, book: { select: { id: true, title: true } }, _count: { select: { submissions: true } } }, orderBy: { createdAt: 'desc' } });
+  async listTasks() {
+    const rows = await this.prisma.task.findMany({ select: { ...taskSelect, ...taskBooksInclude, _count: { select: { submissions: true } } }, orderBy: { createdAt: 'desc' } });
+    return rows.map(flattenBooks);
   }
 
-  /** Only one task is active at a time; a new task never deletes the history of the old one. */
+  private async existingBookIds(ids: string[]) {
+    const unique = [...new Set(ids)];
+    const found = await this.prisma.book.findMany({ where: { id: { in: unique } }, select: { id: true } });
+    if (found.length !== unique.length) throw new NotFoundException('One of the selected books was not found');
+    return unique;
+  }
+
+  /** A task can unlock several books. Tasks are independent: publishing one does not switch the others off. */
   async createTask(dto: CreateTaskDto) {
-    const book = await this.prisma.book.findUnique({ where: { id: dto.bookId } });
-    if (!book) throw new NotFoundException('Book not found');
-    const [, task] = await this.prisma.$transaction([
-      this.prisma.task.updateMany({ where: { isActive: true }, data: { isActive: false } }),
-      this.prisma.task.create({ data: { bookId: dto.bookId, title: dto.title.trim(), description: dto.description.trim() }, select: taskSelect }),
-    ]);
-    return task;
+    const ids = dto.bookIds?.length ? dto.bookIds : dto.bookId ? [dto.bookId] : [];
+    if (!ids.length) throw new BadRequestException('Choose at least one book for this task.');
+    const bookIds = await this.existingBookIds(ids);
+    const task = await this.prisma.task.create({
+      data: { title: dto.title.trim(), description: dto.description.trim(), books: { create: bookIds.map((bookId) => ({ bookId })) } },
+      select: { ...taskSelect, ...taskBooksInclude },
+    });
+    return flattenBooks(task);
   }
 
   async updateTask(id: string, dto: UpdateTaskDto) {
     if (!(await this.prisma.task.findUnique({ where: { id } }))) throw new NotFoundException('Task not found');
-    const ops: Prisma.PrismaPromise<any>[] = [];
-    if (dto.isActive) ops.push(this.prisma.task.updateMany({ where: { isActive: true, NOT: { id } }, data: { isActive: false } }));
-    ops.push(this.prisma.task.update({ where: { id }, data: dto, select: taskSelect }));
-    const res = await this.prisma.$transaction(ops);
-    return res[res.length - 1];
+    const { bookIds, ...rest } = dto;
+    const bookIdList = bookIds ? await this.existingBookIds(bookIds) : null;
+    const task = await this.prisma.task.update({
+      where: { id },
+      data: { ...rest, ...(bookIdList ? { books: { deleteMany: {}, create: bookIdList.map((bookId) => ({ bookId })) } } : {}) },
+      select: { ...taskSelect, ...taskBooksInclude },
+    });
+    return flattenBooks(task);
   }
 
   // ---------- admin: requests ----------
   private requestInclude = {
     user: { select: { id: true, name: true, email: true } },
-    task: { select: { id: true, title: true, description: true, book: { select: { id: true, title: true } } } },
+    task: { select: { id: true, title: true, description: true, ...taskBooksInclude } },
   } as const;
+  private withBooks<T extends { task: { books: { book: { id: string; title: string } }[] } }>(r: T) {
+    return { ...r, task: flattenBooks(r.task) };
+  }
 
   listRequests(status?: string) {
     const where: Prisma.TaskSubmissionWhereInput = {};
@@ -276,39 +323,45 @@ export class ReadingService {
       if (!['PENDING_REVIEW', 'APPROVED', 'REJECTED'].includes(status)) throw new BadRequestException('Invalid status filter');
       where.status = status as SubmissionStatus;
     }
-    return this.prisma.taskSubmission.findMany({ where, include: this.requestInclude, orderBy: { submittedAt: 'desc' }, take: 500 });
+    return this.prisma.taskSubmission.findMany({ where, include: this.requestInclude, orderBy: { submittedAt: 'desc' }, take: 500 }).then((rows) => rows.map((r) => this.withBooks(r)));
   }
 
   async getRequest(id: string) {
     const r = await this.prisma.taskSubmission.findUnique({ where: { id }, include: this.requestInclude });
     if (!r) throw new NotFoundException('Request not found');
-    return r;
+    return this.withBooks(r);
   }
 
   async approve(id: string, admin: AuthUser) {
-    const sub = await this.prisma.taskSubmission.findUnique({ where: { id }, include: { task: true } });
+    const sub = await this.prisma.taskSubmission.findUnique({ where: { id }, include: { task: { include: { books: { select: { bookId: true } } } } } });
     if (!sub) throw new NotFoundException('Request not found');
     const days = Number(process.env.READING_ACCESS_DAYS);
     const expiresAt = days > 0 ? new Date(Date.now() + days * 86_400_000) : null;
     const now = new Date();
+    // Approving one task unlocks every book linked to it.
     await this.prisma.$transaction([
       this.prisma.taskSubmission.update({ where: { id }, data: { status: 'APPROVED', rejectionReason: null, reviewedAt: now, reviewedById: admin.id } }),
-      this.prisma.readingAccess.upsert({
-        where: { userId_bookId: { userId: sub.userId, bookId: sub.task.bookId } },
-        update: { status: 'ACTIVE', grantedAt: now, expiresAt },
-        create: { userId: sub.userId, bookId: sub.task.bookId, status: 'ACTIVE', grantedAt: now, expiresAt },
-      }),
+      ...sub.task.books.map(({ bookId }) =>
+        this.prisma.readingAccess.upsert({
+          where: { userId_bookId: { userId: sub.userId, bookId } },
+          update: { status: 'ACTIVE', grantedAt: now, expiresAt },
+          create: { userId: sub.userId, bookId, status: 'ACTIVE', grantedAt: now, expiresAt },
+        }),
+      ),
     ]);
     return this.getRequest(id);
   }
 
   async reject(id: string, admin: AuthUser, reason?: string) {
-    const sub = await this.prisma.taskSubmission.findUnique({ where: { id }, include: { task: true } });
+    const sub = await this.prisma.taskSubmission.findUnique({ where: { id }, include: { task: { include: { books: { select: { bookId: true } } } } } });
     if (!sub) throw new NotFoundException('Request not found');
     await this.prisma.$transaction([
       this.prisma.taskSubmission.update({ where: { id }, data: { status: 'REJECTED', rejectionReason: reason?.trim() || null, reviewedAt: new Date(), reviewedById: admin.id } }),
-      // Rejecting a previously approved submission also withdraws the access it granted.
-      this.prisma.readingAccess.updateMany({ where: { userId: sub.userId, bookId: sub.task.bookId, status: 'ACTIVE' }, data: { status: 'REVOKED' } }),
+      // Rejecting a previously approved submission also withdraws the task access it granted (never mentorship access).
+      this.prisma.readingAccess.updateMany({
+        where: { userId: sub.userId, bookId: { in: sub.task.books.map((b) => b.bookId) }, status: 'ACTIVE', source: 'TASK' },
+        data: { status: 'REVOKED' },
+      }),
     ]);
     return this.getRequest(id);
   }
@@ -353,19 +406,14 @@ class ReadingController {
     return new StreamableFile(image);
   }
 
-  @Get('tasks/current')
-  currentTask() {
-    return this.reading.currentTask();
+  @Get('library')
+  library(@CurrentUser() u: AuthUser) {
+    return this.reading.library(u);
   }
 
   @Post('tasks/:taskId/submit')
   submit(@CurrentUser() u: AuthUser, @Param('taskId') taskId: string) {
     return this.reading.submit(u, taskId);
-  }
-
-  @Get('me/status')
-  status(@CurrentUser() u: AuthUser) {
-    return this.reading.status(u);
   }
 
   @Get('progress/:bookId')
