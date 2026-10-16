@@ -126,7 +126,7 @@ export class ReadingService {
     const [books, accesses, progress, submissions] = await Promise.all([
       this.prisma.book.findMany({
         where: { isActive: true, status: 'READY' },
-        select: { ...bookPublicSelect, taskBooks: { select: { task: { select: { ...taskSelect, books: { select: { book: { select: { id: true, title: true, isActive: true, status: true } } } } } } } } },
+        select: { ...bookPublicSelect, coverKey: true, updatedAt: true, taskBooks: { select: { task: { select: { ...taskSelect, books: { select: { book: { select: { id: true, title: true, isActive: true, status: true } } } } } } } } },
         orderBy: { createdAt: 'asc' },
       }),
       this.prisma.readingAccess.findMany({ where: { userId: user.id } }),
@@ -141,7 +141,7 @@ export class ReadingService {
     const out = books.map((b) => {
       const access = accessBy.get(b.id);
       const prog = progressBy.get(b.id);
-      const base = { id: b.id, title: b.title, description: b.description, pageCount: b.pageCount };
+      const base = { id: b.id, title: b.title, description: b.description, pageCount: b.pageCount, cover: b.coverKey ? `/books/${b.id}/cover?v=${b.updatedAt.getTime()}` : null };
 
       // The newest active task that links this book is the one that opens it.
       const task = b.taskBooks.map((x) => x.task).filter((t) => t.isActive).sort((x, y) => y.createdAt.getTime() - x.createdAt.getTime())[0];

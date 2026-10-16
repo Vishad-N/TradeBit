@@ -12,11 +12,14 @@ import {
   Param,
   Patch,
   Post,
+  Res,
+  StreamableFile,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { IsBoolean, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PrismaService } from '../prisma/prisma.service';
@@ -30,6 +33,15 @@ const MAX_PDF_BYTES = (Number(process.env.MAX_PDF_MB) || 50) * 1024 * 1024;
 // Books added from a link are downloaded by the server, so they can be larger than a browser upload.
 const MAX_LINK_PDF_BYTES = (Number(process.env.MAX_LINK_PDF_MB) || 300) * 1024 * 1024;
 const LINK_PREFIX = 'link:';
+const MAX_COVER_BYTES = 2 * 1024 * 1024;
+const COVER_MIME: Record<string, string> = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
+
+function sniffCover(buf: Buffer): { ext: 'jpg' | 'png' | 'webp'; mime: string } | null {
+  if (buf.length > 12 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return { ext: 'jpg', mime: 'image/jpeg' };
+  if (buf.length > 12 && buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return { ext: 'png', mime: 'image/png' };
+  if (buf.length > 12 && buf.subarray(0, 4).toString('latin1') === 'RIFF' && buf.subarray(8, 12).toString('latin1') === 'WEBP') return { ext: 'webp', mime: 'image/webp' };
+  return null;
+}
 
 export class CreateBookDto {
   @IsString() @MinLength(1) @MaxLength(200) title: string;
@@ -55,6 +67,7 @@ const bookSelect = {
   status: true,
   processingError: true,
   isActive: true,
+  coverKey: true,
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -141,6 +154,38 @@ export class BooksService {
     }
   }
 
+  /** Public: the cover image of an active book. */
+  async cover(id: string) {
+    const b = await this.prisma.book.findUnique({ where: { id } });
+    if (!b || !b.isActive || !b.coverKey) throw new NotFoundException();
+    const ext = b.coverKey.split('.').pop() || 'jpg';
+    return { body: await this.storage.get(b.coverKey), mime: COVER_MIME[ext] || 'application/octet-stream' };
+  }
+
+  async setCover(id: string, file?: { buffer: Buffer; size: number }) {
+    if (!file) throw new BadRequestException('Choose an image to upload.');
+    const b = await this.prisma.book.findUnique({ where: { id } });
+    if (!b) throw new NotFoundException('Book not found');
+    if (file.size > MAX_COVER_BYTES) throw new BadRequestException('Cover must be 2MB or smaller.');
+    const img = sniffCover(file.buffer);
+    if (!img) throw new BadRequestException('Cover must be a JPG, PNG or WEBP image.');
+    const key = `books/${id}/cover-${Date.now()}.${img.ext}`;
+    await this.storage.put(key, file.buffer, img.mime);
+    const updated = await this.prisma.book.update({ where: { id }, data: { coverKey: key }, select: bookSelect });
+    if (b.coverKey) await this.storage.deleteKey(b.coverKey).catch(() => undefined);
+    return updated;
+  }
+
+  async clearCover(id: string) {
+    const b = await this.prisma.book.findUnique({ where: { id } });
+    if (!b) throw new NotFoundException('Book not found');
+    if (b.coverKey) {
+      await this.prisma.book.update({ where: { id }, data: { coverKey: null } });
+      await this.storage.deleteKey(b.coverKey).catch(() => undefined);
+    }
+    return { cleared: true };
+  }
+
   async remove(id: string) {
     const book = await this.prisma.book.findUnique({ where: { id } });
     if (!book) throw new NotFoundException('Book not found');
@@ -182,14 +227,37 @@ class AdminBooksController {
     return this.books.update(id, dto);
   }
 
+  @Post(':bookId/cover')
+  @UseInterceptors(FileInterceptor('cover', { limits: { fileSize: MAX_COVER_BYTES, files: 1 } }))
+  setCover(@Param('bookId') id: string, @UploadedFile() cover?: { buffer: Buffer; size: number }) {
+    return this.books.setCover(id, cover);
+  }
+
+  @Delete(':bookId/cover')
+  clearCover(@Param('bookId') id: string) {
+    return this.books.clearCover(id);
+  }
+
   @Delete(':bookId')
   remove(@Param('bookId') id: string) {
     return this.books.remove(id);
   }
 }
 
+@Controller('books')
+class PublicBooksController {
+  constructor(private readonly books: BooksService) {}
+
+  @Get(':bookId/cover')
+  async cover(@Param('bookId') id: string, @Res({ passthrough: true }) res: Response) {
+    const { body, mime } = await this.books.cover(id);
+    res.set({ 'Content-Type': mime, 'Cache-Control': 'public, max-age=3600', 'X-Content-Type-Options': 'nosniff' });
+    return new StreamableFile(body);
+  }
+}
+
 @Module({
-  controllers: [AdminBooksController],
+  controllers: [AdminBooksController, PublicBooksController],
   providers: [BooksService, PdfProcessor],
   exports: [BooksService],
 })

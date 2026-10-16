@@ -66,6 +66,8 @@ model Book {
   status           BookStatus @default(PROCESSING)
   processingError  String?
   isActive         Boolean    @default(true)
+  /// Storage key of the optional cover image shown on the library card.
+  coverKey         String?
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { API_URL } from '../../services/api.js';
 
 // Cover palettes, in the site's colours. Chosen by position so a book keeps its colour while the list is stable.
 const COVERS = [
@@ -24,7 +25,8 @@ export function LockIcon({ open }) {
   return (
     <svg className={`lib-lock${open ? ' is-open' : ''}`} viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" />
-      <path className="lib-shackle" d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+      <path className="lib-shackle" d={open ? 'M8 10.5V7a4 4 0 0 1 7.6-1.7' : 'M8 10.5V7.5a4 4 0 0 1 8 0v3'} />
+      <circle cx="12" cy="15.5" r="1.2" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -41,8 +43,7 @@ export function BookCard({ book, index, fresh, onOpen }) {
     <li className={`lib-item${fresh ? ' is-fresh' : ''}`} style={{ '--i': index }}>
       <button type="button" className={`lib-card lib-${book.state.toLowerCase()}`} onClick={() => onOpen(book)} aria-label={`${book.title}. ${open ? (pct > 0 ? `Continue reading, ${pct}% done` : 'Open book') : label}`}>
         <span className="lib-cover" style={{ '--bg': cover.bg, '--fg': cover.fg, '--ac': cover.accent }} aria-hidden="true">
-          <i className="lib-ring" />
-          <span className="lib-mono">{monogram(book.title)}</span>
+          {book.cover ? <img className="lib-img" src={`${API_URL}${book.cover}`} alt="" loading="lazy" /> : <><i className="lib-ring" /><span className="lib-mono">{monogram(book.title)}</span></>}
           <span className="lib-spine" />
           <span className={`lib-badge${open ? ' on' : ''}`}><LockIcon open={open} /></span>
           {open && pct > 0 && <span className="lib-prog"><b style={{ width: `${pct}%` }} /></span>}

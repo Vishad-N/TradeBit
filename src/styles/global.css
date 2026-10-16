@@ -1123,6 +1123,11 @@ html{scroll-padding-top:96px}
 .vip-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:54px;padding:14px 16px;border-radius:14px;font-weight:700;font-size:14.5px;text-align:center;text-decoration:none;transition:transform .3s var(--ease),box-shadow .3s}
 .vip-btn:hover{transform:translateY(-2px)}
 .vip-btn-gold{background:linear-gradient(135deg,var(--gold-hi),var(--gold) 55%,#a8821a);color:#15130a;box-shadow:0 10px 30px -12px rgba(212,175,55,.7)}
+.vip-ack{grid-column:1/-1;display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:rgba(244,241,230,.8);cursor:pointer}
+.vip-ack input{margin-top:3px;accent-color:var(--em)}
+.vip-ack b{color:var(--gold-hi)}
+.vip-wa{grid-column:1/-1}
+.vip-btn.is-disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
 .vip-btn-green{background:linear-gradient(135deg,#34d399,var(--em));color:#04130c;box-shadow:0 10px 30px -12px rgba(16,185,129,.7)}
 .vip-fine{margin:10px 0 0;font-size:11px;line-height:1.45;color:rgba(244,241,230,.45);text-align:center}
 @media (max-width:640px){

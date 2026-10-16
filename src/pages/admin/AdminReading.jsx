@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { adminApi } from '../../services/readingApi.js';
+import { API_URL } from '../../services/api.js';
 import PaymentsTab from './PaymentsTab.jsx';
 import PlatformsTab from './PlatformsTab.jsx';
 import WebinarTab from './WebinarTab.jsx';
@@ -36,6 +37,32 @@ function BooksTab() {
   const [msg, setMsg] = useState(null);
   const fileRef = useRef(null);
   const [link, setLink] = useState('');
+  const [editing, setEditing] = useState(null); // book being edited
+  const [edit, setEdit] = useState({ title: '', description: '' });
+  const coverRef = useRef(null);
+
+  const startEdit = b => { setEditing(b); setEdit({ title: b.title, description: b.description || '' }); setMsg(null); };
+  async function saveEdit(e) {
+    e.preventDefault();
+    setBusy(true);
+    setMsg(null);
+    try {
+      await adminApi.updateBook(editing.id, { title: edit.title.trim(), description: edit.description.trim() });
+      const cover = coverRef.current?.files?.[0];
+      if (cover) {
+        const fd = new FormData();
+        fd.append('cover', cover);
+        await adminApi.setBookCover(editing.id, fd);
+      }
+      setEditing(null);
+      setMsg({ ok: 'Book updated.' });
+      reload();
+    } catch (err) {
+      setMsg({ error: err.message });
+    } finally {
+      setBusy(false);
+    }
+  }
 
   // Poll while any book is still being converted into pages.
   useEffect(() => {
@@ -107,7 +134,25 @@ function BooksTab() {
         <button className="btn btn-dark" type="submit" disabled={busy || !title.trim()}>{busy ? 'Adding…' : 'Add from Link'} <span className="ar">→</span></button>
       </form>
 
+      {editing && (
+        <form className="rd-card rd-form rd-gap" onSubmit={saveEdit}>
+          <h2 className="rd-h2">Edit Book</h2>
+          <label className="rd-field"><span>Book Title</span><input value={edit.title} onChange={e => setEdit(v => ({ ...v, title: e.target.value }))} required maxLength={200} /></label>
+          <label className="rd-field"><span>Description</span><textarea rows={3} value={edit.description} onChange={e => setEdit(v => ({ ...v, description: e.target.value }))} maxLength={2000} /></label>
+          <label className="rd-field"><span>Thumbnail (optional: JPG, PNG or WEBP, up to 2MB){editing.coverKey ? ' · choose a file to replace the current one' : ''}</span>
+            <input type="file" accept="image/jpeg,image/png,image/webp" ref={coverRef} />
+            <small>Shown on the book card. A portrait image (about 3:4) works best; without one a coloured cover with initials is used.</small>
+          </label>
+          {msg?.error && <p className="rd-error" role="alert">{msg.error}</p>}
+          <div className="rd-actions">
+            <button className="btn btn-lime" type="submit" disabled={busy || !edit.title.trim()}>{busy ? 'Saving…' : 'Save Changes'} <span className="ar">→</span></button>
+            <button className="btn btn-dark" type="button" onClick={() => setEditing(null)}>Cancel</button>
+          </div>
+        </form>
+      )}
+
       <h2 className="rd-h2 rd-gap">Books</h2>
+      {!editing && msg?.ok && <p className="rd-ok" role="status">{msg.ok}</p>}
       {error && <p className="rd-error" role="alert">{error.message}</p>}
       {!books ? <p>Loading…</p> : books.length === 0 ? <p>No books yet.</p> : (
         <div className="rd-table-wrap">
@@ -116,11 +161,13 @@ function BooksTab() {
             <tbody>
               {books.map(b => (
                 <tr key={b.id}>
-                  <td data-label="Title"><strong>{b.title}</strong>{b.status === 'FAILED' && <small className="rd-error">{b.processingError}</small>}</td>
+                  <td data-label="Title">{b.coverKey && <img src={`${API_URL}/books/${b.id}/cover?v=${new Date(b.updatedAt).getTime()}`} alt="" style={{ width: 32, height: 42, borderRadius: 4, objectFit: 'cover', float: 'left', marginRight: 10 }} onError={e => { e.currentTarget.style.display = 'none'; }} />}<strong>{b.title}</strong>{b.status === 'FAILED' && <small className="rd-error">{b.processingError}</small>}</td>
                   <td data-label="Status"><Chip value={b.status} /></td>
                   <td data-label="Pages">{b.pageCount || '—'}</td>
                   <td data-label="Visible">{b.isActive ? 'Yes' : 'No'}</td>
                   <td data-label="Actions" className="rd-actions">
+                    <button className="rd-mini" onClick={() => startEdit(b)}>Edit</button>
+                    {b.coverKey && <button className="rd-mini" onClick={act(() => adminApi.clearBookCover(b.id))}>Remove thumbnail</button>}
                     <button className="rd-mini" onClick={act(() => adminApi.updateBook(b.id, { isActive: !b.isActive }))}>{b.isActive ? 'Hide' : 'Show'}</button>
                     {b.status === 'FAILED' && <button className="rd-mini" onClick={act(() => adminApi.reprocessBook(b.id))}>Retry</button>}
                     <button className="rd-mini rd-danger" onClick={() => window.confirm(`Delete "${b.title}" and all its pages?`) && act(() => adminApi.deleteBook(b.id))()}>Delete</button>

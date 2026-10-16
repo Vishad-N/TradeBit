@@ -285,8 +285,8 @@ button.rd-bar-back{background:none;border:0;color:inherit;font:inherit;font-weig
 .lib-mono{position:absolute;left:14%;bottom:12%;font-size:clamp(46px,6vw,76px);font-weight:500;letter-spacing:-.05em;line-height:.8}
 .lib-badge{position:absolute;right:12px;top:12px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:rgba(21,24,20,.55);color:#F3F4EF;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:background .5s var(--ease),color .5s var(--ease),transform .5s var(--ease)}
 .lib-badge.on{background:var(--lime);color:var(--c)}
-.lib-lock .lib-shackle{transform-box:fill-box;transform-origin:0% 100%;transition:transform .6s var(--ease)}
-.lib-lock.is-open .lib-shackle{transform:translate(1px,-3px) rotate(-32deg)}
+.lib-lock .lib-shackle{transition:d .45s var(--ease)}
+.lib-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
 .lib-prog{position:absolute;left:14%;right:14px;bottom:10px;height:4px;border-radius:100px;background:rgba(255,255,255,.28);overflow:hidden}
 .lib-prog b{display:block;height:100%;background:var(--ac);border-radius:inherit}
 /* a locked cover is dimmed a little, and wakes up on hover */
