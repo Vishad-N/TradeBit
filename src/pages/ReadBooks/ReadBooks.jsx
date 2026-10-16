@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { readingApi } from '../../services/readingApi.js';
-import TaskCard from './TaskCard.jsx';
+import { BookCard, LibrarySkeleton, LockIcon, TaskPanel } from './Library.jsx';
 import BookReader from './BookReader.jsx';
 import BooksArt from './BooksArt.jsx';
 
@@ -64,38 +64,64 @@ function Shell({ label, title, lead, children }) {
 
 function ReaderPage() {
   const { user, loading: authLoading, isAdmin } = useAuth();
-  const [status, setStatus] = useState(null);
+  const [params, setParams] = useSearchParams();
+  const [lib, setLib] = useState(null);
   const [error, setError] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [fresh, setFresh] = useState([]); // books that just unlocked, for the highlight
+  const [toast, setToast] = useState(null);
+  const prev = useRef(null);
+  const openId = params.get('book');
+
+  const apply = useCallback(next => {
+    // A book that was waiting and is now open just got approved: celebrate it.
+    const was = prev.current;
+    if (was) {
+      const unlocked = next.books.filter(b => b.state === 'UNLOCKED' && was.get(b.id) && was.get(b.id) !== 'UNLOCKED');
+      if (unlocked.length) {
+        setFresh(unlocked.map(b => b.id));
+        setToast(unlocked.length === 1 ? `“${unlocked[0].title}” is unlocked` : `${unlocked.length} books unlocked`);
+        setTimeout(() => setFresh([]), 6000);
+        setTimeout(() => setToast(null), 5000);
+      }
+    }
+    prev.current = new Map(next.books.map(b => [b.id, b.state]));
+    setLib(next);
+  }, []);
 
   const load = useCallback(async () => {
     try {
-      setStatus(await readingApi.status());
+      apply(await readingApi.library());
       setError(null);
     } catch (e) {
       setError(e);
     }
-  }, []);
+  }, [apply]);
 
   useEffect(() => {
     if (user) load();
-    else { setStatus(null); setError(null); }
+    else { setLib(null); setError(null); prev.current = null; }
   }, [user, load]);
 
-  // While waiting for the admin, check back so approval shows up without a manual refresh.
+  // While a task is waiting for the admin, check back so approval shows up without a manual refresh.
+  const waiting = lib?.books.some(b => b.state === 'PENDING_REVIEW');
   useEffect(() => {
-    if (status?.state !== 'PENDING_REVIEW') return;
+    if (!waiting) return undefined;
     const t = setInterval(load, POLL_MS);
     return () => clearInterval(t);
-  }, [status?.state, load]);
+  }, [waiting, load]);
 
-  async function submit() {
+  const select = id => setParams(p => { const n = new URLSearchParams(p); if (id) n.set('book', id); else n.delete('book'); return n; });
+  const closePanel = useCallback(() => { setSubmitError(null); select(null); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function submit(taskId) {
     setSubmitting(true);
-    setError(null);
+    setSubmitError(null);
     try {
-      setStatus(await readingApi.submitTask(status.task.id));
+      apply(await readingApi.submitTask(taskId));
     } catch (e) {
-      setError(e);
+      setSubmitError(e);
       if (e.status === 409) load();
     } finally {
       setSubmitting(false);
@@ -115,10 +141,10 @@ function ReaderPage() {
     );
   }
 
-  // ---- errors ----
-  if (error && !status) {
+  // ---- errors / loading ----
+  if (error && !lib) {
     return (
-      <Shell lead="We couldn't load your reading status.">
+      <Shell lead="We couldn't load your library.">
         <div className="rd-card">
           <p className="rd-error" role="alert">{error.message}</p>
           <button className="btn btn-dark" onClick={load}>Try again</button>
@@ -126,55 +152,62 @@ function ReaderPage() {
       </Shell>
     );
   }
-  if (!status) return <Shell lead="Loading your reading status…" />;
+  if (!lib) {
+    return (
+      <section className="rd-section lib">
+        <span className="label">Your Library</span>
+        <h1 className="h-l lib-h">Loading your books…</h1>
+        <LibrarySkeleton />
+      </section>
+    );
+  }
+
+  const selected = lib.books.find(b => b.id === openId);
 
   // ---- reader ----
-  if (status.state === 'ACCESS_ACTIVE') {
-    return <BookReader book={status.book} startPage={status.currentPage} onAccessLost={load} />;
+  if (selected?.state === 'UNLOCKED') {
+    return <BookReader key={selected.id} book={selected} startPage={selected.currentPage} onAccessLost={load} onBack={closePanel} />;
   }
 
+  // ---- library ----
+  const unlocked = lib.books.filter(b => b.state === 'UNLOCKED').length;
   const adminLink = isAdmin && <Link className="rd-link" to="/admin/reading">Open the Reading admin →</Link>;
+  const mentorship = lib.mentorshipPayment && (lib.mentorshipPayment === 'PENDING' || lib.mentorshipPayment === 'REJECTED');
 
-  switch (status.state) {
-    case 'NO_ACTIVE_TASK':
-      return (
-        <Shell lead="Access your available reading material.">
-          <MentorshipNotice state={status.mentorshipPayment} />
-          <div className="rd-card"><h2 className="rd-h2">Nothing to read yet</h2><p>There is no reading task available right now. Please check back soon.</p>{adminLink}</div>
-        </Shell>
-      );
-    case 'PENDING_REVIEW':
-      return (
-        <Shell label="Reading task" title="Task Submitted">
-          <div className="rd-card" role="status">
-            <p>Your task has been submitted successfully.</p>
-            <p>Your request is currently waiting for admin approval.</p>
-            <p>You will receive reading access after your submission has been approved.</p>
-            <button className="btn btn-dark" disabled>Submitted <span className="ar">✓</span></button>
+  return (
+    <section className="rd-section lib">
+      <header className="lib-head">
+        <span className="label">Your Library</span>
+        <h1 className="h-l lib-h">Pick a book to <span className="hl">start reading.</span></h1>
+        <p className="lib-sub">
+          {lib.books.length === 0
+            ? 'No books are available yet. Please check back soon.'
+            : <><b>{unlocked}</b> of {lib.books.length} unlocked. Open a locked book to see the task that unlocks it; one task can open several books at once.</>}
+        </p>
+        {lib.books.length > 0 && (
+          <div className="lib-meter" role="progressbar" aria-label="Books unlocked" aria-valuemin={0} aria-valuemax={lib.books.length} aria-valuenow={unlocked}>
+            <b style={{ width: `${(unlocked / lib.books.length) * 100}%` }} />
           </div>
-        </Shell>
-      );
-    case 'ACCESS_EXPIRED':
-      return (
-        <Shell lead="Access your available reading material.">
-          <div className="rd-card"><h2 className="rd-h2">Reading access expired</h2><p>Your reading access has expired. Please contact the team to renew it.</p></div>
-        </Shell>
-      );
-    case 'ACCESS_REVOKED':
-      return (
-        <Shell lead="Access your available reading material.">
-          <div className="rd-card"><h2 className="rd-h2">Reading access removed</h2><p>Your reading access is no longer active. Please contact the team if you think this is a mistake.</p></div>
-        </Shell>
-      );
-    default: // NOT_SUBMITTED, REJECTED
-      return (
-        <Shell label="Reading task" title="Your Reading Task" lead={status.state === 'REJECTED' ? undefined : 'Complete the following task before requesting access to the book.'}>
-          <MentorshipNotice state={status.mentorshipPayment} />
-          <TaskCard task={status.task} rejectedReason={status.state === 'REJECTED' ? (status.rejectionReason || '') : null} revision={status.state === 'REJECTED'} busy={submitting} error={error} onSubmit={submit} />
-          {adminLink}
-        </Shell>
-      );
-  }
+        )}
+      </header>
+
+      {mentorship && <MentorshipNotice state={lib.mentorshipPayment} />}
+
+      {lib.books.length > 0 && (
+        <ul className="lib-grid">
+          {lib.books.map((b, i) => (
+            <BookCard key={b.id} book={b} index={i} fresh={fresh.includes(b.id)} onOpen={x => { setSubmitError(null); select(x.id); }} />
+          ))}
+        </ul>
+      )}
+      {adminLink && <p className="lib-admin">{adminLink}</p>}
+
+      {selected && selected.state !== 'UNLOCKED' && (
+        <TaskPanel book={selected} busy={submitting} error={submitError} onClose={closePanel} onSubmit={() => submit(selected.task.id)} />
+      )}
+      {toast && <div className="lib-toast" role="status"><LockIcon open /> {toast}</div>}
+    </section>
+  );
 }
 
 // Admins land on the dashboard; "View as reader" (?view=reader) shows them the page readers see.

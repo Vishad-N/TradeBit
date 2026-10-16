@@ -139,7 +139,9 @@ function BooksTab() {
 function TasksTab() {
   const { data: tasks, error, reload } = useList(adminApi.tasks);
   const { data: books } = useList(adminApi.books);
-  const [form, setForm] = useState({ bookId: '', title: '', description: '' });
+  const [form, setForm] = useState({ title: '', description: '' });
+  const [picked, setPicked] = useState([]); // book ids this task unlocks
+  const [editing, setEditing] = useState(null); // task whose books are being changed
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
   const readyBooks = (books || []).filter(b => b.status === 'READY');
@@ -150,9 +152,10 @@ function TasksTab() {
     setBusy(true);
     setMsg(null);
     try {
-      await adminApi.createTask({ ...form, bookId: form.bookId || readyBooks[0]?.id });
-      setForm(f => ({ ...f, title: '', description: '' }));
-      setMsg({ ok: 'Task published. It is now the one active task for every user.' });
+      await adminApi.createTask({ ...form, bookIds: picked });
+      setForm({ title: '', description: '' });
+      setPicked([]);
+      setMsg({ ok: `Task published. Completing it unlocks ${picked.length} book${picked.length === 1 ? '' : 's'}.` });
       reload();
     } catch (err) {
       setMsg({ error: err.message });
@@ -165,18 +168,13 @@ function TasksTab() {
     <>
       <form className="rd-card rd-form" onSubmit={create}>
         <h2 className="rd-h2">Publish Global Task</h2>
-        <p className="rd-note">One task is shown to every user. Publishing a new task replaces the active one; earlier submissions and approved access are kept.</p>
-        <label className="rd-field"><span>Book unlocked by this task</span>
-          <select value={form.bookId || readyBooks[0]?.id || ''} onChange={set('bookId')} required>
-            {readyBooks.length === 0 && <option value="">No ready books</option>}
-            {readyBooks.map(b => <option key={b.id} value={b.id}>{b.title}</option>)}
-          </select>
-        </label>
+        <p className="rd-note">A task can unlock one or several books: when a user's submission is approved, every book you tick here opens for them. Tasks are independent; each locked book shows the newest active task that includes it.</p>
+        <BookPicker books={readyBooks} value={picked} onChange={setPicked} />
         <label className="rd-field"><span>Task title</span><input value={form.title} onChange={set('title')} required maxLength={200} /></label>
         <label className="rd-field"><span>Task description</span><textarea rows={4} value={form.description} onChange={set('description')} required maxLength={5000} /></label>
         {msg?.error && <p className="rd-error" role="alert">{msg.error}</p>}
         {msg?.ok && <p className="rd-ok" role="status">{msg.ok}</p>}
-        <button className="btn btn-lime" type="submit" disabled={busy || readyBooks.length === 0}>{busy ? 'Publishing…' : 'Publish Task'} <span className="ar">→</span></button>
+        <button className="btn btn-lime" type="submit" disabled={busy || picked.length === 0}>{busy ? 'Publishing…' : 'Publish Task'} <span className="ar">→</span></button>
       </form>
 
       <h2 className="rd-h2 rd-gap">Tasks</h2>
@@ -184,15 +182,16 @@ function TasksTab() {
       {!tasks ? <p>Loading…</p> : tasks.length === 0 ? <p>No tasks yet.</p> : (
         <div className="rd-table-wrap">
           <table className="rd-table">
-            <thead><tr><th>Task</th><th>Book</th><th>Submissions</th><th>Active</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Task</th><th>Unlocks</th><th>Submissions</th><th>Active</th><th>Actions</th></tr></thead>
             <tbody>
               {tasks.map(t => (
                 <tr key={t.id}>
                   <td data-label="Task"><strong>{t.title}</strong><small>{t.description.slice(0, 90)}{t.description.length > 90 ? '…' : ''}</small></td>
-                  <td data-label="Book">{t.book.title}</td>
+                  <td data-label="Unlocks">{t.books.length === 0 ? '—' : t.books.map(b => b.title).join(', ')}</td>
                   <td data-label="Submissions">{t._count.submissions}</td>
                   <td data-label="Active">{t.isActive ? <Chip value="APPROVED" /> : 'No'}</td>
                   <td data-label="Actions" className="rd-actions">
+                    <button className="rd-mini" onClick={() => setEditing(t)}>Edit books</button>
                     <button className="rd-mini" onClick={async () => { await adminApi.updateTask(t.id, { isActive: !t.isActive }).catch(err => setMsg({ error: err.message })); reload(); }}>{t.isActive ? 'Deactivate' : 'Make active'}</button>
                   </td>
                 </tr>
@@ -201,7 +200,39 @@ function TasksTab() {
           </table>
         </div>
       )}
+      {editing && (
+        <div className="rd-modal-back" role="dialog" aria-modal="true" aria-label="Choose the books this task unlocks" onClick={e => e.target === e.currentTarget && setEditing(null)}>
+          <div className="rd-modal rd-card">
+            <h2 className="rd-h2">Books unlocked by “{editing.title}”</h2>
+            <p className="rd-note">Users who already completed this task get any book you add right away.</p>
+            <BookPicker books={readyBooks} value={editing.books.map(b => b.id)} onChange={ids => setEditing(e => ({ ...e, books: ids.map(id => ({ id })) }))} />
+            <div className="rd-actions">
+              <button className="btn btn-lime" disabled={editing.books.length === 0} onClick={async () => {
+                try { await adminApi.updateTask(editing.id, { bookIds: editing.books.map(b => b.id) }); setEditing(null); reload(); } catch (err) { setMsg({ error: err.message }); }
+              }}>Save books <span className="ar">→</span></button>
+              <button className="btn btn-dark" onClick={() => setEditing(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
+  );
+}
+
+/** Tick the books a task unlocks. */
+function BookPicker({ books, value, onChange }) {
+  const toggle = id => onChange(value.includes(id) ? value.filter(x => x !== id) : [...value, id]);
+  return (
+    <fieldset className="rd-field rd-picker">
+      <span>Books unlocked by this task ({value.length} selected)</span>
+      {books.length === 0 && <small>No ready books yet. Upload a book first.</small>}
+      {books.map(b => (
+        <label key={b.id} className="rd-check">
+          <input type="checkbox" checked={value.includes(b.id)} onChange={() => toggle(b.id)} />
+          <span>{b.title}</span>
+        </label>
+      ))}
+    </fieldset>
   );
 }
 
@@ -267,7 +298,7 @@ function RequestsTab() {
             <dl className="rd-dl">
               <dt>User</dt><dd>{open.user.name} ({open.user.email})</dd>
               <dt>Task</dt><dd>{open.task.title}</dd>
-              <dt>Book</dt><dd>{open.task.book.title}</dd>
+              <dt>Unlocks</dt><dd>{open.task.books.map(b => b.title).join(', ')}</dd>
               <dt>Submitted</dt><dd>{fmt(open.submittedAt)}</dd>
               <dt>Status</dt><dd><Chip value={open.status} /></dd>
               {open.reviewedAt && <><dt>Reviewed</dt><dd>{fmt(open.reviewedAt)}</dd></>}

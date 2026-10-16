@@ -29,7 +29,7 @@ const IconRight = () => <Icon d="M9 18l6-6-6-6" />;
 const IconExpand = () => <Icon d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" />;
 const IconCompress = () => <Icon d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5" />;
 
-export default function BookReader({ book, startPage, onAccessLost }) {
+export default function BookReader({ book, startPage, onAccessLost, onBack }) {
   const [session, setSession] = useState(null);
   const [page, setPage] = useState(startPage || 1);
   const [src, setSrc] = useState(null);
@@ -240,7 +240,9 @@ export default function BookReader({ book, startPage, onAccessLost }) {
         onPointerMove={wake}
       >
         <div className="rd-bar">
-          <Link to="/" className="rd-bar-back" aria-label="Back to home"><IconLeft /><span>Home</span></Link>
+          {onBack
+            ? <button type="button" className="rd-bar-back" aria-label="Back to all books" onClick={onBack}><IconLeft /><span>Library</span></button>
+            : <Link to="/" className="rd-bar-back" aria-label="Back to home"><IconLeft /><span>Home</span></Link>}
           <strong className="rd-bar-title" title={book.title}>{book.title}</strong>
 
           <label className="rd-jump">

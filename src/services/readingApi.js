@@ -7,7 +7,7 @@ export const authApi = {
 };
 
 export const readingApi = {
-  status: () => api.get('/reading/me/status'),
+  library: () => api.get('/reading/library'),
   submitTask: (taskId) => api.post(`/reading/tasks/${taskId}/submit`),
   startSession: (bookId) => api.post(`/reading/books/${bookId}/session`),
   // Pages are fetched with the auth + session headers (an <img src> cannot send them) and shown from a blob URL.
