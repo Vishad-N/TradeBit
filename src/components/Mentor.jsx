@@ -22,7 +22,7 @@ const MENTORS = [
   {
     key: 'maam',
     tone: 'light',
-    name: 'Samriddhi Kushwaha',
+    name: 'Madhu Kushwaha',
     photo: '/mentors/maam.png', 
     photoDrop: 110, // pushes a tall photo down inside the arch so her head is not cropped
     role: 'Mentor',

@@ -5,6 +5,7 @@ import { readingApi } from '../../services/readingApi.js';
 import { BookCard, LibrarySkeleton, LockIcon, TaskPanel } from './Library.jsx';
 import BookReader from './BookReader.jsx';
 import BooksArt from './BooksArt.jsx';
+import OfferClock from '../../components/OfferClock.jsx';
 
 const POLL_MS = 20000;
 
@@ -62,6 +63,22 @@ function Shell({ label, title, lead, children }) {
   );
 }
 
+// Shown while a free-reading window is live (with a countdown) or scheduled (when it next opens).
+function FreeBanner({ fw }) {
+  const live = fw.active;
+  return (
+    <aside className={'lib-free' + (live ? ' is-live' : '')} aria-label="Free reading days">
+      <div className="lib-free-txt">
+        <span className="lib-free-pill">{live ? 'Free reading is on' : 'Free reading days'}</span>
+        <strong>{live ? 'Everything marked Free is open. No task needed.' : `Free to read on ${fw.label}`}</strong>
+        {!live && !fw.nextStartsAt && <p>No upcoming free window is scheduled.</p>}
+      </div>
+      {live && fw.endsAt && <OfferClock endsAt={fw.endsAt} tone="light" prefix="Free window ends" />}
+      {!live && fw.nextStartsAt && <OfferClock endsAt={fw.nextStartsAt} tone="light" prefix="Opens" />}
+    </aside>
+  );
+}
+
 function ReaderPage() {
   const { user, loading: authLoading, isAdmin } = useAuth();
   const [params, setParams] = useSearchParams();
@@ -111,6 +128,17 @@ function ReaderPage() {
     const t = setInterval(load, POLL_MS);
     return () => clearInterval(t);
   }, [waiting, load]);
+
+  // Free days open and close on their own: re-check the library right after the next boundary.
+  const fw = lib?.freeWindow;
+  useEffect(() => {
+    const target = fw?.active ? fw.endsAt : fw?.nextStartsAt;
+    if (!target) return undefined;
+    const ms = Date.parse(target) - Date.parse(fw.serverTime) + 1500; // measured on the server's clock
+    if (!(ms > 0)) return undefined;
+    const t = setTimeout(load, Math.min(ms, 2 ** 31 - 1));
+    return () => clearTimeout(t);
+  }, [fw, load]);
 
   const select = id => setParams(p => { const n = new URLSearchParams(p); if (id) n.set('book', id); else n.delete('book'); return n; });
   const closePanel = useCallback(() => { setSubmitError(null); select(null); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -192,6 +220,7 @@ function ReaderPage() {
       </header>
 
       {mentorship && <MentorshipNotice state={lib.mentorshipPayment} />}
+      {fw && <FreeBanner fw={fw} />}
 
       {lib.books.length > 0 && (
         <ul className="lib-grid">

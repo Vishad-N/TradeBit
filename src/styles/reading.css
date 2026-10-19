@@ -354,7 +354,74 @@ button.rd-bar-back{background:none;border:0;color:inherit;font:inherit;font-weig
 }
 
 .rd-picker{border:0;padding:0;margin:0;display:grid;gap:8px;min-width:0}
+/* Fixed-height scrolling list so a long book catalogue doesn't stretch the card. */
+.rd-picker-list{display:grid;gap:8px;max-height:260px;overflow-y:auto;padding-right:6px;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--c-12) transparent}
+.rd-picker-list::-webkit-scrollbar{width:8px}
+.rd-picker-list::-webkit-scrollbar-thumb{background:rgba(21,24,20,.28);border-radius:8px}
 .rd-check{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--c-12);border-radius:14px;background:#fff;cursor:pointer;font-size:15px;font-weight:500;letter-spacing:0;text-transform:none;transition:border-color .3s var(--ease),background .3s var(--ease)}
 .rd-check:has(input:checked){border-color:var(--c);background:var(--pl)}
 .rd-check input{width:18px;height:18px;accent-color:var(--c);flex:none}
 .rd-adminbar + .rd-section.lib{margin-top:22px}
+
+/* ---------- Admin -> Pricing ---------- */
+.pr-wrap{display:grid;gap:20px;max-width:760px}
+.pr-card{width:100%}
+.pr-head{display:grid;gap:2px}
+.pr-head .rd-h2{margin-bottom:0}
+.pr-head small{color:var(--c-60)}
+.pr-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:100%}
+.pr-offer{width:100%;display:grid;gap:14px;padding-top:16px;border-top:1px solid var(--c-12)}
+.pr-offer-body{display:grid;gap:14px;padding:16px;border-radius:18px;background:rgba(255,255,255,.65);border:1px solid var(--c-12)}
+.pr-switch{display:flex;align-items:center;gap:14px;cursor:pointer}
+.pr-switch input{position:absolute;opacity:0;width:1px;height:1px}
+.pr-switch b{display:block;font-weight:600}
+.pr-switch small{display:block;color:var(--c-60);font-weight:400;letter-spacing:0;text-transform:none}
+.pr-track{flex:none;width:48px;height:28px;border-radius:100px;background:var(--c-12);position:relative;transition:background .3s var(--ease)}
+.pr-track i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(21,24,20,.3);transition:transform .3s var(--ease)}
+.pr-switch input:checked + .pr-track{background:var(--c)}
+.pr-switch input:checked + .pr-track i{transform:translateX(20px);background:var(--lime)}
+.pr-switch input:focus-visible + .pr-track{outline:2px solid var(--c);outline-offset:3px}
+.pr-quick{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.pr-quick>span{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--c-60);margin-right:4px}
+.pr-preview{display:grid;gap:10px;padding:14px;border-radius:16px;background:var(--pl);border:1px dashed var(--c-12)}
+.pr-preview-k{font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--c-60)}
+.pr-preview p{margin:0}
+.pr-preview-end{font-size:13px;text-align:center}
+.oclock-modal{margin:0 0 14px}
+@media (max-width:640px){.pr-grid{grid-template-columns:1fr}}
+
+/* ---------- 1% Club books + free reading days ---------- */
+.rd-chip-club,.lib-chip-club_only{background:var(--c);color:var(--lime)}
+.rd-club-toggle{align-items:flex-start}
+.rd-club-toggle span{display:grid;gap:2px}
+.rd-club-toggle small{color:var(--c-60);font-weight:400;font-size:12.5px;line-height:1.4}
+.lib-tag{position:absolute;z-index:3;left:10px;top:10px;padding:5px 10px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;background:var(--c);color:var(--lime);box-shadow:0 6px 16px -6px rgba(21,24,20,.6)}
+.lib-tag.is-free{background:var(--lime);color:var(--c)}
+.lib-freeon{color:var(--c);font-weight:600}
+
+.lib-free{display:flex;align-items:center;justify-content:space-between;gap:20px 32px;flex-wrap:wrap;margin:0 0 28px;padding:18px 22px;border-radius:22px;background:var(--pl);border:1px solid var(--c-12)}
+.lib-free.is-live{border-color:var(--c);box-shadow:0 18px 40px -26px rgba(21,24,20,.6)}
+.lib-free-txt{display:grid;gap:6px;min-width:0;flex:1 1 240px}
+.lib-free-txt strong{font-size:16px;font-weight:500;line-height:1.35}
+.lib-free-txt p{margin:0;color:var(--c-60);font-size:13.5px}
+.lib-free-pill{justify-self:start;padding:5px 12px;border-radius:100px;background:var(--c);color:var(--lime);font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+.lib-free .oclock{flex:0 1 340px;min-width:260px}
+@media (max-width:640px){.lib-free{padding:16px}.lib-free .oclock{flex-basis:100%;min-width:0}}
+
+.fd-status{display:grid;gap:10px;max-width:760px;width:100%;align-items:start}
+.fd-status strong{font-size:18px;font-weight:500}
+.fd-status.is-live{border-color:var(--c)}
+.fd-status .oclock{max-width:420px}
+.fd-pill{justify-self:start;padding:5px 12px;border-radius:100px;background:var(--c-12);color:var(--c);font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+.fd-status.is-live .fd-pill{background:var(--lime)}
+.fd-set{border:0;margin:0;padding:16px 0 0;min-width:0;width:100%;display:grid;gap:12px;border-top:1px solid var(--c-12)}
+.fd-set legend{padding:0 0 4px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--c-60);float:left;width:100%}
+.fd-set legend + *{clear:both}
+.fd-set:disabled{opacity:.5}
+.fd-days{display:flex;flex-wrap:wrap;gap:8px}
+.fd-day{min-width:56px;min-height:44px;padding:0 14px;border-radius:100px;border:1px solid var(--c-12);background:#fff;font:inherit;font-weight:600;letter-spacing:.06em;cursor:pointer;transition:background .25s,color .25s,border-color .25s}
+.fd-day.on{background:var(--c);color:var(--lime);border-color:var(--c)}
+.fd-day:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+.rd-mini.fd-on{background:var(--c);color:var(--lime)}
+.fd-allday{max-width:420px}
+@media (max-width:480px){.fd-day{flex:1 0 calc(25% - 8px);min-width:0}}

@@ -3,6 +3,7 @@ import {
   Body,
   ConflictException,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   Headers,
@@ -13,6 +14,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Put,
   Query,
   Res,
   StreamableFile,
@@ -27,6 +29,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { AuthGuard, AuthUser, CurrentUser, Roles } from '../auth/auth.guard';
 import { pageKey } from '../books/books.module';
+import { computeWindow, covers, FreeScheduleService } from './free-schedule';
 
 // ---------- DTOs ----------
 class SaveProgressDto {
@@ -56,9 +59,18 @@ const bookPublicSelect = { id: true, title: true, description: true, pageCount: 
 
 @Injectable()
 export class ReadingService {
-  constructor(private readonly prisma: PrismaService, private readonly storage: StorageService) {}
+  constructor(private readonly prisma: PrismaService, private readonly storage: StorageService, private readonly free: FreeScheduleService) {}
 
   // ---------- helpers ----------
+  /** Who is asking: admins can open club-only books (for testing); 1% Club members are an ACTIVE mentorship. */
+  private async who(userId: string) {
+    const [u, m] = await Promise.all([
+      this.prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
+      this.prisma.mentorshipAccess.findUnique({ where: { userId }, select: { status: true } }),
+    ]);
+    return { isAdmin: u?.role === 'ADMIN', isClub: m?.status === 'ACTIVE' };
+  }
+
   /**
    * An ACTIVE mentorship unlocks every ready book. Approval already granted the books that existed at the time;
    * this covers books added later (only for books the user has no access row for at all).
@@ -81,6 +93,15 @@ export class ReadingService {
     if (!book || !book.isActive || book.status !== 'READY') throw new NotFoundException({ code: 'BOOK_UNAVAILABLE', message: 'This book is not available.' });
 
     const access = await this.prisma.readingAccess.findUnique({ where: { userId_bookId: { userId, bookId } } });
+    // 1% Club books: members and admins only. Tasks, old access rows and free days never open them.
+    if (book.clubOnly) {
+      const w = await this.who(userId);
+      if (!w.isAdmin && !w.isClub) throw new ForbiddenException({ code: 'CLUB_ONLY', message: 'This book is only for 1% Club members.' });
+      return { book, access };
+    }
+    // Free days: open to every logged-in user while the schedule is live (no access row needed).
+    const schedule = await this.free.get();
+    if (covers(schedule, book) && computeWindow(schedule)?.active) return { book, access };
     if (!access) throw new ForbiddenException({ code: 'ACCESS_REQUIRED', message: 'You do not have access to this book.' });
     if (access.status === 'ACTIVE' && access.expiresAt && access.expiresAt <= new Date()) {
       await this.prisma.readingAccess.update({ where: { id: access.id }, data: { status: 'EXPIRED' } });
@@ -98,14 +119,14 @@ export class ReadingService {
   private async syncTaskAccess(userId: string) {
     const subs = await this.prisma.taskSubmission.findMany({
       where: { userId, status: 'APPROVED' },
-      select: { reviewedAt: true, task: { select: { books: { select: { bookId: true } } } } },
+      select: { reviewedAt: true, task: { select: { books: { select: { bookId: true, book: { select: { clubOnly: true } } } } } } },
     });
     if (!subs.length) return;
     const have = new Set((await this.prisma.readingAccess.findMany({ where: { userId }, select: { bookId: true } })).map((a) => a.bookId));
     const days = Number(process.env.READING_ACCESS_DAYS);
     for (const sub of subs) {
-      for (const { bookId } of sub.task.books) {
-        if (have.has(bookId)) continue;
+      for (const { bookId, book } of sub.task.books) {
+        if (book.clubOnly || have.has(bookId)) continue;
         have.add(bookId);
         const base = sub.reviewedAt ?? new Date();
         const expiresAt = days > 0 ? new Date(base.getTime() + days * 86_400_000) : null;
@@ -122,11 +143,14 @@ export class ReadingService {
   async library(user: AuthUser) {
     await this.syncMentorshipAccess(user.id);
     await this.syncTaskAccess(user.id);
+    const who = await this.who(user.id);
+    const schedule = await this.free.get();
+    const window = computeWindow(schedule);
 
     const [books, accesses, progress, submissions] = await Promise.all([
       this.prisma.book.findMany({
         where: { isActive: true, status: 'READY' },
-        select: { ...bookPublicSelect, coverKey: true, updatedAt: true, taskBooks: { select: { task: { select: { ...taskSelect, books: { select: { book: { select: { id: true, title: true, isActive: true, status: true } } } } } } } } },
+        select: { ...bookPublicSelect, clubOnly: true, coverKey: true, updatedAt: true, taskBooks: { select: { task: { select: { ...taskSelect, books: { select: { book: { select: { id: true, title: true, isActive: true, status: true } } } } } } } } },
         orderBy: { createdAt: 'asc' },
       }),
       this.prisma.readingAccess.findMany({ where: { userId: user.id } }),
@@ -141,7 +165,18 @@ export class ReadingService {
     const out = books.map((b) => {
       const access = accessBy.get(b.id);
       const prog = progressBy.get(b.id);
-      const base = { id: b.id, title: b.title, description: b.description, pageCount: b.pageCount, cover: b.coverKey ? `/books/${b.id}/cover?v=${b.updatedAt.getTime()}` : null };
+      const base = { id: b.id, title: b.title, description: b.description, pageCount: b.pageCount, clubOnly: b.clubOnly, cover: b.coverKey ? `/books/${b.id}/cover?v=${b.updatedAt.getTime()}` : null };
+      const resume = { currentPage: prog?.currentPage ?? 1, progressPercentage: prog?.progressPercentage ?? 0 };
+
+      // 1% Club books: open for members (and admins, for testing); everyone else sees a club lock, never a task.
+      if (b.clubOnly) {
+        if (who.isAdmin || who.isClub) return { ...base, state: 'UNLOCKED' as const, ...resume, task: null, adminPreview: who.isAdmin && !who.isClub };
+        return { ...base, state: 'CLUB_ONLY' as const, task: null };
+      }
+      // Free days: open for everyone while the schedule is live; otherwise remember when it will be.
+      const freeCovered = covers(schedule, b);
+      if (freeCovered && window?.active) return { ...base, state: 'UNLOCKED' as const, ...resume, task: null, free: true, freeUntil: window.endsAt };
+      const freeSoon = freeCovered && window ? { freeLabel: window.label, freeStartsAt: window.nextStartsAt } : {};
 
       // The newest active task that links this book is the one that opens it.
       const task = b.taskBooks.map((x) => x.task).filter((t) => t.isActive).sort((x, y) => y.createdAt.getTime() - x.createdAt.getTime())[0];
@@ -153,23 +188,24 @@ export class ReadingService {
       };
 
       if (access?.status === 'ACTIVE' && !(access.expiresAt && access.expiresAt <= now)) {
-        return { ...base, state: 'UNLOCKED' as const, currentPage: prog?.currentPage ?? 1, progressPercentage: prog?.progressPercentage ?? 0, task: null };
+        return { ...base, state: 'UNLOCKED' as const, ...resume, task: null };
       }
-      if (access?.status === 'REVOKED') return { ...base, state: 'REVOKED' as const, task: taskInfo ?? null };
-      if (access) return { ...base, state: 'EXPIRED' as const, task: taskInfo ?? null };
-      if (!task) return { ...base, state: 'NO_TASK' as const, task: null };
+      if (access?.status === 'REVOKED') return { ...base, ...freeSoon, state: 'REVOKED' as const, task: taskInfo ?? null };
+      if (access) return { ...base, ...freeSoon, state: 'EXPIRED' as const, task: taskInfo ?? null };
+      if (!task) return { ...base, ...freeSoon, state: 'NO_TASK' as const, task: null };
 
       const sub = submissionBy.get(task.id);
-      if (!sub) return { ...base, state: 'LOCKED' as const, task: taskInfo };
-      if (sub.status === 'REJECTED') return { ...base, state: 'REJECTED' as const, task: taskInfo, rejectionReason: sub.rejectionReason };
+      if (!sub) return { ...base, ...freeSoon, state: 'LOCKED' as const, task: taskInfo };
+      if (sub.status === 'REJECTED') return { ...base, ...freeSoon, state: 'REJECTED' as const, task: taskInfo, rejectionReason: sub.rejectionReason };
       // PENDING_REVIEW, or APPROVED without an access row (should not happen): treat as waiting.
-      return { ...base, state: 'PENDING_REVIEW' as const, task: taskInfo, submittedAt: sub.submittedAt };
+      return { ...base, ...freeSoon, state: 'PENDING_REVIEW' as const, task: taskInfo, submittedAt: sub.submittedAt };
     });
 
     // A user waiting on a 1:1 mentorship payment should see "access pending" on the Books page too.
     const latest = await this.prisma.mentorshipPayment.findFirst({ where: { userId: user.id }, orderBy: { submittedAt: 'desc' }, select: { status: true } });
     const mentorshipPayment = latest?.status === 'PENDING' || latest?.status === 'REJECTED' ? latest.status : null;
-    return { books: out, mentorshipPayment };
+    const freeWindow = schedule.enabled && window ? { ...window, serverTime: new Date().toISOString() } : null;
+    return { books: out, mentorshipPayment, freeWindow, isClubMember: who.isClub };
   }
 
   async submit(user: AuthUser, taskId: string) {
@@ -208,9 +244,10 @@ export class ReadingService {
     await this.syncMentorshipAccess(userId);
     const accesses = await this.prisma.readingAccess.findMany({
       where: { userId, status: 'ACTIVE', OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }], book: { isActive: true, status: 'READY' } },
-      include: { book: { select: bookPublicSelect } },
+      include: { book: { select: { ...bookPublicSelect, clubOnly: true } } },
     });
-    return accesses.map((a) => a.book);
+    const w = await this.who(userId);
+    return accesses.filter((a) => w.isAdmin || w.isClub || !a.book.clubOnly).map(({ book: { clubOnly: _c, ...book } }) => book);
   }
 
   async bookInfo(userId: string, bookId: string) {
@@ -234,7 +271,7 @@ export class ReadingService {
       title: book.title,
       pageCount: book.pageCount,
       currentPage: Math.min(Math.max(progress?.currentPage ?? 1, 1), book.pageCount),
-      watermark: `${user.name} • Access #${access.id.slice(-6).toUpperCase()}`,
+      watermark: `${user.name} • Access #${(access?.id ?? user.id).slice(-6).toUpperCase()}`,
     };
   }
 
@@ -279,8 +316,9 @@ export class ReadingService {
 
   private async existingBookIds(ids: string[]) {
     const unique = [...new Set(ids)];
-    const found = await this.prisma.book.findMany({ where: { id: { in: unique } }, select: { id: true } });
+    const found = await this.prisma.book.findMany({ where: { id: { in: unique } }, select: { id: true, clubOnly: true } });
     if (found.length !== unique.length) throw new NotFoundException('One of the selected books was not found');
+    if (found.some((b) => b.clubOnly)) throw new BadRequestException('1% Club books cannot be unlocked by a task. Untick them or make the book public first.');
     return unique;
   }
 
@@ -306,6 +344,13 @@ export class ReadingService {
       select: { ...taskSelect, ...taskBooksInclude },
     });
     return flattenBooks(task);
+  }
+
+  /** Submissions and book links cascade with the task. */
+  async deleteTask(id: string) {
+    if (!(await this.prisma.task.findUnique({ where: { id } }))) throw new NotFoundException('Task not found');
+    await this.prisma.task.delete({ where: { id } });
+    return { ok: true };
   }
 
   // ---------- admin: requests ----------
@@ -431,7 +476,18 @@ class ReadingController {
 @UseGuards(AuthGuard)
 @Roles('ADMIN')
 class AdminReadingController {
-  constructor(private readonly reading: ReadingService) {}
+  constructor(private readonly reading: ReadingService, private readonly free: FreeScheduleService) {}
+
+  /** The recurring free-reading days (Admin -> Free Days). */
+  @Get('free-reading')
+  freeReading() {
+    return this.free.view();
+  }
+
+  @Put('free-reading')
+  saveFreeReading(@Body() body: Record<string, unknown>) {
+    return this.free.save(body);
+  }
 
   @Get('tasks')
   tasks() {
@@ -446,6 +502,11 @@ class AdminReadingController {
   @Patch('tasks/:taskId')
   updateTask(@Param('taskId') id: string, @Body() dto: UpdateTaskDto) {
     return this.reading.updateTask(id, dto);
+  }
+
+  @Delete('tasks/:taskId')
+  deleteTask(@Param('taskId') id: string) {
+    return this.reading.deleteTask(id);
   }
 
   @Get('reading/requests')
@@ -469,5 +530,5 @@ class AdminReadingController {
   }
 }
 
-@Module({ controllers: [ReadingController, AdminReadingController], providers: [ReadingService] })
+@Module({ controllers: [ReadingController, AdminReadingController], providers: [ReadingService, FreeScheduleService] })
 export class ReadingModule {}

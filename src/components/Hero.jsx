@@ -60,6 +60,105 @@ function HeroHeadline() {
   );
 }
 
+// Live market flip-card. Prices come from Binance public futures tickers (CORS-open, no key):
+// metals and oil trade there as USDT perpetuals, crypto as the usual pairs.
+const MARKETS = [
+  { label: 'GOLD (XAUUSD)', sym: 'XAUUSDT', dp: 2, base: 4192 },
+  { label: 'SILVER (XAGUSD)', sym: 'XAGUSDT', dp: 3, base: 57.79 },
+  { label: 'BITCOIN (BTCUSDT)', sym: 'BTCUSDT', dp: 2, base: 82830 },
+  { label: 'ETHEREUM (ETHUSDT)', sym: 'ETHUSDT', dp: 2, base: 2429.44 },
+  { label: 'SOLANA (SOLUSDT)', sym: 'SOLUSDT', dp: 2, base: 105.73 },
+  { label: 'CRUDE OIL (USOIL)', sym: 'CLUSDT', dp: 2, base: 97 },
+];
+const TICKER_URL = 'https://fapi.binance.com/fapi/v1/ticker/24hr?symbols=' +
+  encodeURIComponent(JSON.stringify(MARKETS.map((m) => m.sym)));
+const FLIP_EVERY = 4500;
+const FLIP_HALF = 280;
+
+function fmtPrice(n, dp) {
+  const [int, dec] = n.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp }).split('.');
+  return <>{int}.<span className="lime">{dec}</span></>;
+}
+
+function LiveMarketCard() {
+  const [idx, setIdx] = useState(0);
+  const [phase, setPhase] = useState('');
+  const [paused, setPaused] = useState(false);
+  const [quotes, setQuotes] = useState({});
+  const [tick, setTick] = useState('');
+  const prev = useRef({});
+  const [reduced] = useState(() => prefersReducedMotion());
+
+  // Poll live quotes (only while the tab is visible).
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      if (document.hidden) return;
+      try {
+        const res = await fetch(TICKER_URL);
+        if (!res.ok) return;
+        const rows = await res.json();
+        if (!alive) return;
+        const next = {};
+        rows.forEach((r) => { next[r.symbol] = { price: parseFloat(r.lastPrice), chg: parseFloat(r.priceChangePercent) }; });
+        setQuotes((q) => ({ ...q, ...next }));
+      } catch { /* keep last known / fallback price */ }
+    };
+    load();
+    const id = setInterval(load, 4000);
+    return () => { alive = false; clearInterval(id); };
+  }, []);
+
+  // Flip to the next market.
+  useEffect(() => {
+    if (reduced || paused) return undefined;
+    let swap, done;
+    const t = setTimeout(() => {
+      setPhase('out');
+      swap = setTimeout(() => {
+        setIdx((i) => (i + 1) % MARKETS.length);
+        setPhase('in');
+        done = setTimeout(() => setPhase(''), FLIP_HALF);
+      }, FLIP_HALF);
+    }, FLIP_EVERY);
+    return () => { clearTimeout(t); clearTimeout(swap); clearTimeout(done); };
+  }, [idx, paused, reduced]);
+
+  const m = MARKETS[idx];
+  const q = quotes[m.sym];
+  const price = q ? q.price : m.base;
+  const chg = q ? q.chg : null;
+
+  // Flash green/red when the live price moves.
+  useEffect(() => {
+    const last = prev.current[m.sym];
+    if (q && last != null && q.price !== last) {
+      setTick(q.price > last ? 'up' : 'dn');
+      const t = setTimeout(() => setTick(''), 700);
+      prev.current[m.sym] = q.price;
+      return () => clearTimeout(t);
+    }
+    if (q) prev.current[m.sym] = q.price;
+    return undefined;
+  }, [q, m.sym]);
+
+  const bull = chg == null || chg >= 0;
+  return (
+    <div className="tag-float tf1 live-card" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      <div className={'lc-face' + (phase ? ' ' + phase : '')} aria-live="off">
+        <span className="meta">{m.label} · LIVE</span>
+        <b className={tick ? 'tick-' + tick : undefined}>{fmtPrice(price, m.dp)}</b>
+        <span className="meta" style={{ color: bull ? '#B8D83D' : '#FF7A6B' }}>
+          {bull ? '▲' : '▼'} {chg == null ? 'Connecting…' : `${bull ? '+' : ''}${chg.toFixed(2)}% · 24h`}
+        </span>
+      </div>
+      <div className="lc-dots" aria-hidden="true">
+        {MARKETS.map((_, i) => <i key={i} className={i === idx ? 'on' : undefined}></i>)}
+      </div>
+    </div>
+  );
+}
+
 export default function Hero({ onPlayVideo }) {
   const chartRef = useRef(null);
   const [drawn, setDrawn] = useState(false);
@@ -107,7 +206,7 @@ export default function Hero({ onPlayVideo }) {
         <div className="hero-chart" data-speed="-0.04">
           <svg ref={chartRef} className={drawn ? 'drawn' : undefined} viewBox="0 0 600 560" preserveAspectRatio="none" aria-hidden="true" dangerouslySetInnerHTML={html(chart)} />
         </div>
-        <div className="tag-float tf1"><span className="meta">GOLD (XAUUSD) · 4H</span><b>4,248.<span className="lime">50</span></b><span className="meta" style={{ color: '#B8D83D' }}>▲ Structure · Bullish</span></div>
+        <LiveMarketCard />
         <div className="tag-float tf2"><span className="meta">Planned R:R</span><b>1 : <span className="lime">3.2</span></b></div>
       </div>
 

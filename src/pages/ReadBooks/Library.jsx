@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { API_URL } from '../../services/api.js';
 
 // Cover palettes, in the site's colours. Chosen by position so a book keeps its colour while the list is stable.
@@ -19,6 +20,7 @@ const STATE_LABEL = {
   REVOKED: 'Access removed',
   EXPIRED: 'Access expired',
   NO_TASK: 'Coming soon',
+  CLUB_ONLY: '1% Club only',
 };
 
 export function LockIcon({ open }) {
@@ -38,6 +40,7 @@ export function BookCard({ book, index, fresh, onOpen }) {
   const label = STATE_LABEL[book.state];
   const pct = book.progressPercentage || 0;
   const bundle = book.task?.unlocks?.length > 1 ? book.task.unlocks.length : 0;
+  const tag = open && book.free ? 'Free now' : open && book.clubOnly ? (book.adminPreview ? '1% Club · admin preview' : '1% Club') : null;
 
   return (
     <li className={`lib-item${fresh ? ' is-fresh' : ''}`} style={{ '--i': index }}>
@@ -46,6 +49,7 @@ export function BookCard({ book, index, fresh, onOpen }) {
           {book.cover ? <img className="lib-img" src={`${API_URL}${book.cover}`} alt="" loading="lazy" /> : <><i className="lib-ring" /><span className="lib-mono">{monogram(book.title)}</span></>}
           <span className="lib-spine" />
           <span className={`lib-badge${open ? ' on' : ''}`}><LockIcon open={open} /></span>
+          {tag && <span className={`lib-tag${book.free ? ' is-free' : ' is-club'}`}>{tag}</span>}
           {open && pct > 0 && <span className="lib-prog"><b style={{ width: `${pct}%` }} /></span>}
         </span>
         <span className="lib-info">
@@ -56,6 +60,7 @@ export function BookCard({ book, index, fresh, onOpen }) {
               ? <span className="lib-cta">{pct > 0 ? `Continue · ${pct}%` : 'Read now'} <span className="ar">→</span></span>
               : <span className={`lib-chip lib-chip-${book.state.toLowerCase()}`}>{label}</span>}
             {!open && bundle > 0 && <span className="lib-bundle">+{bundle - 1} more with this task</span>}
+            {!open && book.freeLabel && <span className="lib-bundle lib-freeon">Free on {book.freeLabel}</span>}
           </span>
         </span>
       </button>
@@ -91,12 +96,22 @@ export function TaskPanel({ book, busy, error, onClose, onSubmit }) {
       <aside className="lib-panel">
         <button ref={closeRef} type="button" className="lib-x" aria-label="Close" onClick={onClose}>✕</button>
 
-        <span className="label lib-p-1">{state === 'PENDING_REVIEW' ? 'Submitted' : 'Unlock this book'}</span>
+        <span className="label lib-p-1">{state === 'PENDING_REVIEW' ? 'Submitted' : state === 'CLUB_ONLY' ? '1% Club' : 'Unlock this book'}</span>
         <h2 id="lib-p-t" className="lib-p-title lib-p-2">{book.title}</h2>
 
+        {state === 'CLUB_ONLY' && (
+          <div className="lib-p-3">
+            <p className="lib-note">This book is part of the 1% Club. It opens automatically for 1% Club members, and tasks or free days do not unlock it.</p>
+            <Link className="btn btn-lime lib-submit" to="/1-percent-club" onClick={onClose}>See the 1% Club <span className="ar">→</span></Link>
+          </div>
+        )}
         {state === 'NO_TASK' && <p className="lib-note lib-p-3">There is no task for this book yet. Please check back soon.</p>}
         {state === 'EXPIRED' && <p className="lib-note lib-p-3">Your reading access has expired. Please contact the team to renew it.</p>}
         {state === 'REVOKED' && <p className="lib-note lib-p-3">Your reading access to this book was removed. Please contact the team if you think this is a mistake.</p>}
+
+        {book.freeLabel && state !== 'CLUB_ONLY' && (
+          <p className="lib-note lib-p-3">This book is also free to read on <b>{book.freeLabel}</b>, no task needed.</p>
+        )}
 
         {task && (state === 'LOCKED' || state === 'REJECTED' || state === 'PENDING_REVIEW') && (
           <>

@@ -21,6 +21,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
+import { PricingModule, PricingService } from '../pricing/pricing.module';
 import { randomUUID } from 'node:crypto';
 import { Prisma } from '@prisma/client';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
@@ -62,8 +63,9 @@ const testModeRequested = () => process.env.MENTORSHIP_TEST_MODE === 'true';
 const testModeEnabled = () => testModeRequested() && process.env.NODE_ENV !== 'production';
 
 /** Payment settings come from the environment so the wallet address is never hard-coded in the frontend. */
-function paymentConfig() {
-  const price = process.env.MENTORSHIP_PRICE_USDT?.trim() || '';
+function paymentConfig(adminPrice: number | null) {
+  // The price set in Admin -> Pricing wins; the environment value is the fallback until one is saved.
+  const price = adminPrice != null ? String(adminPrice) : process.env.MENTORSHIP_PRICE_USDT?.trim() || '';
   const wallet = process.env.MENTORSHIP_WALLET_ADDRESS?.trim() || '';
   return { priceUsdt: price, walletAddress: wallet, configured: Boolean(price) && TRON_ADDRESS.test(wallet) };
 }
@@ -83,7 +85,7 @@ const userPaymentView = (p: { id: string; amountPaid: Prisma.Decimal; network: s
 @Injectable()
 export class MentorshipService {
   private readonly log = new Logger('Mentorship');
-  constructor(private readonly prisma: PrismaService, private readonly storage: StorageService) {
+  constructor(private readonly prisma: PrismaService, private readonly storage: StorageService, private readonly pricing: PricingService) {
     if (testModeRequested() && process.env.NODE_ENV === 'production') {
       this.log.error('MENTORSHIP_TEST_MODE is set but NODE_ENV=production: test mode is IGNORED. Remove MENTORSHIP_TEST_MODE from production.');
     } else if (testModeEnabled()) {
@@ -92,8 +94,8 @@ export class MentorshipService {
   }
 
   // ---------- user ----------
-  paymentInfo() {
-    const c = paymentConfig();
+  async paymentInfo() {
+    const c = paymentConfig(await this.pricing.currentIfSaved('club'));
     return { priceUsdt: c.priceUsdt, network: NETWORK, walletAddress: c.configured ? c.walletAddress : '', configured: c.configured, testMode: testModeEnabled() };
   }
 
@@ -111,7 +113,7 @@ export class MentorshipService {
   }
 
   async submit(user: AuthUser, dto: SubmitPaymentDto, file?: UploadedImage) {
-    if (!paymentConfig().configured) throw new ConflictException({ code: 'PAYMENTS_NOT_CONFIGURED', message: 'Mentorship payments are not available yet. Please try again later.' });
+    if (!paymentConfig(await this.pricing.currentIfSaved('club')).configured) throw new ConflictException({ code: 'PAYMENTS_NOT_CONFIGURED', message: 'Mentorship payments are not available yet. Please try again later.' });
 
     // ---- validate input ----
     const txHash = dto.txHash.trim().toLowerCase();
@@ -306,5 +308,5 @@ class AdminMentorshipController {
   }
 }
 
-@Module({ controllers: [MentorshipController, AdminMentorshipController], providers: [MentorshipService] })
+@Module({ imports: [PricingModule], controllers: [MentorshipController, AdminMentorshipController], providers: [MentorshipService] })
 export class MentorshipModule {}

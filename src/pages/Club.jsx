@@ -3,6 +3,8 @@ import Disclaimer from '../components/Disclaimer.jsx';
 import Counter from '../components/Counter.jsx';
 import { usePageReveal, prefersReducedMotion } from '../hooks/motion.js';
 import { OPEN_CLUB_EVENT } from '../components/Nav.jsx';
+import OfferClock from '../components/OfferClock.jsx';
+import { formatUsd, usePricing } from '../context/PricingContext.jsx';
 import '../styles/club.css';
 
 // Every "Register / Join" button reuses the existing 1% Club popup (ClubModal, mounted in the Nav).
@@ -120,6 +122,7 @@ const TERMS = [
 const Tick = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 8.500l3.200 3L13 4.500" /></svg>;
 
 export default function Club() {
+  const { club } = usePricing();
   usePageReveal();
 
   // Gentle parallax on [data-par] layers (skipped for reduced motion and small screens).
@@ -286,8 +289,9 @@ export default function Club() {
 
             <aside className="cl-g-price rv d2" aria-label="Offer">
               <span className="meta">Learn the secret strategies of the top 1% traders</span>
-              <div className="cl-g-amt"><s>$2,000</s><b>$499</b></div>
-              <p>Originally $2,000, now just $499. 100% money-back guarantee included.</p>
+              <div className="cl-g-amt">{club.listPrice > club.price && <s>{formatUsd(club.listPrice)}</s>}<b>{formatUsd(club.price)}</b></div>
+              {club.offer && <OfferClock endsAt={club.offer.endsAt} tone="dark" className="oclock-section" />}
+              <p>{club.listPrice > club.price ? `Originally ${formatUsd(club.listPrice)}, now just ${formatUsd(club.price)}.` : `Just ${formatUsd(club.price)}.`} 100% money-back guarantee included.</p>
               <JoinButton className="btn btn-lime cl-g-btn">Secure your risk-free spot</JoinButton>
               <small>Limited to the first 100 traders, due to high demand and live server capacity.</small>
             </aside>
@@ -301,7 +305,7 @@ export default function Club() {
               ))}
             </ol>
             <p className="cl-g-clause">
-              If you follow our exact framework and fail to become a net-profitable trader within 3 months, we will refund <strong>100% of your $499</strong>.
+              If you follow our exact framework and fail to become a net-profitable trader within 3 months, we will refund <strong>100% of your {formatUsd(club.price)}</strong>.
               No friction. No hidden excuses. If you don't make money, we don't keep yours.
             </p>
             <p className="cl-g-ast">* Terms &amp; conditions apply. The guarantee is valid only for active students who attend the sessions, follow the mandated risk-management rules and provide a verified broker P&amp;L ledger showing executed trades that correspond to the taught strategies. <a href="#guarantee-terms">Read the full terms</a></p>
@@ -318,7 +322,7 @@ export default function Club() {
 
           <div className="cl-g-close rv">
             <p>You either emerge as a highly skilled, profitable trader, or you get your money back. <strong>You have absolute zero risk.</strong></p>
-            <JoinButton className="btn btn-dark">Secure your risk-free spot for $499</JoinButton>
+            <JoinButton className="btn btn-dark">Secure your risk-free spot for {formatUsd(club.price)}</JoinButton>
           </div>
 
           <details className="cl-g-terms" id="guarantee-terms">
@@ -379,7 +383,8 @@ export default function Club() {
               <span className="meta">Your seat</span>
               <span className="cl-seat-tag">Limited to the first 100 traders</span>
             </div>
-            <div className="cl-seat-price"><s>$2,000</s><b>$499</b></div>
+            <div className="cl-seat-price">{club.listPrice > club.price && <s>{formatUsd(club.listPrice)}</s>}<b>{formatUsd(club.price)}</b></div>
+            {club.offer && <OfferClock endsAt={club.offer.endsAt} tone="dark" className="oclock-section" />}
             <ul className="cl-seat-list">
               <li><i><Tick /></i>90-day 100% money-back guarantee*</li>
               <li><i><Tick /></i>Live sessions and step-by-step modules</li>

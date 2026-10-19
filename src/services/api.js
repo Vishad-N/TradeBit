@@ -70,6 +70,7 @@ async function request(path, { method = 'GET', body, form, headers = {}, raw = f
 export const api = {
   get: (path, opts) => request(path, opts),
   post: (path, body, opts) => request(path, { method: 'POST', body, ...opts }),
+  put: (path, body, opts) => request(path, { method: 'PUT', body, ...opts }),
   patch: (path, body, opts) => request(path, { method: 'PATCH', body, ...opts }),
   delete: (path, opts) => request(path, { method: 'DELETE', ...opts }),
   upload: (path, form) => request(path, { method: 'POST', form }),

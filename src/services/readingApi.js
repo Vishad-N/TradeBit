@@ -30,6 +30,7 @@ export const adminApi = {
   tasks: () => api.get('/admin/tasks'),
   createTask: (data) => api.post('/admin/tasks', data),
   updateTask: (id, data) => api.patch(`/admin/tasks/${id}`, data),
+  deleteTask: (id) => api.delete(`/admin/tasks/${id}`),
   requests: (status) => api.get(`/admin/reading/requests${status ? `?status=${status}` : ''}`),
   approve: (id) => api.patch(`/admin/reading/requests/${id}/approve`),
   reject: (id, reason) => api.patch(`/admin/reading/requests/${id}/reject`, { reason }),
@@ -72,6 +73,15 @@ adminApi.deleteGalleryImage = (id) => api.delete(`/admin/gallery/${id}`);
 
 adminApi.setTestimonialPhoto = (id, form) => api.upload(`/admin/testimonials/${id}/photo`, form);
 adminApi.clearTestimonialPhoto = (id) => api.delete(`/admin/testimonials/${id}/photo`);
+
+// Recurring free-reading days (Admin -> Free Days).
+adminApi.freeReading = () => api.get('/admin/free-reading');
+adminApi.saveFreeReading = (data) => api.put('/admin/free-reading', data);
+
+// Prices and timed offers (Admin -> Pricing). The public GET returns only live values plus the server clock.
+export const pricingApi = { get: () => api.get('/pricing') };
+adminApi.pricing = () => api.get('/admin/pricing');
+adminApi.savePricing = (data) => api.put('/admin/pricing', data);
 
 // Social links (Admin -> Social Links). Public GET returns only the links that were set by an admin.
 export const siteLinksApi = { get: () => api.get('/site-links') };

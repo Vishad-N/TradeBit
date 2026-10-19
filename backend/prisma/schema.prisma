@@ -68,6 +68,8 @@ model Book {
   isActive         Boolean    @default(true)
   /// Storage key of the optional cover image shown on the library card.
   coverKey         String?
+  /// Only 1% Club members (an ACTIVE mentorship) and admins can read it. Tasks and free days never open it.
+  clubOnly         Boolean    @default(false)
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
 
@@ -321,4 +323,34 @@ model SiteLink {
   key       String   @id
   url       String
   updatedAt DateTime @updatedAt
+}
+
+/// Admin-configurable price (and optional timed offer) for a product: invitation (the course) or club (1% Club).
+model ProductPricing {
+  product       String    @id
+  listPrice     Decimal   @db.Decimal(12, 2)
+  price         Decimal   @db.Decimal(12, 2)
+  offerEnabled  Boolean   @default(false)
+  offerPrice    Decimal?  @db.Decimal(12, 2)
+  offerTitle    String?
+  offerStartsAt DateTime?
+  offerEndsAt   DateTime?
+  updatedAt     DateTime  @updatedAt
+}
+
+/// The recurring "free reading" schedule (one row, id "default"): on the chosen weekdays the chosen books open for every
+/// logged-in user with no task. Club-only books are never included.
+model FreeReadingSchedule {
+  id          String   @id
+  enabled     Boolean  @default(false)
+  /// Weekdays 0 = Sunday ... 6 = Saturday.
+  days        Int[]
+  /// Minutes after midnight in `timezone`; the window is [startMinute, endMinute). 0 and 1440 = all day.
+  startMinute Int      @default(0)
+  endMinute   Int      @default(1440)
+  timezone    String   @default("Asia/Kolkata")
+  /// true = every non-club book, false = only `bookIds`.
+  allBooks    Boolean  @default(true)
+  bookIds     String[]
+  updatedAt   DateTime @updatedAt
 }

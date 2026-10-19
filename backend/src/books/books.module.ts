@@ -21,7 +21,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { IsBoolean, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { AuthGuard, Roles } from '../auth/auth.guard';
@@ -46,6 +46,8 @@ function sniffCover(buf: Buffer): { ext: 'jpg' | 'png' | 'webp'; mime: string } 
 export class CreateBookDto {
   @IsString() @MinLength(1) @MaxLength(200) title: string;
   @IsOptional() @IsString() @MaxLength(2000) description?: string;
+  /** Only 1% Club members (and admins, for testing) can read it. Arrives as the string "true" from the multipart upload form. */
+  @IsOptional() @Transform(({ value }) => value === true || value === 'true') @IsBoolean() clubOnly?: boolean;
 }
 
 export class CreateBookFromLinkDto extends CreateBookDto {
@@ -56,6 +58,7 @@ export class UpdateBookDto {
   @IsOptional() @IsString() @MinLength(1) @MaxLength(200) title?: string;
   @IsOptional() @IsString() @MaxLength(2000) description?: string;
   @IsOptional() @Type(() => Boolean) @IsBoolean() isActive?: boolean;
+  @IsOptional() @Type(() => Boolean) @IsBoolean() clubOnly?: boolean;
 }
 
 /** Admin-facing view: never includes originalFilePath. */
@@ -67,6 +70,7 @@ const bookSelect = {
   status: true,
   processingError: true,
   isActive: true,
+  clubOnly: true,
   coverKey: true,
   createdAt: true,
   updatedAt: true,
@@ -90,7 +94,7 @@ export class BooksService {
     if (file.buffer.subarray(0, 5).toString('latin1') !== '%PDF-') throw new BadRequestException('File is not a valid PDF');
 
     const book = await this.prisma.book.create({
-      data: { title: dto.title.trim(), description: dto.description?.trim() ?? '', originalFilePath: 'pending', status: 'PROCESSING' },
+      data: { title: dto.title.trim(), description: dto.description?.trim() ?? '', clubOnly: dto.clubOnly === true, originalFilePath: 'pending', status: 'PROCESSING' },
     });
     const originalKey = `books/${book.id}/original.pdf`;
     try {
@@ -116,7 +120,7 @@ export class BooksService {
   async createFromLink(dto: CreateBookFromLinkDto) {
     const url = dto.url.trim();
     const book = await this.prisma.book.create({
-      data: { title: dto.title.trim(), description: dto.description?.trim() ?? '', originalFilePath: `${LINK_PREFIX}${url}`, status: 'PROCESSING' },
+      data: { title: dto.title.trim(), description: dto.description?.trim() ?? '', clubOnly: dto.clubOnly === true, originalFilePath: `${LINK_PREFIX}${url}`, status: 'PROCESSING' },
     });
     setImmediate(() => this.process(book.id, url));
     return this.prisma.book.findUniqueOrThrow({ where: { id: book.id }, select: bookSelect });

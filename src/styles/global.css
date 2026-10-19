@@ -155,6 +155,19 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .tag-float b{display:block;font-size:24px;font-weight:500;letter-spacing:-.02em;line-height:1.1}
 .tag-float .meta{color:var(--l-60)}
 .tf1{left:24%;top:6%}
+.live-card{perspective:600px;min-width:210px}
+.lc-face{transform-origin:50% 50%;backface-visibility:hidden}
+.lc-face.out{animation:lcOut .28s ease-in forwards}
+.lc-face.in{animation:lcIn .28s ease-out}
+@keyframes lcOut{to{transform:rotateX(-90deg);opacity:.2}}
+@keyframes lcIn{from{transform:rotateX(90deg);opacity:.2}to{transform:rotateX(0);opacity:1}}
+.live-card b{font-variant-numeric:tabular-nums;transition:color .6s}
+.live-card b.tick-up{color:#B8D83D;transition:none}
+.live-card b.tick-dn{color:#FF7A6B;transition:none}
+.lc-dots{display:flex;gap:4px;margin-top:10px}
+.lc-dots i{width:14px;height:2px;border-radius:2px;background:var(--l-60);opacity:.35;transition:opacity .3s,background .3s}
+.lc-dots i.on{background:#B8D83D;opacity:1}
+@media (prefers-reduced-motion:reduce){.lc-face.out,.lc-face.in{animation:none}}
 .tf2{right:6%;top:44%}
 .hero-cap{position:absolute;left:0;right:0;bottom:-1px;height:var(--hero-cap);z-index:3;pointer-events:none}
 .hero-cap svg{width:100%;height:100%}

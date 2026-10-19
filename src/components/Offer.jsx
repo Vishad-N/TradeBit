@@ -3,8 +3,14 @@ import { CapRings } from './Rings.jsx';
 import { GoldAsset } from './FloatingAssets.jsx';
 import CountDown from './CountDown.jsx';
 import { openVip } from './VipModal.jsx';
+import OfferClock from './OfferClock.jsx';
+import { formatInr, percentOff, usePricing } from '../context/PricingContext.jsx';
 
 export default function Offer() {
+  const { invitation } = usePricing();
+  const { listPrice, price, offer } = invitation;
+  const off = percentOff(listPrice, price);
+  const tag = (offer ? (offer.title || 'Limited time offer') + ' · ' : '') + (off > 0 ? `${off}% OFF · ` : '') + 'LIMITED ENROLMENT';
   return (
     <section className="offer dark" id="offer" aria-labelledby="offer-t">
       <CapRings className="rings" count={5} step={30} radiusVar="--r-offer" />
@@ -29,9 +35,10 @@ export default function Offer() {
         <div className="deal rv">
           <div className="price">
             <span className="meta">Complete programme · one-time payment</span>
-            <div className="was"><span className="sr" style={{ position: 'absolute', left: '-9999px' }}>Original price</span>₹24,999</div>
-            <div className="now"><sup>₹</sup><CountDown from={9999} to={0} /></div>
-            <span className="off">100% OFF · LIMITED ENROLMENT</span>
+            {listPrice > price && <div className="was"><span className="sr" style={{ position: 'absolute', left: '-9999px' }}>Original price</span>{formatInr(listPrice)}</div>}
+            <div className="now"><sup>₹</sup><CountDown key={price} from={Math.max(price, Math.min(9999, listPrice))} to={price} /></div>
+            <span className="off">{tag.toUpperCase()}</span>
+            {offer && <OfferClock endsAt={offer.endsAt} tone="dark" className="oclock-section" />}
             <p>One payment, no subscription. Every future curriculum update is included for life.</p>
           </div>
           <div className="vr" aria-hidden="true"></div>

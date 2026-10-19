@@ -10,8 +10,10 @@ import TestimonialsTab from './TestimonialsTab.jsx';
 import ProfitShotsTab from './ProfitShotsTab.jsx';
 import GalleryTab from './GalleryTab.jsx';
 import SocialLinksTab from './SocialLinksTab.jsx';
+import PricingTab from './PricingTab.jsx';
+import FreeDaysTab from './FreeDaysTab.jsx';
 
-const TABS = [['books', 'Books'], ['tasks', 'Tasks'], ['requests', 'Reading Requests'], ['payments', 'Mentorship Payments'], ['platforms', 'Platforms'], ['webinar', 'Webinar Registrations'], ['testimonials', 'Testimonials'], ['profits', 'Profit Screenshots'], ['gallery', 'Gallery'], ['social', 'Social Links']];
+const TABS = [['books', 'Books'], ['tasks', 'Tasks'], ['requests', 'Reading Requests'], ['payments', 'Mentorship Payments'], ['platforms', 'Platforms'], ['webinar', 'Webinar Registrations'], ['testimonials', 'Testimonials'], ['profits', 'Profit Screenshots'], ['gallery', 'Gallery'], ['social', 'Social Links'], ['pricing', 'Pricing'], ['freedays', 'Free Days']];
 const STATUS_LABEL = { PENDING_REVIEW: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected', PROCESSING: 'Processing', READY: 'Ready', FAILED: 'Failed' };
 const fmt = d => (d ? new Date(d).toLocaleString() : '—');
 
@@ -28,6 +30,16 @@ function useList(fetcher, deps = []) {
   return { data, error, reload };
 }
 
+/** "1% Club only" switch for the book forms. */
+function ClubOnlyToggle({ checked, onChange }) {
+  return (
+    <label className="rd-check rd-club-toggle">
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
+      <span><b>1% Club only</b><small>Only 1% Club members can read this book. No task or free day opens it. Admins can still open it for testing.</small></span>
+    </label>
+  );
+}
+
 // ---------------------------------------------------------------- Books
 function BooksTab() {
   const { data: books, error, reload } = useList(adminApi.books);
@@ -37,17 +49,18 @@ function BooksTab() {
   const [msg, setMsg] = useState(null);
   const fileRef = useRef(null);
   const [link, setLink] = useState('');
+  const [clubOnly, setClubOnly] = useState(false); // new book is for 1% Club members only
   const [editing, setEditing] = useState(null); // book being edited
-  const [edit, setEdit] = useState({ title: '', description: '' });
+  const [edit, setEdit] = useState({ title: '', description: '', clubOnly: false });
   const coverRef = useRef(null);
 
-  const startEdit = b => { setEditing(b); setEdit({ title: b.title, description: b.description || '' }); setMsg(null); };
+  const startEdit = b => { setEditing(b); setEdit({ title: b.title, description: b.description || '', clubOnly: !!b.clubOnly }); setMsg(null); };
   async function saveEdit(e) {
     e.preventDefault();
     setBusy(true);
     setMsg(null);
     try {
-      await adminApi.updateBook(editing.id, { title: edit.title.trim(), description: edit.description.trim() });
+      await adminApi.updateBook(editing.id, { title: edit.title.trim(), description: edit.description.trim(), clubOnly: edit.clubOnly });
       const cover = coverRef.current?.files?.[0];
       if (cover) {
         const fd = new FormData();
@@ -82,9 +95,10 @@ function BooksTab() {
       const form = new FormData();
       form.append('title', title.trim());
       form.append('description', description.trim());
+      form.append('clubOnly', String(clubOnly));
       form.append('file', file);
       await adminApi.uploadBook(form);
-      setTitle(''); setDescription(''); fileRef.current.value = '';
+      setTitle(''); setDescription(''); setClubOnly(false); fileRef.current.value = '';
       setMsg({ ok: 'Uploaded. The book is being processed into pages.' });
       reload();
     } catch (err) {
@@ -100,8 +114,8 @@ function BooksTab() {
     setBusy(true);
     setMsg(null);
     try {
-      await adminApi.addBookFromLink({ title: title.trim(), description: description.trim(), url: link.trim() });
-      setTitle(''); setDescription(''); setLink('');
+      await adminApi.addBookFromLink({ title: title.trim(), description: description.trim(), clubOnly, url: link.trim() });
+      setTitle(''); setDescription(''); setLink(''); setClubOnly(false);
       setMsg({ ok: 'Added. The server is downloading the PDF and processing it into pages. Watch the Status below.' });
       reload();
     } catch (err) {
@@ -122,6 +136,7 @@ function BooksTab() {
         <label className="rd-field"><span>Book Title</span><input value={title} onChange={e => setTitle(e.target.value)} required maxLength={200} /></label>
         <label className="rd-field"><span>Description</span><textarea rows={3} value={description} onChange={e => setDescription(e.target.value)} maxLength={2000} /></label>
         <label className="rd-field"><span>PDF File</span><input type="file" accept="application/pdf,.pdf" ref={fileRef} required /></label>
+        <ClubOnlyToggle checked={clubOnly} onChange={setClubOnly} />
         {msg?.error && <p className="rd-error" role="alert">{msg.error}</p>}
         {msg?.ok && <p className="rd-ok" role="status">{msg.ok}</p>}
         <button className="btn btn-lime" type="submit" disabled={busy}>{busy ? 'Uploading…' : 'Upload Book'} <span className="ar">→</span></button>
@@ -139,6 +154,7 @@ function BooksTab() {
           <h2 className="rd-h2">Edit Book</h2>
           <label className="rd-field"><span>Book Title</span><input value={edit.title} onChange={e => setEdit(v => ({ ...v, title: e.target.value }))} required maxLength={200} /></label>
           <label className="rd-field"><span>Description</span><textarea rows={3} value={edit.description} onChange={e => setEdit(v => ({ ...v, description: e.target.value }))} maxLength={2000} /></label>
+          <ClubOnlyToggle checked={edit.clubOnly} onChange={v => setEdit(e => ({ ...e, clubOnly: v }))} />
           <label className="rd-field"><span>Thumbnail (optional: JPG, PNG or WEBP, up to 2MB){editing.coverKey ? ' · choose a file to replace the current one' : ''}</span>
             <input type="file" accept="image/jpeg,image/png,image/webp" ref={coverRef} />
             <small>Shown on the book card. A portrait image (about 3:4) works best; without one a coloured cover with initials is used.</small>
@@ -157,7 +173,7 @@ function BooksTab() {
       {!books ? <p>Loading…</p> : books.length === 0 ? <p>No books yet.</p> : (
         <div className="rd-table-wrap">
           <table className="rd-table">
-            <thead><tr><th>Title</th><th>Status</th><th>Pages</th><th>Visible</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Title</th><th>Status</th><th>Pages</th><th>Visible</th><th>Access</th><th>Actions</th></tr></thead>
             <tbody>
               {books.map(b => (
                 <tr key={b.id}>
@@ -165,10 +181,12 @@ function BooksTab() {
                   <td data-label="Status"><Chip value={b.status} /></td>
                   <td data-label="Pages">{b.pageCount || '—'}</td>
                   <td data-label="Visible">{b.isActive ? 'Yes' : 'No'}</td>
+                  <td data-label="Access">{b.clubOnly ? <span className="rd-chip rd-chip-club">1% Club only</span> : 'Everyone'}</td>
                   <td data-label="Actions" className="rd-actions">
                     <button className="rd-mini" onClick={() => startEdit(b)}>Edit</button>
                     {b.coverKey && <button className="rd-mini" onClick={act(() => adminApi.clearBookCover(b.id))}>Remove thumbnail</button>}
                     <button className="rd-mini" onClick={act(() => adminApi.updateBook(b.id, { isActive: !b.isActive }))}>{b.isActive ? 'Hide' : 'Show'}</button>
+                    <button className="rd-mini" onClick={act(() => adminApi.updateBook(b.id, { clubOnly: !b.clubOnly }))}>{b.clubOnly ? 'Make public' : 'Club only'}</button>
                     {b.status === 'FAILED' && <button className="rd-mini" onClick={act(() => adminApi.reprocessBook(b.id))}>Retry</button>}
                     <button className="rd-mini rd-danger" onClick={() => window.confirm(`Delete "${b.title}" and all its pages?`) && act(() => adminApi.deleteBook(b.id))()}>Delete</button>
                   </td>
@@ -191,7 +209,8 @@ function TasksTab() {
   const [editing, setEditing] = useState(null); // task whose books are being changed
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
-  const readyBooks = (books || []).filter(b => b.status === 'READY');
+  // 1% Club books are never unlocked by a task, so they are not offered here.
+  const readyBooks = (books || []).filter(b => b.status === 'READY' && !b.clubOnly);
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
   async function create(e) {
@@ -240,6 +259,10 @@ function TasksTab() {
                   <td data-label="Actions" className="rd-actions">
                     <button className="rd-mini" onClick={() => setEditing(t)}>Edit books</button>
                     <button className="rd-mini" onClick={async () => { await adminApi.updateTask(t.id, { isActive: !t.isActive }).catch(err => setMsg({ error: err.message })); reload(); }}>{t.isActive ? 'Deactivate' : 'Make active'}</button>
+                    <button className="rd-mini rd-danger" onClick={async () => {
+                      if (!window.confirm(`Delete task "${t.title}"? Its ${t._count.submissions} submission(s) will be removed too, and books users unlocked only through this task will lock again.`)) return;
+                      try { await adminApi.deleteTask(t.id); reload(); } catch (err) { setMsg({ error: err.message }); }
+                    }}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -273,12 +296,14 @@ function BookPicker({ books, value, onChange }) {
     <fieldset className="rd-field rd-picker">
       <span>Books unlocked by this task ({value.length} selected)</span>
       {books.length === 0 && <small>No ready books yet. Upload a book first.</small>}
-      {books.map(b => (
-        <label key={b.id} className="rd-check">
-          <input type="checkbox" checked={value.includes(b.id)} onChange={() => toggle(b.id)} />
-          <span>{b.title}</span>
-        </label>
-      ))}
+      <div className="rd-picker-list">
+        {books.map(b => (
+          <label key={b.id} className="rd-check">
+            <input type="checkbox" checked={value.includes(b.id)} onChange={() => toggle(b.id)} />
+            <span>{b.title}</span>
+          </label>
+        ))}
+      </div>
     </fieldset>
   );
 }
@@ -411,6 +436,8 @@ export default function AdminReading() {
       {tab === 'profits' && <ProfitShotsTab />}
       {tab === 'gallery' && <GalleryTab />}
       {tab === 'social' && <SocialLinksTab />}
+      {tab === 'pricing' && <PricingTab />}
+      {tab === 'freedays' && <FreeDaysTab />}
     </section>
   );
 }

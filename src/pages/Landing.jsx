@@ -19,10 +19,12 @@ import Footer from '../components/Footer.jsx';
 import VideoModal from '../components/VideoModal.jsx';
 import { usePageReveal } from '../hooks/motion.js';
 import { useScrollState } from '../hooks/useScrollState.js';
+import { formatInr, usePricing } from '../context/PricingContext.jsx';
 
 const LINK_HREFS = NAV_LINKS.map(([href]) => href);
 
 export default function Landing() {
+  const { invitation } = usePricing();
   const [menuOpen, setMenuOpen] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const { solid, activeHref, showCta } = useScrollState(LINK_HREFS, menuOpen);
@@ -73,7 +75,7 @@ export default function Landing() {
       </main>
       <ProfitMarquee />
       <Footer />
-      <div className={showCta ? 'm-cta show' : 'm-cta'}><a href="#offer">START YOUR JOURNEY → <small>₹0</small></a></div>
+      <div className={showCta ? 'm-cta show' : 'm-cta'}><a href="#offer">START YOUR JOURNEY → <small>{formatInr(invitation.price)}</small></a></div>
       <VideoModal open={videoOpen} onClose={closeVideo} />
     </>
   );

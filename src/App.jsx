@@ -21,14 +21,18 @@ import ScrollToTop from './components/ScrollToTop.jsx';
 import WhatsAppButton from './components/WhatsAppButton.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { SiteLinksProvider } from './context/SiteLinksContext.jsx';
+import { PricingProvider } from './context/PricingContext.jsx';
+import OfferBadge from './components/OfferBadge.jsx';
 
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <SiteLinksProvider>
+        <PricingProvider>
         <ScrollToTop />
         <WhatsAppButton />
+        <OfferBadge />
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route element={<LegalLayout />}>
@@ -49,6 +53,7 @@ export default function App() {
             <Route path="/admin/reading" element={<AdminReading />} />
           </Route>
         </Routes>
+        </PricingProvider>
         </SiteLinksProvider>
       </AuthProvider>
     </BrowserRouter>

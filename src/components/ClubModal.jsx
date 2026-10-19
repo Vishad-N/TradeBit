@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { percentOff, usePricing } from '../context/PricingContext.jsx';
+import OfferClock from './OfferClock.jsx';
 
-// Shown prices. The payment page reads the live fee from the backend (MENTORSHIP_PRICE_USDT); keep the two in step.
-const PRICE_NOW = 499;
-const PRICE_WAS = 2000;
-const SAVE_PERCENT = Math.round((1 - PRICE_NOW / PRICE_WAS) * 100);
 
 const INCLUDES = [
   'Private 1:1 guidance with the mentor',
@@ -18,6 +16,10 @@ const INCLUDES = [
 // mentorship application (log in first when needed), exactly like the "Apply for 1:1 Mentorship" card.
 export default function ClubModal({ open, onClose }) {
   const { user } = useAuth();
+  const { club } = usePricing(); // price comes from Admin -> Pricing; the payment page reads the same value from the backend
+  const PRICE_NOW = club.price;
+  const PRICE_WAS = club.listPrice;
+  const SAVE_PERCENT = percentOff(PRICE_WAS, PRICE_NOW);
   const navigate = useNavigate();
   const [closing, setClosing] = useState(false);
   const closeRef = useRef(null);
@@ -68,10 +70,11 @@ export default function ClubModal({ open, onClose }) {
           <p className="club-lead">Learn directly with the mentor. Personalised guidance, built around your trading, in a private 1:1 setting.</p>
 
           <div className="club-price" aria-label={`Price ${PRICE_NOW} USDT, down from ${PRICE_WAS} USDT`}>
-            <s>{PRICE_WAS} USDT</s>
+            {PRICE_WAS > PRICE_NOW && <s>{PRICE_WAS} USDT</s>}
             <b>{PRICE_NOW}<small> USDT</small></b>
-            <span className="club-save">Save {SAVE_PERCENT}% · TRC20</span>
+            <span className="club-save">{SAVE_PERCENT > 0 ? `Save ${SAVE_PERCENT}% · ` : ''}TRC20</span>
           </div>
+          {club.offer && <OfferClock endsAt={club.offer.endsAt} tone="light" className="oclock-modal" />}
 
           <ul className="club-list">
             {INCLUDES.map(t => <li key={t}><b aria-hidden="true">✓</b>{t}</li>)}
