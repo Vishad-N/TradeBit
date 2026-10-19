@@ -39,11 +39,11 @@ export function candles(data, box, o = {}) {
   let c = '';
   data.forEach((d, i) => {
     const up = d.c >= d.o, y1 = Y(Math.max(d.o, d.c)), y2 = Y(Math.min(d.o, d.c));
-    const op = o.opacity ?? 1;
-    c += `<g class="cd" style="--i:${i}" opacity="${op}"><line x1="${X(i)}" x2="${X(i)}" y1="${Y(d.h)}" y2="${Y(d.l)}" stroke="${col}" ${NSE}/><rect x="${X(i) - cw / 2}" y="${y1}" width="${cw}" height="${Math.max(1, y2 - y1)}" fill="${up ? col : (o.hollowFill || 'none')}" stroke="${col}" ${NSE}/></g>`;
+    const op = o.opacity ?? 1, sw = o.sw ? ` stroke-width="${o.sw}"` : '';
+    c += `<g class="cd" style="--i:${i}" opacity="${op}"><line x1="${X(i)}" x2="${X(i)}" y1="${Y(d.h)}" y2="${Y(d.l)}" stroke="${col}"${sw} ${NSE}/><rect x="${X(i) - cw / 2}" y="${y1}" width="${cw}" height="${Math.max(1, y2 - y1)}" fill="${up ? (o.upFill || col) : (o.hollowFill || 'none')}" stroke="${col}"${sw} ${NSE}/></g>`;
   });
   return {
-    svg: `<g>${g}</g><g>${c}</g>`,
+    svg: `<g>${g}</g><g${o.lift ? ` filter="url(#${o.lift})"` : ''}>${c}</g>`,
     X, Y, data,
     at: t => { const i = Math.round(t * (data.length - 1)), d = data[i]; return { i, x: X(i), hi: Y(d.h), lo: Y(d.l), c: Y(d.c) }; },
   };
@@ -125,20 +125,22 @@ export function archArt() {
 
 /* ---------- HERO chart ---------- */
 export function heroChart(reduceMotion) {
-  const ch = candles(ohlc([[0, 100], [.12, 124], [.2, 112], [.34, 150], [.44, 132], [.6, 172], [.7, 154], [.84, 196], [.9, 188], [1, 214]], 58, 7, 7), { x: 0, y: 30, w: 560, h: 500 }, { color: K.pl, grid: 5, gridColor: 'rgba(220,232,192,.06)' });
+  // Charcoal candles on a white slab; a soft drop shadow lifts them off the surface.
+  const ch = candles(ohlc([[0, 100], [.12, 124], [.2, 112], [.34, 150], [.44, 132], [.6, 172], [.7, 154], [.84, 196], [.9, 188], [1, 214]], 58, 7, 7), { x: 0, y: 30, w: 560, h: 500 }, { color: '#0B0D0A', upFill: '#0B0D0A', hollowFill: '#FFFFFF', sw: 1.3, lift: 'candleLift', grid: 5, gridColor: 'rgba(21,24,20,.09)' });
+  const defs = '<defs><filter id="candleLift" x="-10%" y="-10%" width="120%" height="130%" color-interpolation-filters="sRGB"><feDropShadow dx="0" dy="3" stdDeviation="2.4" flood-color="#26331A" flood-opacity=".3"/></filter></defs>';
   const sw = [[.2, 'lo'], [.34, 'hi'], [.44, 'lo'], [.6, 'hi'], [.7, 'lo']].map(([t, k]) => ({ ...ch.at(t), k }));
   const hh = ch.at(.6), zn = ch.at(.7), bo = ch.at(.78), last = ch.at(1);
-  let a = `<rect class="fd" x="${zn.x - 30}" y="${zn.lo - 8}" width="${560 - zn.x + 30}" height="36" fill="rgba(220,232,192,.08)" stroke="rgba(220,232,192,.35)" stroke-dasharray="3 4" ${NSE}/>`;
-  a += `<text class="fd" x="${zn.x - 24}" y="${zn.lo + 46}" font-family="${F}" font-size="9" font-weight="600" letter-spacing="1.6" fill="${K.pl}" fill-opacity=".7">SUPPORT ZONE</text>`;
-  a += `<line class="dr" x1="${hh.x - 60}" x2="600" y1="${hh.hi}" y2="${hh.hi}" stroke="${K.pl}" stroke-opacity=".6" stroke-dasharray="2 5" ${NSE}/>`;
-  a += `<text class="fd" x="598" y="${hh.hi - 8}" text-anchor="end" font-family="${F}" font-size="9" letter-spacing="1.4" fill="${K.pl}" fill-opacity=".7">RESISTANCE</text>`;
-  a += `<polyline class="dr" points="${sw.map(p => `${p.x},${p.k === 'hi' ? p.hi : p.lo}`).join(' ')}" fill="none" stroke="${K.pl}" stroke-width="1.2" ${NSE}/>`;
-  sw.forEach(p => { a += `<g class="fd">${pill(p.x, p.k === 'hi' ? p.hi - 18 : p.lo + 20, p.k === 'hi' ? 'HH' : 'HL', 'rgba(220,232,192,.14)', K.pl)}</g><circle class="fd" cx="${p.x}" cy="${p.k === 'hi' ? p.hi : p.lo}" r="3" fill="${K.pl}"/>`; });
-  a += `<circle class="fd" cx="${bo.x}" cy="${hh.hi}" r="14" fill="none" stroke="${K.lime}" stroke-width="1.4"/><g class="fd">${pill(bo.x, hh.hi - 30, 'BREAKOUT ↗', K.lime, K.c)}</g>`;
-  a += `<line x1="${last.x}" x2="600" y1="${last.c}" y2="${last.c}" stroke="${K.lime}" stroke-opacity=".7" ${NSE}/><g class="fd">${pill(600, last.c, '4,248', K.lime, K.c, 'end')}</g>`;
-  a += `<circle cx="${last.x}" cy="${last.c}" r="4" fill="${K.lime}">${reduceMotion ? '' : '<animate attributeName="r" values="4;10;4" dur="2.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.25;1" dur="2.6s" repeatCount="indefinite"/>'}</circle>`;
-  [0, 1, 2, 3, 4].forEach(i => { a += `<text x="-8" y="${60 + i * 110}" text-anchor="end" font-family="${F}" font-size="9" fill="${K.pl}" fill-opacity=".35">${(3270 - i * 30).toLocaleString('en-US')}</text>`; });
-  return ch.svg + a;
+  let a = `<rect class="fd" x="${zn.x - 30}" y="${zn.lo - 8}" width="${560 - zn.x + 30}" height="36" fill="rgba(184,216,61,.2)" stroke="rgba(21,24,20,.55)" stroke-dasharray="3 4" ${NSE}/>`;
+  a += `<text class="fd" x="${zn.x - 24}" y="${zn.lo + 46}" font-family="${F}" font-size="9" font-weight="600" letter-spacing="1.6" fill="${K.c}" fill-opacity=".72">SUPPORT ZONE</text>`;
+  a += `<line class="dr" x1="${hh.x - 60}" x2="600" y1="${hh.hi}" y2="${hh.hi}" stroke="${K.c}" stroke-opacity=".6" stroke-dasharray="2 5" ${NSE}/>`;
+  a += `<text class="fd" x="598" y="${hh.hi - 8}" text-anchor="end" font-family="${F}" font-size="9" letter-spacing="1.4" fill="${K.c}" fill-opacity=".72">RESISTANCE</text>`;
+  a += `<polyline class="dr" points="${sw.map(p => `${p.x},${p.k === 'hi' ? p.hi : p.lo}`).join(' ')}" fill="none" stroke="${K.c}" stroke-opacity=".85" stroke-width="1.6" ${NSE}/>`;
+  sw.forEach(p => { a += `<g class="fd">${pill(p.x, p.k === 'hi' ? p.hi - 18 : p.lo + 20, p.k === 'hi' ? 'HH' : 'HL', K.c, K.pl)}</g><circle class="fd" cx="${p.x}" cy="${p.k === 'hi' ? p.hi : p.lo}" r="3.2" fill="#FFFFFF" stroke="${K.c}" stroke-width="1.5"/>`; });
+  a += `<circle class="fd" cx="${bo.x}" cy="${hh.hi}" r="14" fill="rgba(184,216,61,.25)" stroke="${K.c}" stroke-width="1.5"/><g class="fd">${pill(bo.x, hh.hi - 30, 'BREAKOUT ↗', K.lime, K.c)}</g>`;
+  a += `<line x1="${last.x}" x2="600" y1="${last.c}" y2="${last.c}" stroke="${K.c}" stroke-opacity=".55" ${NSE}/><g class="fd">${pill(600, last.c, '4,248', K.lime, K.c, 'end')}</g>`;
+  a += `<circle cx="${last.x}" cy="${last.c}" r="4.5" fill="${K.lime}" stroke="${K.c}" stroke-width="1.5">${reduceMotion ? '' : '<animate attributeName="r" values="4;10;4" dur="2.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.25;1" dur="2.6s" repeatCount="indefinite"/>'}</circle>`;
+  [0, 1, 2, 3, 4].forEach(i => { a += `<text x="-8" y="${60 + i * 110}" text-anchor="end" font-family="${F}" font-size="9" fill="${K.c}" fill-opacity=".45">${(3270 - i * 30).toLocaleString('en-US')}</text>`; });
+  return defs + ch.svg + a;
 }
 
 /* ---------- SOLUTION visual (light) ---------- */

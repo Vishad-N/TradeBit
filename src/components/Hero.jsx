@@ -148,7 +148,7 @@ function LiveMarketCard() {
       <div className={'lc-face' + (phase ? ' ' + phase : '')} aria-live="off">
         <span className="meta">{m.label} · LIVE</span>
         <b className={tick ? 'tick-' + tick : undefined}>{fmtPrice(price, m.dp)}</b>
-        <span className="meta" style={{ color: bull ? '#B8D83D' : '#FF7A6B' }}>
+        <span className="meta" style={{ color: bull ? '#4F6B0A' : '#B83A27', fontWeight: 600 }}>
           {bull ? '▲' : '▼'} {chg == null ? 'Connecting…' : `${bull ? '+' : ''}${chg.toFixed(2)}% · 24h`}
         </span>
       </div>
@@ -198,8 +198,8 @@ export default function Hero({ onPlayVideo }) {
 
       <div className="hero-form" role="img" aria-label="Annotated candlestick chart showing an uptrend with higher highs, higher lows, a resistance breakout and a support zone, set on a charcoal architectural form">
         <svg className="form" viewBox="0 0 800 900" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M170 900 V330 C170 150 300 20 480 20 H800 V900 Z" fill="#151814"/>
-          <g fill="none" stroke="#DCE8C0" strokeOpacity=".09" vectorEffect="non-scaling-stroke" dangerouslySetInnerHTML={html(formTopo())} />
+          <path d="M170 900 V330 C170 150 300 20 480 20 H800 V900 Z" fill="#FFFFFF" stroke="#151814" strokeOpacity=".16" vectorEffect="non-scaling-stroke"/>
+          <g fill="none" stroke="#151814" strokeOpacity=".1" vectorEffect="non-scaling-stroke" dangerouslySetInnerHTML={html(formTopo())} />
           <path d="M120 900 V330 C120 120 270 -30 480 -30 H800" fill="none" stroke="#151814" strokeOpacity=".18" vectorEffect="non-scaling-stroke"/>
           <path d="M70 900 V330 C70 90 240 -80 480 -80 H800" fill="none" stroke="#151814" strokeOpacity=".08" vectorEffect="non-scaling-stroke"/>
         </svg>
