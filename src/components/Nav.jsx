@@ -17,6 +17,7 @@ export const ROUTE_LINKS = [
   { to: '/about', label: 'About Us' },
   { to: '/contact', label: 'Contact Us' },
   { to: '/gallery', label: 'Gallery' },
+  { to: '/courses', label: 'Courses' },
   { to: '/market-news', label: 'Market News' },
   { to: '/read/books', label: 'Books', flip: true },
 ];

@@ -15,6 +15,7 @@ import { GalleryModule } from './gallery/gallery.module';
 import { SiteLinksModule } from './site-links/site-links.module';
 import { PricingModule } from './pricing/pricing.module';
 import { HealthModule } from './health/health.module';
+import { CoursesModule } from './courses/courses.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { HealthModule } from './health/health.module';
     SiteLinksModule,
     PricingModule,
     HealthModule,
+    CoursesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

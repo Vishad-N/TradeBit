@@ -1,0 +1,201 @@
+/* ---------- HERO · "Institutional Structure Core" ----------
+   Full-viewport near-black stage with a Three.js scene behind the copy.
+   Gold (#D4AF37) leads, cool cyan supports; the lime/pale-lime of the rest of the page returns at the curved cap. */
+.hero.hero-dark{
+  --hg:#D4AF37; --hg-hi:#F1D98A; --hg-lo:#B8921F; --hc:#7FE7FF; --ht:#EEF2F8;
+  min-height:max(100svh,720px);display:flex;align-items:center;
+  padding:112px var(--g) calc(var(--hero-cap) * .5 + 36px);
+  background:#05060A;color:var(--ht);isolation:isolate;
+}
+.hero-bg{position:absolute;inset:0;z-index:0;overflow:hidden;
+  background:
+    radial-gradient(900px 620px at 74% 46%,rgba(36,92,124,.22),transparent 70%),
+    radial-gradient(700px 500px at 88% 90%,rgba(212,175,55,.08),transparent 70%),
+    linear-gradient(180deg,#05060A 0%,#0A0C12 100%)}
+.hero-bg-grid{position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(rgba(127,231,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(127,231,255,.05) 1px,transparent 1px);
+  background-size:96px 96px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 70% 45%,#000 0%,transparent 75%);mask-image:radial-gradient(ellipse 80% 70% at 70% 45%,#000 0%,transparent 75%)}
+.sc{position:absolute;inset:0}
+.sc canvas{position:absolute;inset:0;width:100%;height:100%;display:block;animation:sc-in 1.6s var(--ease) both}
+@keyframes sc-in{from{opacity:0}to{opacity:1}}
+
+/* readability: dark veil behind the copy, plus a soft floor so the curved cap lands cleanly */
+.hero-veil{position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    linear-gradient(90deg,rgba(5,6,10,.9) 0%,rgba(5,6,10,.7) 30%,rgba(5,6,10,.22) 55%,transparent 72%),
+    linear-gradient(0deg,rgba(5,6,10,.55) 0%,transparent 28%)}
+.hero.hero-dark .hero-copy{z-index:3;max-width:min(980px,100%)}
+
+/* structure labels (positioned from the 3D anchors each frame) */
+.sc-labels{position:absolute;inset:0;pointer-events:none}
+.sc-label{position:absolute;left:0;top:0;opacity:0;transition:opacity .9s var(--ease) var(--d,0s);
+  font-size:10px;font-weight:600;letter-spacing:.2em;color:rgba(127,231,255,.78);white-space:nowrap;
+  padding:3px 8px;border:1px solid rgba(127,231,255,.22);border-radius:6px;background:rgba(8,12,18,.45);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.sc-label.on{opacity:1}
+.sc-label.gold{color:var(--hg);border-color:rgba(212,175,55,.4)}
+
+/* copy */
+.hero-dark .label{color:rgba(238,242,248,.8)}
+.hero-dark .label::before{background:var(--hg)}
+.sc-h1{margin:26px 0 26px;font-weight:500;text-transform:uppercase;letter-spacing:-.04em;line-height:.93;
+  font-size:clamp(40px,5.2vw,84px);color:var(--ht)}
+.sc-ln{display:block;overflow:hidden;padding:.1em 0 .14em;margin:-.1em 0 -.14em}
+.sc-ln>span{display:inline-block;white-space:nowrap}
+/* headline: each letter rises out of its line mask, un-blurring as it lands */
+.ch{display:inline-block;transform:translateY(115%) rotate(4deg);opacity:0;filter:blur(8px);
+  animation:ch-in 1.1s var(--ease) var(--d) forwards}
+@keyframes ch-in{60%{opacity:1}to{transform:none;opacity:1;filter:blur(0)}}
+/* gold letters: a gradient spread across the word, then a glint that ripples through it on a loop */
+.ch.g{background:linear-gradient(100deg,var(--hg-hi),var(--hg) 55%,var(--hg-lo));
+  background-size:calc(var(--t) * 100%) 100%;background-position:calc(var(--n) / (var(--t) - 1) * 100%) 0;
+  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+  animation:ch-in 1.1s var(--ease) var(--d) forwards,ch-glint 6s ease-in-out calc(2.6s + var(--n) * .07s) infinite}
+@keyframes ch-glint{0%,16%,100%{filter:brightness(1)}6%{filter:brightness(1.7) drop-shadow(0 0 10px rgba(241,217,138,.35))}}
+/* paragraph: words fade up in sequence; the rest of the copy follows */
+.wd{display:inline-block;margin-right:.27em;opacity:0;transform:translateY(14px);animation:wd-in .9s var(--ease) var(--d) forwards}
+@keyframes wd-in{to{opacity:1;transform:none}}
+.sc-label-in,.sc-hook,.sc-ctas,.hero-pill-slot{opacity:0;transform:translateY(18px);animation:wd-in 1.1s var(--ease) forwards}
+.sc-label-in{animation-delay:.05s}
+.sc-hook{animation-delay:2s}
+.sc-ctas{animation-delay:2.25s}
+.hero-pill-slot{animation-delay:2.6s}
+.hero-dark .lead{color:rgba(238,242,248,.74)}
+.hero-dark .hook-hero{border-left-color:var(--hg);color:rgba(238,242,248,.82)}
+.hero-dark .hook-hero b{color:#fff}
+.hero-dark .hook-hero a{border-bottom-color:var(--hg)}
+
+/* CTAs: filled gold + outline */
+.btn-gold{background:linear-gradient(135deg,var(--hg-hi),var(--hg) 60%,var(--hg-lo));color:#0A0C12;box-shadow:0 0 0 0 rgba(212,175,55,.3),0 14px 34px -14px rgba(212,175,55,.6)}
+.btn-gold:hover{box-shadow:0 0 0 8px rgba(212,175,55,.2),0 14px 34px -14px rgba(212,175,55,.7)}
+.hero-dark .btn-ghost{padding:10px 26px 10px 10px;border:1px solid rgba(238,242,248,.28);border-radius:100px;color:var(--ht);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);background:rgba(238,242,248,.03)}
+.hero-dark .btn-ghost .ring{width:38px;height:38px;border-color:rgba(238,242,248,.45)}
+.hero-dark .btn-ghost:hover{border-color:var(--hg);background:rgba(212,175,55,.08)}
+.hero-dark .btn-ghost:hover .ring{background:var(--hg);border-color:var(--hg);color:#0A0C12}
+
+/* live gold: dark glass pill, top-right on desktop */
+.hero-pill-slot{position:absolute;z-index:4;right:var(--g);top:104px}
+.gp-face{display:grid;gap:4px;transform-origin:50% 50%;backface-visibility:hidden}
+.gp-face.out{animation:gp-out .28s ease-in forwards}
+.gp-face.in{animation:gp-flip-in .28s ease-out}
+@keyframes gp-out{to{transform:rotateX(-90deg);opacity:.2}}
+@keyframes gp-flip-in{from{transform:rotateX(90deg);opacity:.2}to{transform:rotateX(0);opacity:1}}
+.gp-dots{display:flex;gap:4px}
+.gp-dots i{width:16px;height:2px;border-radius:2px;background:#EEF2F8;opacity:.22;transition:opacity .3s,background .3s}
+.gp-dots i.on{background:var(--hg);opacity:1}
+.gold-pill:focus-visible{outline:2px solid var(--hg);outline-offset:3px}
+.gold-pill{display:grid;gap:8px;min-width:236px;perspective:600px;padding:14px 18px;border-radius:18px;color:var(--ht);
+  background:linear-gradient(135deg,rgba(255,255,255,.09),rgba(255,255,255,.025));
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 24px 50px -24px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.18);
+  -webkit-backdrop-filter:blur(16px) saturate(150%);backdrop-filter:blur(16px) saturate(150%)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.gold-pill{background:rgba(14,17,24,.94)}}
+.gp-meta{display:flex;align-items:center;gap:8px;font-size:10.5px;font-weight:500;letter-spacing:.18em;color:rgba(238,242,248,.62)}
+.gp-dot{width:6px;height:6px;border-radius:50%;background:var(--hg);box-shadow:0 0 0 0 rgba(212,175,55,.6);animation:gp-pulse 2s ease-out infinite}
+@keyframes gp-pulse{70%{box-shadow:0 0 0 8px rgba(212,175,55,0)}100%{box-shadow:0 0 0 0 rgba(212,175,55,0)}}
+.gp-price{display:block;font-size:30px;font-weight:500;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--hg-hi);transition:color .6s}
+.gp-price.tick-up{color:#6EE7A8;transition:none}
+.gp-price.tick-dn{color:#FF7A66;transition:none}
+.gp-dec{opacity:.75}
+.gp-chg{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-variant-numeric:tabular-nums}
+.gp-chg.up{color:#6EE7A8}.gp-chg.dn{color:#FF7A66}
+
+/* nav: light text over the dark hero (landing page only; class set by Landing.jsx) */
+body.lp .nav:not(.solid){color:#EEF2F8}
+body.lp .nav:not(.solid) .tg-btn{background:rgba(238,242,248,.1);color:#EEF2F8;border-color:rgba(238,242,248,.28)}
+body.lp .nav:not(.solid) .brand small{opacity:.7}
+
+@media (max-width:1100px){
+  .hero-pill-slot{top:96px}
+  .gold-pill{min-width:196px;padding:12px 14px}.gp-price{font-size:25px}
+}
+@media (max-width:900px){
+  /* phones/tablets: structure floats above the copy; veil switches from left->right to top->bottom */
+  .hero.hero-dark{display:block;min-height:max(100svh,640px);padding:calc(33svh + 44px) var(--g) calc(var(--hero-cap) * .6 + 28px)}
+  .hero-veil{background:linear-gradient(180deg,transparent 0%,rgba(5,6,10,.35) 26%,rgba(5,6,10,.88) 46%,rgba(5,6,10,.92) 100%)}
+  .hero-pill-slot{position:relative;top:auto;right:auto;z-index:4;margin-top:26px}
+  .hero.hero-dark .hero-copy{max-width:none}
+  .hero-ctas .btn-gold{width:100%;justify-content:center}
+  .sc-h1{font-size:clamp(28px,8.2vw,52px)}
+  .sc-label:nth-child(n+4){display:none}
+  .sc-label{font-size:9px;padding:2px 6px}
+}
+@media (max-width:480px){
+  .hero-dark .btn-ghost{width:100%;justify-content:center}
+  .gold-pill{width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  .sc canvas{animation:none}
+  .ch,.ch.g,.wd,.sc-label-in,.sc-hook,.sc-ctas,.hero-pill-slot{animation:none;opacity:1;transform:none;filter:none}
+  .gp-face.out,.gp-face.in{animation:none}
+  .gp-dot{animation:none}
+  .sc-label{transition:none}
+}
+
+/* ---------- ALIVE: mouse-driven parallax layers ----------
+   useHeroLife() writes --px / --py (-1..1, eased) on .hero. Every layer shifts by its own depth (--z) using the
+   independent `translate` property, so it never fights the keyframe `transform`s used for the intro / bobbing. */
+.hx{translate:calc(var(--px,0) * var(--z,1) * -34px) calc(var(--py,0) * var(--z,1) * -22px);will-change:translate}
+
+/* far: glows that breathe + drift */
+.hx-orb{position:absolute;border-radius:50%;pointer-events:none;filter:blur(70px);animation:hx-drift 16s ease-in-out infinite alternate}
+.hx-orb-a{width:min(46vw,640px);aspect-ratio:1;left:50%;top:-8%;background:radial-gradient(circle,rgba(127,231,255,.28),transparent 68%)}
+.hx-orb-b{width:min(36vw,520px);aspect-ratio:1;right:-6%;bottom:2%;background:radial-gradient(circle,rgba(212,175,55,.26),transparent 68%);animation-duration:19s;animation-delay:-6s}
+.hx-orb-c{width:min(30vw,440px);aspect-ratio:1;left:16%;bottom:-14%;background:radial-gradient(circle,rgba(127,231,255,.16),transparent 70%);animation-duration:22s;animation-delay:-11s}
+@keyframes hx-drift{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(36px,-28px,0) scale(1.12)}}
+
+/* far: huge outlined words sliding in opposite directions */
+.hx-band{position:absolute;inset:0 -12%;display:flex;flex-direction:column;justify-content:space-around;pointer-events:none;overflow:visible}
+.hx-row{display:flex;width:max-content;white-space:nowrap;font-weight:600;text-transform:uppercase;letter-spacing:-.03em;line-height:1;
+  font-size:clamp(70px,11vw,170px);color:transparent;-webkit-text-stroke:1px rgba(127,231,255,.085);animation:hx-marq 80s linear infinite}
+.hx-row.rev{animation-direction:reverse;animation-duration:96s;-webkit-text-stroke-color:rgba(212,175,55,.09)}
+@keyframes hx-marq{to{transform:translateX(-50%)}}
+
+/* near: candlestick runs float and bob at different speeds; plus markers twinkle */
+.hx-candles{position:absolute;pointer-events:none;opacity:.55}
+.hx-candles svg{display:block;width:100%;height:auto;animation:hx-bob 7s ease-in-out infinite alternate}
+.hx-c1{width:clamp(110px,13vw,200px);left:44%;top:14%}
+.hx-c2{width:clamp(90px,10vw,150px);right:5%;top:56%;opacity:.4}.hx-c2 svg{animation-duration:9s;animation-delay:-3s}
+.hx-c3{width:clamp(70px,7.5vw,120px);left:32%;bottom:12%;opacity:.3}.hx-c3 svg{animation-duration:11s;animation-delay:-5s}
+@keyframes hx-bob{from{transform:translateY(-8px) rotate(-1.5deg)}to{transform:translateY(10px) rotate(1.5deg)}}
+.hx-plus{position:absolute;width:14px;height:14px;pointer-events:none;opacity:.55;animation:hx-twinkle 4.5s ease-in-out calc(var(--i,0) * -.9s) infinite}
+.hx-plus::before,.hx-plus::after{content:"";position:absolute;background:var(--hg);left:50%;top:50%;translate:-50% -50%}
+.hx-plus::before{width:14px;height:1px}.hx-plus::after{width:1px;height:14px}
+@keyframes hx-twinkle{0%,100%{opacity:.15;scale:.8}50%{opacity:.75;scale:1.15}}
+
+/* crosshair: chart-style lines that ease after the cursor with a price read-out (desktop pointers only) */
+.hx-cross{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .5s var(--ease);overflow:hidden}
+.hx-cross.on{opacity:1}
+.hx-v,.hx-h{position:absolute;left:0;top:0;background:linear-gradient(var(--dir,90deg),transparent,rgba(127,231,255,.35),transparent)}
+.hx-v{--dir:180deg;width:1px;height:100%;translate:var(--cx,0) 0}
+.hx-h{height:1px;width:100%;translate:0 var(--cy,0)}
+.hx-tag{position:absolute;left:0;top:0;translate:calc(var(--cx,0px) + 14px) calc(var(--cy,0px) - 30px);padding:3px 8px;border-radius:6px;
+  font-size:10px;font-weight:600;letter-spacing:.14em;color:#0A0C12;background:rgba(212,175,55,.92);white-space:nowrap;font-variant-numeric:tabular-nums}
+@media (hover:none),(pointer:coarse){.hx-cross{display:none}}
+
+/* text layers: nearer copy moves more, in the opposite sense to the far background */
+.sc-label-in{translate:calc(var(--px,0) * 6px) calc(var(--py,0) * 4px)}
+.sc-ln:nth-child(1){translate:calc(var(--px,0) * 14px) calc(var(--py,0) * 8px)}
+.sc-ln:nth-child(2){translate:calc(var(--px,0) * 22px) calc(var(--py,0) * 12px)}
+.sc-lead{translate:calc(var(--px,0) * 9px) calc(var(--py,0) * 6px)}
+.sc-hook{translate:calc(var(--px,0) * 7px) calc(var(--py,0) * 5px)}
+.sc-ctas{translate:calc(var(--px,0) * 4px) calc(var(--py,0) * 3px)}
+.hero-pill-slot{translate:calc(var(--px,0) * -10px) calc(var(--py,0) * -7px)}
+/* letters near the cursor warm towards gold (white letters only; the gold word has its own gradient) */
+.ch:not(.g){color:color-mix(in srgb,#F1D98A calc(var(--k,0) * 100%),#EEF2F8)}
+.ch{transition:color .25s}
+.hero-veil{z-index:1}
+
+@media (max-width:900px){
+  .hx{translate:calc(var(--px,0) * var(--z,1) * -16px) calc(var(--py,0) * var(--z,1) * -10px)}
+  .hx-c1{left:6%;top:6%}.hx-c2{right:3%;top:18%}.hx-c3{display:none}
+  .hx-row{font-size:clamp(54px,18vw,90px)}
+  .sc-ln,.sc-label-in,.sc-lead,.sc-hook,.sc-ctas,.hero-pill-slot{translate:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .hx,.sc-label-in,.sc-ln,.sc-lead,.sc-hook,.sc-ctas,.hero-pill-slot{translate:none!important}
+  .hx-orb,.hx-row,.hx-candles svg,.hx-plus{animation:none}
+  .hx-cross{display:none}
+}

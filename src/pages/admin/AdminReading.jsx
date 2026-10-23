@@ -419,6 +419,8 @@ export default function AdminReading() {
       <p>
         <Link className="rd-link" to="/read/books?view=reader">View as reader →</Link>
         {' · '}
+        <Link className="rd-link" to="/admin/courses">Manage courses →</Link>
+        {' · '}
         <button type="button" className="rd-link rd-logout" onClick={logout}>Log out</button>
       </p>
       <div className="rd-tabs" role="tablist">

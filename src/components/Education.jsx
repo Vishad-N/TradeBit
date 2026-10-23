@@ -2,13 +2,17 @@ import { useRef } from 'react';
 import { eduArt, structChart } from '../lib/charts.js';
 import { html } from '../lib/html.js';
 import { useStrokeLengths } from '../hooks/motion.js';
+import useCurriculumFx from './edu/useCurriculumFx.js';
+import '../styles/edu-fx.css';
 
 export default function Education() {
   const structRef = useRef(null);
+  const sectionRef = useRef(null);
   useStrokeLengths(structRef);
+  useCurriculumFx(sectionRef);
 
   return (
-    <section className="edu" id="learn" aria-labelledby="edu-t">
+    <section className="edu" id="learn" aria-labelledby="edu-t" ref={sectionRef}>
       <div className="edu-art" aria-hidden="true"><svg viewBox="0 0 100 190" preserveAspectRatio="none" dangerouslySetInnerHTML={html(eduArt())} /></div>
       <div className="edu-cap" aria-hidden="true"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0 0 H64 C36 4 12 32 0 100 Z" fill="#151814"/></svg></div>
       <svg className="edu-curve" viewBox="0 0 1440 1400" preserveAspectRatio="none" aria-hidden="true"><path className="dr" id="eduCurve" d="M-40 1180 C260 1120 360 760 640 700 S1060 820 1200 520 1380 180 1500 120" fill="none" stroke="#B8D83D" strokeWidth="2.2" vectorEffect="non-scaling-stroke"/></svg>
@@ -26,10 +30,10 @@ export default function Education() {
             <h3>Price<br />Action</h3>
             <div className="pa">
               <svg viewBox="0 0 96 170" fill="none" aria-label="Anatomy of a candle: high, close, open and low">
-                <line x1="26" x2="26" y1="6" y2="164" stroke="#151814" strokeWidth="1.5"/>
-                <rect x="12" y="46" width="28" height="78" fill="#151814"/>
-                <g stroke="#151814" strokeOpacity=".4"><line x1="46" x2="56" y1="6" y2="6"/><line x1="46" x2="56" y1="46" y2="46"/><line x1="46" x2="56" y1="124" y2="124"/><line x1="46" x2="56" y1="164" y2="164"/></g>
-                <g fill="#151814" fillOpacity=".6" fontSize="9" fontFamily="Space Grotesk, sans-serif" letterSpacing="1"><text x="60" y="9">HIGH</text><text x="60" y="49">CLOSE</text><text x="60" y="127">OPEN</text><text x="60" y="167">LOW</text></g>
+                <line className="pa-wick" x1="26" x2="26" y1="6" y2="164" stroke="#151814" strokeWidth="1.5"/>
+                <rect className="pa-body" x="12" y="46" width="28" height="78" fill="#151814"/>
+                <g className="pa-ticks" stroke="#151814" strokeOpacity=".4"><line x1="46" x2="56" y1="6" y2="6"/><line x1="46" x2="56" y1="46" y2="46"/><line x1="46" x2="56" y1="124" y2="124"/><line x1="46" x2="56" y1="164" y2="164"/></g>
+                <g className="pa-labels" fill="#151814" fillOpacity=".6" fontSize="9" fontFamily="Space Grotesk, sans-serif" letterSpacing="1"><text x="60" y="9">HIGH</text><text x="60" y="49">CLOSE</text><text x="60" y="127">OPEN</text><text x="60" y="167">LOW</text></g>
               </svg>
               <p>Candle anatomy, rejection, engulfing behaviour and momentum — read intent, not noise.</p>
             </div>

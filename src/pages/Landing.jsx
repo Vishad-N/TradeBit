@@ -37,6 +37,12 @@ export default function Landing() {
     document.body.classList.toggle('m-open', menuOpen);
   }, [menuOpen]);
 
+  // The hero is dark, so the transparent nav (before it turns solid) needs light text on this page only.
+  useEffect(() => {
+    document.body.classList.add('lp');
+    return () => document.body.classList.remove('lp');
+  }, []);
+
   useEffect(() => {
     const onKey = e => {
       if (e.key !== 'Escape') return;

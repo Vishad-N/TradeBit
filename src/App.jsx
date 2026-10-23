@@ -15,6 +15,11 @@ import ReadBooks from './pages/ReadBooks/ReadBooks.jsx';
 import Mentorship from './pages/Mentorship.jsx';
 import Club from './pages/Club.jsx';
 import AdminReading from './pages/admin/AdminReading.jsx';
+import Courses from './pages/courses/Courses.jsx';
+import CourseDetail from './pages/courses/CourseDetail.jsx';
+import LessonPlayer from './pages/courses/LessonPlayer.jsx';
+import AdminCourses from './pages/admin/AdminCourses.jsx';
+import AdminCourseEdit from './pages/admin/AdminCourseEdit.jsx';
 import LegalLayout from './components/LegalLayout.jsx';
 import SiteLayout from './components/SiteLayout.jsx';
 import ScrollToTop from './components/ScrollToTop.jsx';
@@ -51,6 +56,11 @@ export default function App() {
             <Route path="/mentorship" element={<Mentorship />} />
             <Route path="/1-percent-club" element={<Club />} />
             <Route path="/admin/reading" element={<AdminReading />} />
+            <Route path="/courses" element={<Courses />} />
+            <Route path="/courses/:slug" element={<CourseDetail />} />
+            <Route path="/courses/:slug/lesson/:lessonId" element={<LessonPlayer />} />
+            <Route path="/admin/courses" element={<AdminCourses />} />
+            <Route path="/admin/courses/:id" element={<AdminCourseEdit />} />
           </Route>
         </Routes>
         </PricingProvider>
