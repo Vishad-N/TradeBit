@@ -13,32 +13,49 @@ services:
         value: 22.18.0
       - key: NODE_ENV
         value: production
+
       # Neon pooled URL (host contains -pooler). Used by the running app.
       - key: DATABASE_URL
         sync: false
       # Neon direct URL (no -pooler). Used only for `prisma migrate deploy` on boot.
       - key: DATABASE_URL_UNPOOLED
         sync: false
+
       # Must equal the Railway value or every existing login token is invalidated.
       - key: JWT_SECRET
         sync: false
       - key: JWT_EXPIRES_IN
         value: 7d
-      # Comma-separated frontend origins, e.g. https://tradebitindia.com,https://www.tradebitindia.com
       - key: FRONTEND_URL
-        sync: false
+        value: https://www.tradebitindia.com,https://tradebitindia.com,https://trade-bit.vercel.app
+
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
       - key: ADMIN_NAME
         value: Admin
-      # File storage (Render's disk is wiped on deploy; use Cloudinary or an S3 bucket).
-      - key: CLOUDINARY_URL
+
+      # File storage (Render's disk is wiped on deploy, so Cloudinary is required).
+      - key: CLOUDINARY_CLOUD_NAME
         sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+      - key: MAX_PDF_MB
+        value: '50'
+      - key: PAGE_RENDER_SCALE
+        value: '1.8'
+      - key: PAGE_JPEG_QUALITY
+        value: '82'
+
       - key: MENTORSHIP_PRICE_USDT
-        sync: false
+        value: '499'
       - key: MENTORSHIP_WALLET_ADDRESS
         sync: false
+      - key: MENTORSHIP_TEST_MODE
+        value: 'false'
       - key: TELEGRAM_URL
-        sync: false
+        value: https://t.me/tradebitindia_Official
