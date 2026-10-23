@@ -7,6 +7,12 @@ import { PrismaService } from '../prisma/prisma.service';
 class HealthController {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Cheap liveness probe for uptime bots: never touches the database, so it keeps Render awake without waking Neon. */
+  @Get('live')
+  live() {
+    return { status: 'ok' };
+  }
+
   @Get()
   async check() {
     try {
