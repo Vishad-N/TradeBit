@@ -49,6 +49,8 @@ export default function BookReader({ book, startPage, onAccessLost, onBack }) {
   const stageRef = useRef(null);
   const idleTimer = useRef(null);
   const cache = useRef(new Map()); // pageNumber -> blob URL
+  const inflight = useRef(new Map()); // pageNumber -> pending request, so prefetch and navigation share one download
+  const mounted = useRef(true);
   const pageRef = useRef(page);
   const sessionRef = useRef(null);
   const dirty = useRef(false);
@@ -73,11 +75,26 @@ export default function BookReader({ book, startPage, onAccessLost, onBack }) {
   useEffect(() => { start(); }, [start]);
 
   // ---------- page loading (+ prefetch next, free pages far away) ----------
-  const fetchPage = useCallback(async n => {
-    if (cache.current.has(n)) return cache.current.get(n);
-    const url = await readingApi.page(book.id, n, sessionRef.current.sessionToken);
-    cache.current.set(n, url);
-    return url;
+  const clearCache = useCallback(() => {
+    cache.current.forEach(u => URL.revokeObjectURL(u));
+    cache.current.clear();
+    inflight.current.clear();
+  }, []);
+
+  const fetchPage = useCallback(n => {
+    if (cache.current.has(n)) return Promise.resolve(cache.current.get(n));
+    let pending = inflight.current.get(n);
+    if (!pending) {
+      pending = readingApi.page(book.id, n, sessionRef.current.sessionToken)
+        .then(url => {
+          if (!mounted.current) { URL.revokeObjectURL(url); return url; } // left the reader while it downloaded
+          cache.current.set(n, url);
+          return url;
+        })
+        .finally(() => inflight.current.delete(n));
+      inflight.current.set(n, pending);
+    }
+    return pending;
   }, [book.id]);
 
   useEffect(() => {
@@ -110,7 +127,10 @@ export default function BookReader({ book, startPage, onAccessLost, onBack }) {
     return () => { alive = false; };
   }, [session, page, total, retry, fetchPage, onAccessLost]);
 
-  useEffect(() => () => { cache.current.forEach(u => URL.revokeObjectURL(u)); cache.current.clear(); }, []);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; clearCache(); };
+  }, [clearCache]);
 
   // ---------- progress: debounced save, flushed on leave ----------
   useEffect(() => {
@@ -195,7 +215,9 @@ export default function BookReader({ book, startPage, onAccessLost, onBack }) {
     };
     const blockKeys = e => {
       const k = e.key.toLowerCase();
-      if ((e.ctrlKey || e.metaKey) && ['c', 'p', 's', 'u', 'a', 'x'].includes(k)) e.preventDefault();
+      // Not inside the "go to page" box: there copy / select-all must keep working.
+      const typing = e.target instanceof HTMLElement && e.target.matches('input,textarea,select');
+      if (!typing && (e.ctrlKey || e.metaKey) && ['c', 'p', 's', 'u', 'a', 'x'].includes(k)) e.preventDefault();
       if (k === 'printscreen') shield();
     };
     window.addEventListener('keydown', blockKeys);
@@ -293,7 +315,7 @@ export default function BookReader({ book, startPage, onAccessLost, onBack }) {
               <div className="rd-stage-msg" role="alert">
                 <p>{error.message}</p>
                 {error.kind === 'replaced'
-                  ? <button className="btn btn-lime" onClick={() => { cache.current.clear(); start(); }}>Continue reading here</button>
+                  ? <button className="btn btn-lime" onClick={() => { clearCache(); start(); }}>Continue reading here</button>
                   : <button className="btn btn-lime" onClick={() => setRetry(r => r + 1)}>Try again</button>}
               </div>
             ) : (

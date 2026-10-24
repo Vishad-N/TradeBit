@@ -31,6 +31,11 @@ enum AccessStatus {
   REVOKED
 }
 
+enum AccessSource {
+  TASK
+  MENTORSHIP
+}
+
 enum PaymentStatus {
   PENDING
   APPROVED
@@ -45,6 +50,8 @@ model User {
   phone        String?
   passwordHash String
   role         Role     @default(USER)
+  // Bumped to sign the user out everywhere: tokens carry the version they were issued with.
+  tokenVersion Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -139,7 +146,7 @@ model ReadingAccess {
   expiresAt DateTime?
   // Why this access exists: "TASK" (approved reading task) or "MENTORSHIP" (approved 1:1 payment).
   // Withdrawing a mentorship only revokes rows it created.
-  source    String       @default("TASK")
+  source    AccessSource @default(TASK)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 

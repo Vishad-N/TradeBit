@@ -16,6 +16,8 @@ const MARKETS = [
   { label: 'ETHEREUM (ETHUSDT)', sym: 'ETHUSDT', dp: 2, base: 2429.44 },
   { label: 'SOLANA (SOLUSDT)', sym: 'SOLUSDT', dp: 2, base: 105.73 },
 ];
+const TICK_MS = 4000;
+const TICK_MAX_BACKOFF_MS = 60000;
 const TICKER_URL = 'https://fapi.binance.com/fapi/v1/ticker/24hr?symbols=' +
   encodeURIComponent(JSON.stringify(MARKETS.map((m) => m.sym)));
 const FLIP_EVERY = 4500;
@@ -35,25 +37,34 @@ function MarketPill({ onGold }) {
   const prev = useRef({});
   const [reduced] = useState(() => prefersReducedMotion());
 
-  // Poll all four quotes every 4s (only while the tab is visible).
+  // Poll all four quotes every 4s (only while the tab is visible). A failed request (blocked region, rate limit,
+  // offline) backs off up to a minute instead of retrying every 4s; the next success returns to the normal pace.
   useEffect(() => {
     let alive = true;
+    let timer;
+    let delay = TICK_MS;
     const load = async () => {
-      if (document.hidden) return;
-      try {
-        const res = await fetch(TICKER_URL);
-        if (!res.ok) return;
-        const rows = await res.json();
-        if (!alive) return;
-        const next = {};
-        rows.forEach((r) => { next[r.symbol] = { price: parseFloat(r.lastPrice), chg: parseFloat(r.priceChangePercent) }; });
-        setQuotes((q) => ({ ...q, ...next }));
-        if (next.XAUUSDT) onGold?.(next.XAUUSDT.price);
-      } catch { /* keep the last known / fallback price */ }
+      let ok = true;
+      if (!document.hidden) {
+        ok = false;
+        try {
+          const res = await fetch(TICKER_URL);
+          if (res.ok) {
+            const rows = await res.json();
+            if (!alive) return;
+            const next = {};
+            rows.forEach((r) => { next[r.symbol] = { price: parseFloat(r.lastPrice), chg: parseFloat(r.priceChangePercent) }; });
+            setQuotes((q) => ({ ...q, ...next }));
+            if (next.XAUUSDT) onGold?.(next.XAUUSDT.price);
+            ok = true;
+          }
+        } catch { /* keep the last known / fallback price */ }
+      }
+      delay = ok ? TICK_MS : Math.min(delay * 2, TICK_MAX_BACKOFF_MS);
+      if (alive) timer = setTimeout(load, delay);
     };
     load();
-    const id = setInterval(load, 4000);
-    return () => { alive = false; clearInterval(id); };
+    return () => { alive = false; clearTimeout(timer); };
   }, []);
 
   // Flip to the next market every few seconds (paused on hover/focus, off for reduced motion).

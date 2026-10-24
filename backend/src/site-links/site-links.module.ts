@@ -1,4 +1,5 @@
 import { BadRequestException, Body, Controller, Get, Injectable, Module, Patch, UseGuards } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthGuard, Roles } from '../auth/auth.guard';
 
@@ -34,7 +35,8 @@ export class SiteLinksService {
 
   /** Saves the given keys. An empty value removes the override so the site falls back to its default. */
   async save(body: Record<string, unknown>) {
-    const ops: Promise<unknown>[] = [];
+    // Validate every entry first, then write them all in one transaction, so a bad link never leaves a half-saved form.
+    const ops: Prisma.PrismaPromise<unknown>[] = [];
     for (const [key, value] of Object.entries(body ?? {})) {
       if (!(SITE_LINK_KEYS as readonly string[]).includes(key)) throw new BadRequestException(`Unknown link "${key}".`);
       if (typeof value !== 'string') throw new BadRequestException(`${key} must be text.`);
@@ -46,7 +48,7 @@ export class SiteLinksService {
         ops.push(this.prisma.siteLink.upsert({ where: { key }, create: { key, url }, update: { url } }));
       }
     }
-    await Promise.all(ops);
+    await this.prisma.$transaction(ops);
     return this.all();
   }
 }

@@ -1,18 +1,62 @@
 import { BadRequestException } from '@nestjs/common';
 import { lookup } from 'node:dns/promises';
+import { lookup as lookupCb } from 'node:dns';
+import https from 'node:https';
 import { isIP } from 'node:net';
+import { Readable } from 'node:stream';
 
 const MAX_REDIRECTS = 5;
 const TIMEOUT_MS = Number(process.env.LINK_FETCH_TIMEOUT_MS) || 10 * 60 * 1000;
 
-/** True for loopback, private, link-local and other non-public addresses (blocks reaching internal services). */
+/** True for loopback, private, link-local, reserved, multicast and other non-public addresses (blocks reaching internal services). */
 function isPrivateIp(ip: string): boolean {
   if (ip.includes(':')) {
     const v = ip.toLowerCase();
-    return v === '::1' || v === '::' || v.startsWith('fc') || v.startsWith('fd') || v.startsWith('fe80') || v.startsWith('::ffff:');
+    if (v.startsWith('::ffff:')) return true; // IPv4-mapped: never a legitimate public target here
+    return v === '::1' || v === '::' || v.startsWith('fc') || v.startsWith('fd') || /^fe[89ab]/.test(v) || v.startsWith('ff') || v.startsWith('2001:db8');
   }
-  const [a, b] = ip.split('.').map(Number);
-  return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127);
+  const [a, b, c] = ip.split('.').map(Number);
+  return (
+    a === 0 || a === 10 || a === 127 || a >= 224 ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168) ||
+    (a === 192 && b === 0 && (c === 0 || c === 2)) ||
+    (a === 198 && (b === 18 || b === 19)) ||
+    (a === 198 && b === 51 && c === 100) ||
+    (a === 203 && b === 0 && c === 113) ||
+    (a === 100 && b >= 64 && b <= 127)
+  );
+}
+
+/**
+ * DNS lookup used by the actual connection. Checking the address here (rather than resolving once up front and then
+ * letting fetch resolve again) means a hostname cannot answer "public" to the check and "internal" to the connection.
+ */
+const safeLookup: typeof lookupCb = ((hostname: string, options: any, cb: any) => {
+  lookupCb(hostname, { ...options, all: true }, (err, addrs: any) => {
+    if (err) return cb(err);
+    if (!addrs.length || addrs.some((a: { address: string }) => isPrivateIp(a.address))) return cb(new Error('That link cannot be used.'));
+    return options?.all ? cb(null, addrs) : cb(null, addrs[0].address, addrs[0].family);
+  });
+}) as typeof lookupCb;
+
+/** One GET over https with the address check above; redirects are returned, never followed. */
+function request(u: URL, signal: AbortSignal): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    const req = https.request(u, { method: 'GET', headers: { 'User-Agent': 'Mozilla/5.0 (TradeBit book importer)' }, lookup: safeLookup, signal }, (res) => {
+      const headers = new Headers();
+      for (const [k, v] of Object.entries(res.headers)) if (v !== undefined) headers.set(k, Array.isArray(v) ? v.join(', ') : v);
+      const status = res.statusCode ?? 0;
+      if ([204, 205, 304].includes(status)) {
+        res.resume();
+        return resolve(new Response(null, { status, headers }));
+      }
+      resolve(new Response(Readable.toWeb(res) as unknown as ReadableStream, { status, headers }));
+    });
+    req.on('error', reject);
+    req.end();
+  });
 }
 
 async function assertPublicHttps(raw: string): Promise<URL> {
@@ -54,8 +98,9 @@ async function get(raw: string, signal: AbortSignal): Promise<Response> {
   let url = raw;
   for (let i = 0; i <= MAX_REDIRECTS; i++) {
     const u = await assertPublicHttps(url);
-    const res = await fetch(u, { redirect: 'manual', signal, headers: { 'User-Agent': 'Mozilla/5.0 (TradeBit book importer)' } });
+    const res = await request(u, signal);
     if (res.status >= 300 && res.status < 400 && res.headers.get('location')) {
+      await res.body?.cancel().catch(() => undefined);
       url = new URL(res.headers.get('location')!, u).toString();
       continue;
     }

@@ -2,6 +2,7 @@ import { Body, ConflictException, Controller, Get, Global, HttpCode, Injectable,
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { Throttle } from '@nestjs/throttler';
 import * as bcrypt from 'bcryptjs';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthGuard, AuthUser, CurrentUser } from './auth.guard';
 import { LoginDto, RegisterDto } from './auth.dto';
@@ -21,30 +22,44 @@ export class AuthService implements OnModuleInit {
     const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
     const password = process.env.ADMIN_PASSWORD;
     if (!email || !password) return;
-    const passwordHash = await bcrypt.hash(password, 12);
-    await this.prisma.user.upsert({
-      where: { email },
-      update: { role: 'ADMIN', passwordHash },
-      create: { email, name: process.env.ADMIN_NAME || 'Admin', passwordHash, role: 'ADMIN' },
-    });
+    const existing = await this.prisma.user.findUnique({ where: { email } });
+    if (!existing) {
+      await this.prisma.user.create({ data: { email, name: process.env.ADMIN_NAME || 'Admin', passwordHash: await bcrypt.hash(password, 12), role: 'ADMIN' } });
+    } else if (existing.role !== 'ADMIN' || !(await bcrypt.compare(password, existing.passwordHash))) {
+      // The configured password changed (or the account was demoted): apply it and sign out every old session.
+      await this.prisma.user.update({ where: { email }, data: { role: 'ADMIN', passwordHash: await bcrypt.hash(password, 12), tokenVersion: { increment: 1 } } });
+    }
     this.log.log(`Admin account ready: ${email}`);
   }
 
-  private async sign(user: { id: string; email: string; name: string; role: string }) {
+  private async sign(user: { id: string; email: string; name: string; role: string; tokenVersion: number }) {
     return {
-      token: await this.jwt.signAsync({ sub: user.id }),
+      token: await this.jwt.signAsync({ sub: user.id, v: user.tokenVersion }),
       user: { id: user.id, email: user.email, name: user.name, role: user.role },
     };
   }
 
   async register(dto: RegisterDto) {
     const email = dto.email.trim().toLowerCase();
-    if (await this.prisma.user.findUnique({ where: { email } })) throw new ConflictException('An account with this email already exists');
+    // Deliberately vague: it should not read as a "does this email have an account?" lookup. (Fully closing that gap
+    // needs email verification; the sign-up route is also rate limited.)
+    const taken = () => new ConflictException('We could not create an account with those details. If you already registered, please log in instead.');
+    if (await this.prisma.user.findUnique({ where: { email } })) throw taken();
     const phone = dto.phone.trim();
-    const user = await this.prisma.user.create({
-      data: { email, name: dto.name.trim(), phone, passwordHash: await bcrypt.hash(dto.password, 12), role: 'USER' },
-    });
-    return this.sign(user);
+    try {
+      const user = await this.prisma.user.create({
+        data: { email, name: dto.name.trim(), phone, passwordHash: await bcrypt.hash(dto.password, 12), role: 'USER' },
+      });
+      return this.sign(user);
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') throw taken(); // two sign-ups at once
+      throw e;
+    }
+  }
+
+  /** Signs the user out of every device: all tokens issued so far stop working. */
+  async logoutEverywhere(userId: string) {
+    await this.prisma.user.update({ where: { id: userId }, data: { tokenVersion: { increment: 1 } } });
   }
 
   async login(dto: LoginDto) {
@@ -70,6 +85,13 @@ class AuthController {
   @Throttle({ default: { ttl: 60_000, limit: 10 } })
   login(@Body() dto: LoginDto) {
     return this.auth.login(dto);
+  }
+
+  @Post('logout')
+  @HttpCode(204)
+  @UseGuards(AuthGuard)
+  async logout(@CurrentUser() user: AuthUser) {
+    await this.auth.logoutEverywhere(user.id);
   }
 
   @Get('me')

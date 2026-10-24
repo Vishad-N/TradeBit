@@ -163,6 +163,14 @@ function Outline({ data, done }) {
   );
 }
 
+function NavBtn({ target, dir, slug }) {
+  const icon = <Icon name={dir === 'prev' ? 'arrowLeft' : 'arrowRight'} size={16} />;
+  const label = dir === 'prev' ? <>{icon}Previous</> : <>Next lesson{icon}</>;
+  if (!target) return <span className="cs-pbtn" aria-disabled="true">{label}</span>;
+  if (target.locked) return <span className="cs-pbtn" aria-disabled="true" title="Locked">{label}</span>;
+  return <Link className="cs-pbtn" to={`/courses/${slug}/lesson/${target.id}`} title={target.title}>{label}</Link>;
+}
+
 export default function LessonPlayer() {
   const { lessonId } = useParams();
   const { user } = useAuth();
@@ -190,14 +198,6 @@ export default function LessonPlayer() {
 
   const { course, module: mod, lesson, prev, next } = data;
   const moduleNo = data.outline.findIndex((m) => m.id === mod.id) + 1;
-  const NavBtn = ({ target, dir }) => {
-    const icon = <Icon name={dir === 'prev' ? 'arrowLeft' : 'arrowRight'} size={16} />;
-    const label = dir === 'prev' ? <>{icon}Previous</> : <>Next lesson{icon}</>;
-    if (!target) return <span className="cs-pbtn" aria-disabled="true">{label}</span>;
-    if (target.locked) return <span className="cs-pbtn" aria-disabled="true" title="Locked">{label}</span>;
-    return <Link className="cs-pbtn" to={`/courses/${course.slug}/lesson/${target.id}`} title={target.title}>{label}</Link>;
-  };
-
   return (
     <section className="rd-section">
       <Link className="cs-back" to={`/courses/${course.slug}`}><Icon name="arrowLeft" size={16} />{course.title}</Link>
@@ -211,7 +211,7 @@ export default function LessonPlayer() {
             <h1 className="cs-lesson-title">{lesson.title}</h1>
             {lesson.isFreePreview && <div><span className="cs-chip acc">Free preview</span></div>}
             {lesson.description && <p className="cs-lesson-desc">{lesson.description}</p>}
-            <div className="cs-nav"><NavBtn target={prev} dir="prev" /><NavBtn target={next} dir="next" /></div>
+            <div className="cs-nav"><NavBtn target={prev} dir="prev" slug={course.slug} /><NavBtn target={next} dir="next" slug={course.slug} /></div>
           </div>
         </div>
         <Outline data={data} done={done} />

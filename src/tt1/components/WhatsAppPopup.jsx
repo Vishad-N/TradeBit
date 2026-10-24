@@ -1,3 +1,4 @@
+import { WHATSAPP_MESSAGE, WHATSAPP_NUMBER } from '../../config/learn.js';
 import React from 'react';
 
 export default function WhatsAppPopup() {
@@ -31,7 +32,7 @@ export default function WhatsAppPopup() {
         }
       `}</style>
       <a
-        href="https://wa.me/1234567890" // TODO: Replace with your actual WhatsApp number
+        href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`}
         target="_blank"
         rel="noopener noreferrer"
         className="whatsapp-popup"

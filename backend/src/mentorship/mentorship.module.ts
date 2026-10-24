@@ -28,6 +28,7 @@ import { IsOptional, IsString, MaxLength } from 'class-validator';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { AuthGuard, AuthUser, CurrentUser, Roles } from '../auth/auth.guard';
+import { forgetAccess } from '../reading/access-memo';
 
 const NETWORK = 'TRC20';
 const MAX_SHOT_BYTES = 5 * 1024 * 1024;
@@ -113,7 +114,8 @@ export class MentorshipService {
   }
 
   async submit(user: AuthUser, dto: SubmitPaymentDto, file?: UploadedImage) {
-    if (!paymentConfig(await this.pricing.currentIfSaved('club')).configured) throw new ConflictException({ code: 'PAYMENTS_NOT_CONFIGURED', message: 'Mentorship payments are not available yet. Please try again later.' });
+    const config = paymentConfig(await this.pricing.currentIfSaved('club'));
+    if (!config.configured) throw new ConflictException({ code: 'PAYMENTS_NOT_CONFIGURED', message: 'Mentorship payments are not available yet. Please try again later.' });
 
     // ---- validate input ----
     const txHash = dto.txHash.trim().toLowerCase();
@@ -122,6 +124,10 @@ export class MentorshipService {
     if (!/^\d{1,12}(\.\d{1,6})?$/.test(dto.amountPaid.trim())) throw new BadRequestException('Amount paid must be a positive number (up to 6 decimals).');
     const amount = new Prisma.Decimal(dto.amountPaid.trim());
     if (amount.lte(0)) throw new BadRequestException('Amount paid must be greater than zero.');
+    // Paying more than the fee is fine; paying less is not a valid purchase.
+    if (amount.lt(new Prisma.Decimal(config.priceUsdt))) {
+      throw new BadRequestException(`The amount paid is less than the mentorship fee of ${config.priceUsdt} USDT. If you sent the full fee and fees were deducted, contact support.`);
+    }
 
     const paymentDate = new Date(dto.paymentDate);
     if (Number.isNaN(paymentDate.getTime())) throw new BadRequestException('Payment date is not a valid date.');
@@ -134,33 +140,43 @@ export class MentorshipService {
     const image = sniffImage(file.buffer);
     if (!image) throw new BadRequestException('Screenshot must be a JPG, PNG or WEBP image.');
 
-    // ---- state rules ----
-    const access = await this.prisma.mentorshipAccess.findUnique({ where: { userId: user.id } });
-    if (access?.status === 'ACTIVE') throw new ConflictException({ code: 'ALREADY_APPROVED', message: 'Your mentorship is already active.' });
-    const pending = await this.prisma.mentorshipPayment.findFirst({ where: { userId: user.id, status: 'PENDING' } });
-    if (pending) throw new ConflictException({ code: 'ALREADY_PENDING', message: 'You already have a payment waiting for verification.' });
-
-    // A transaction can back only one submission. The only exception is the same user correcting a rejected one.
-    const existing = await this.prisma.mentorshipPayment.findUnique({ where: { txHash } });
-    if (existing && !(existing.userId === user.id && existing.status === 'REJECTED')) {
-      throw new ConflictException({ code: 'TX_ALREADY_USED', message: 'This transaction hash has already been submitted.' });
-    }
-
-    const id = existing?.id ?? randomUUID();
-    const screenshotKey = `payments/${id}/screenshot-${Date.now()}.${image.ext}`;
+    const screenshotKey = `payments/${randomUUID()}/screenshot-${Date.now()}.${image.ext}`;
     await this.storage.put(screenshotKey, file.buffer, image.mime);
 
+    const replaced: { key: string | null } = { key: null };
     try {
-      const data = { amountPaid: amount, network: NETWORK, paymentDate, screenshotKey, status: 'PENDING' as const, rejectionReason: null, submittedAt: new Date(), reviewedAt: null, reviewedById: null };
-      if (existing) await this.prisma.mentorshipPayment.update({ where: { id }, data });
-      else await this.prisma.mentorshipPayment.create({ data: { id, userId: user.id, txHash, ...data } });
+      await this.prisma.$transaction(async (tx) => {
+        // One submission at a time per user: without this lock two simultaneous requests could both pass the
+        // "no pending payment" check below and leave the user with two PENDING payments.
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${user.id}))`;
+
+        // ---- state rules ----
+        const access = await tx.mentorshipAccess.findUnique({ where: { userId: user.id } });
+        if (access?.status === 'ACTIVE') throw new ConflictException({ code: 'ALREADY_APPROVED', message: 'Your mentorship is already active.' });
+        const pending = await tx.mentorshipPayment.findFirst({ where: { userId: user.id, status: 'PENDING' } });
+        if (pending) throw new ConflictException({ code: 'ALREADY_PENDING', message: 'You already have a payment waiting for verification.' });
+
+        // A transaction can back only one submission. The only exception is the same user correcting a rejected one.
+        const existing = await tx.mentorshipPayment.findUnique({ where: { txHash } });
+        if (existing && !(existing.userId === user.id && existing.status === 'REJECTED')) {
+          throw new ConflictException({ code: 'TX_ALREADY_USED', message: 'This transaction hash has already been submitted.' });
+        }
+
+        const data = { amountPaid: amount, network: NETWORK, paymentDate, screenshotKey, status: 'PENDING' as const, rejectionReason: null, submittedAt: new Date(), reviewedAt: null, reviewedById: null };
+        if (existing) {
+          await tx.mentorshipPayment.update({ where: { id: existing.id }, data });
+          replaced.key = existing.screenshotKey;
+        } else {
+          await tx.mentorshipPayment.create({ data: { id: randomUUID(), userId: user.id, txHash, ...data } });
+        }
+      });
     } catch (e) {
       await this.storage.deleteKey(screenshotKey).catch(() => undefined);
-      // Two simultaneous submissions of the same hash: the unique index decides.
+      // Two simultaneous submissions of the same hash from different users: the unique index decides.
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') throw new ConflictException({ code: 'TX_ALREADY_USED', message: 'This transaction hash has already been submitted.' });
       throw e;
     }
-    if (existing?.screenshotKey) await this.storage.deleteKey(existing.screenshotKey).catch(() => undefined);
+    if (replaced.key) await this.storage.deleteKey(replaced.key).catch(() => undefined);
     return this.status(user.id);
   }
 
@@ -216,6 +232,7 @@ export class MentorshipService {
   async testActivate(userId: string) {
     if (!testModeEnabled()) throw new NotFoundException();
     await this.prisma.$transaction((tx) => this.grantAccess(tx, userId, new Date()));
+    forgetAccess(userId);
     this.log.warn(`Test mode: mentorship activated without payment for user ${userId}`);
     return this.status(userId);
   }
@@ -224,9 +241,11 @@ export class MentorshipService {
     const p = await this.getOrThrow(id);
     const now = new Date();
     await this.prisma.$transaction(async (tx) => {
-      await tx.mentorshipPayment.update({ where: { id }, data: { status: 'APPROVED', rejectionReason: null, reviewedAt: now, reviewedById: admin.id } });
+      const done = await tx.mentorshipPayment.updateMany({ where: { id, status: { not: 'APPROVED' } }, data: { status: 'APPROVED', rejectionReason: null, reviewedAt: now, reviewedById: admin.id } });
+      if (done.count === 0) throw new ConflictException('This payment is already approved.');
       await this.grantAccess(tx, p.userId, now);
     });
+    forgetAccess(p.userId);
     this.log.log(`Payment ${id} approved by ${admin.email}`);
     return this.get(id);
   }
@@ -235,13 +254,15 @@ export class MentorshipService {
     const p = await this.getOrThrow(id);
     const wasApproved = p.status === 'APPROVED';
     await this.prisma.$transaction(async (tx) => {
-      await tx.mentorshipPayment.update({ where: { id }, data: { status: 'REJECTED', rejectionReason: reason?.trim() || null, reviewedAt: new Date(), reviewedById: admin.id } });
+      const done = await tx.mentorshipPayment.updateMany({ where: { id, status: { not: 'REJECTED' } }, data: { status: 'REJECTED', rejectionReason: reason?.trim() || null, reviewedAt: new Date(), reviewedById: admin.id } });
+      if (done.count === 0) throw new ConflictException('This payment is already rejected.');
       if (wasApproved) {
         // Withdrawing an approval also withdraws what it granted, but not book access earned another way.
         await tx.mentorshipAccess.updateMany({ where: { userId: p.userId, status: 'ACTIVE' }, data: { status: 'REVOKED' } });
         await tx.readingAccess.updateMany({ where: { userId: p.userId, source: 'MENTORSHIP', status: 'ACTIVE' }, data: { status: 'REVOKED' } });
       }
     });
+    forgetAccess(p.userId);
     return this.get(id);
   }
 }

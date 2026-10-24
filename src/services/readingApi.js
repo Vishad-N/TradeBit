@@ -4,6 +4,7 @@ export const authApi = {
   login: (email, password) => api.post('/auth/login', { email, password }),
   register: (name, email, phone, password) => api.post('/auth/register', { name, email, phone, password }),
   me: () => api.get('/auth/me'),
+  logout: () => api.post('/auth/logout'),
 };
 
 export const readingApi = {

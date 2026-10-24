@@ -124,8 +124,9 @@ export class PlatformsService {
   }
 
   private async uniqueSlug(base: string, ignoreId?: string) {
-    let slug = base || 'platform';
-    for (let i = 2; await this.prisma.platform.findFirst({ where: { slug, NOT: ignoreId ? { id: ignoreId } : undefined } }); i++) slug = `${base}-${i}`;
+    const root = base || 'platform'; // a name with no latin letters slugifies to '' and must not become '-2'
+    let slug = root;
+    for (let i = 2; await this.prisma.platform.findFirst({ where: { slug, NOT: ignoreId ? { id: ignoreId } : undefined } }); i++) slug = `${root}-${i}`;
     return slug;
   }
 

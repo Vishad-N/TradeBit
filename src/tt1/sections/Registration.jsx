@@ -4,6 +4,7 @@ import EventMeta from '../components/EventMeta.jsx'
 import { EVENT } from '../content.js'
 import { GoldAsset } from '../components/FloatingAssets.jsx'
 import { registerWebinar } from '../lib/registerWebinar.js'
+import { trackLead } from '../lib/track.js'
 import PhoneField from '../../components/PhoneField.jsx'
 import { COUNTRIES } from '../../lib/countries.js'
 import { isValidPhone, PHONE_ERROR } from '../../lib/phone.js'
@@ -81,7 +82,7 @@ function RegistrationForm() {
       setBusy(false)
       return
     }
-    // TODO: fire the Meta Pixel "Lead" event here.
+    trackLead()
     try { localStorage.setItem('tb-registered', '1') } catch { /* storage blocked */ }
     setSubmitted(true)
   }

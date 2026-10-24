@@ -22,11 +22,15 @@ export class WebinarService {
   async register(dto: RegistrationDto) {
     const email = dto.email.trim().toLowerCase();
     const phone = dto.phone.trim();
-    // The same person submitting twice (popup then page, or a double click) is stored once.
-    const existing = await this.prisma.webinarRegistration.findFirst({ where: { email, phone } });
-    if (existing) return { ok: true };
-    await this.prisma.webinarRegistration.create({
-      data: { name: dto.name.trim(), email, phone, country: dto.country?.toUpperCase() || null, source: dto.source || 'page' },
+    // The same person submitting twice (popup then page, or a double click) is stored once. The lock makes the
+    // check-then-insert atomic, so two simultaneous requests cannot both insert.
+    await this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`webinar:${email}:${phone}`}))`;
+      const existing = await tx.webinarRegistration.findFirst({ where: { email, phone } });
+      if (existing) return;
+      await tx.webinarRegistration.create({
+        data: { name: dto.name.trim(), email, phone, country: dto.country?.toUpperCase() || null, source: dto.source || 'page' },
+      });
     });
     return { ok: true };
   }

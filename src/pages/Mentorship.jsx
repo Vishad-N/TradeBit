@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { mentorshipApi } from '../services/readingApi.js';
 import Disclaimer from '../components/Disclaimer.jsx';
+import QRCode from 'qrcode';
 
 const fmtDate = d => (d ? new Date(d).toLocaleString() : '—');
 const todayISO = () => new Date().toISOString().slice(0, 10);
@@ -23,6 +24,15 @@ function Shell({ title, lead, children }) {
 function PaymentDetails({ info }) {
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);
+  const [qr, setQr] = useState(null);
+
+  // The QR is generated from the same address that is displayed, so the two can never disagree.
+  useEffect(() => {
+    let alive = true;
+    setQr(null);
+    if (showQr) QRCode.toDataURL(info.walletAddress, { width: 440, margin: 1 }).then(u => alive && setQr(u)).catch(() => {});
+    return () => { alive = false; };
+  }, [showQr, info.walletAddress]);
 
   async function copy() {
     try {
@@ -47,7 +57,7 @@ function PaymentDetails({ info }) {
           <button type="button" className="btn btn-dark" onClick={copy}>{copied ? 'Copied ✓' : 'Copy address'}</button>
           <button type="button" className="rd-mini" aria-expanded={showQr} onClick={() => setShowQr(v => !v)}>{showQr ? 'Hide QR' : 'Show QR'}</button>
         </div>
-        {showQr && <img className="mp-qr" src="/payment/tron-wallet-qr.png" alt="QR code of the TRON wallet address" width="220" height="220" />}
+        {showQr && qr && <img className="mp-qr" src={qr} alt="QR code of the TRON wallet address" width="220" height="220" />}
       </div>
       <div className="mp-warn" role="note">
         <strong>Use the TRC20 (TRON) network only.</strong>

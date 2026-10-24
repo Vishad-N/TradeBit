@@ -9,6 +9,7 @@ import {
   Logger,
   Module,
   NotFoundException,
+  OnModuleInit,
   Param,
   Patch,
   Post,
@@ -20,6 +21,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
+import { Prisma } from '@prisma/client';
 import { IsBoolean, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { PrismaService } from '../prisma/prisma.service';
@@ -27,6 +29,7 @@ import { StorageService } from '../storage/storage.service';
 import { AuthGuard, Roles } from '../auth/auth.guard';
 import { PdfProcessor } from './pdf-processor';
 import { fetchPdfFromLink } from './link-fetch';
+import { forgetAccess } from '../reading/access-memo';
 
 type UploadedPdf = { buffer: Buffer; size: number };
 const MAX_PDF_BYTES = (Number(process.env.MAX_PDF_MB) || 50) * 1024 * 1024;
@@ -79,9 +82,18 @@ const bookSelect = {
 export const pageKey = (bookId: string, page: number) => `books/${bookId}/pages/${page}.jpg`;
 
 @Injectable()
-export class BooksService {
+export class BooksService implements OnModuleInit {
   private readonly log = new Logger('Books');
   constructor(private readonly prisma: PrismaService, private readonly storage: StorageService, private readonly pdf: PdfProcessor) {}
+
+  /** Processing runs in memory, so a restart kills it. Mark those books FAILED so the admin can press Retry. */
+  async onModuleInit() {
+    const { count } = await this.prisma.book.updateMany({
+      where: { status: 'PROCESSING' },
+      data: { status: 'FAILED', processingError: 'Processing was interrupted by a server restart. Press Retry.' },
+    });
+    if (count) this.log.warn(`${count} book(s) were left in PROCESSING by a restart and are now FAILED (retry them from the admin).`);
+  }
 
   list() {
     return this.prisma.book.findMany({ select: bookSelect, orderBy: { createdAt: 'desc' } });
@@ -152,9 +164,13 @@ export class BooksService {
 
   async update(id: string, dto: UpdateBookDto) {
     try {
-      return await this.prisma.book.update({ where: { id }, data: dto, select: bookSelect });
-    } catch {
-      throw new NotFoundException('Book not found');
+      const updated = await this.prisma.book.update({ where: { id }, data: dto, select: bookSelect });
+      forgetAccess(); // hiding a book or making it club-only changes who may read it
+      return updated;
+    } catch (e) {
+      // Only "no such record" is a 404; anything else (database down, bad data) must surface as the real error.
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') throw new NotFoundException('Book not found');
+      throw e;
     }
   }
 
@@ -194,6 +210,7 @@ export class BooksService {
     const book = await this.prisma.book.findUnique({ where: { id } });
     if (!book) throw new NotFoundException('Book not found');
     await this.prisma.book.delete({ where: { id } });
+    forgetAccess();
     await this.storage.deletePrefix(`books/${id}`);
     return { deleted: true };
   }

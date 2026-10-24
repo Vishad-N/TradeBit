@@ -105,6 +105,7 @@ export class PricingService {
       if (!(PRODUCTS as readonly string[]).includes(key)) throw new BadRequestException(`Unknown product "${key}".`);
     }
     // Validate everything first so a bad second product never leaves the first half-saved.
+    const stored = new Map((await this.prisma.productPricing.findMany()).map(r => [r.product, r]));
     const writes: { product: Product; data: Record<string, unknown> }[] = [];
     for (const product of PRODUCTS) {
       const b = body?.[product] as Record<string, unknown> | undefined;
@@ -126,9 +127,12 @@ export class PricingService {
       }
       if (offerEnabled) {
         if (!endsAt) throw new BadRequestException(`${label}: set when the offer ends.`);
-        if (endsAt.getTime() <= Date.now()) throw new BadRequestException(`${label}: the offer end time must be in the future.`);
+        // An offer that already ended stays "enabled" in the database; re-saving it unchanged (e.g. to edit the other
+        // product, or just the price) must not fail. Only a new or edited end time has to be in the future.
+        const unchangedEnd = stored.get(product)?.offerEndsAt?.getTime() === endsAt.getTime();
+        if (endsAt.getTime() <= Date.now() && !unchangedEnd) throw new BadRequestException(`${label}: the offer end time must be in the future.`);
         if (startsAt && startsAt >= endsAt) throw new BadRequestException(`${label}: the offer must start before it ends.`);
-        if (endsAt.getTime() - (startsAt?.getTime() ?? Date.now()) > MAX_OFFER_DAYS * 864e5) {
+        if (!unchangedEnd && endsAt.getTime() - (startsAt?.getTime() ?? Date.now()) > MAX_OFFER_DAYS * 864e5) {
           throw new BadRequestException(`${label}: an offer can run for at most ${MAX_OFFER_DAYS} days.`);
         }
         if ((offerPrice as number) > price) throw new BadRequestException(`${label}: the offer price should not be higher than the current price.`);

@@ -37,7 +37,8 @@ export function AuthProvider({ children }) {
     isAdmin: user?.role === 'ADMIN',
     login: async (email, password) => finish(await authApi.login(email, password)),
     register: async (name, email, phone, password) => finish(await authApi.register(name, email, phone, password)),
-    logout: () => { tokenStore.clear(); setUser(null); },
+    // Revoke the token on the server too (best effort: the request reads the token before it is cleared below).
+    logout: () => { authApi.logout().catch(() => {}); tokenStore.clear(); setUser(null); },
   }), [user, loading, finish]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

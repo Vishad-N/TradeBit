@@ -104,9 +104,9 @@ export class OptionalAuthGuard implements CanActivate {
     const [scheme, token] = String(req.headers['authorization'] || '').split(' ');
     if (scheme !== 'Bearer' || !token) return true;
     try {
-      const payload = await this.jwt.verifyAsync<{ sub: string }>(token);
-      const user = await this.prisma.user.findUnique({ where: { id: payload.sub }, select: { id: true, email: true, name: true, role: true } });
-      if (user) req.user = user;
+      const payload = await this.jwt.verifyAsync<{ sub: string; v?: number }>(token);
+      const user = await this.prisma.user.findUnique({ where: { id: payload.sub }, select: { id: true, email: true, name: true, role: true, tokenVersion: true } });
+      if (user && (payload.v ?? 0) === user.tokenVersion) req.user = { id: user.id, email: user.email, name: user.name, role: user.role };
     } catch { /* an expired token just means "anonymous" here */ }
     return true;
   }
@@ -318,11 +318,12 @@ export class CoursesService {
     if (!lesson || !course) throw new NotFoundException('Lesson not found');
     if (!this.lessonAllowed(c, course, lesson).allowed) throw new ForbiddenException('You do not have access to this lesson.');
 
-    // Fill in the length once if the admin left it blank (the player knows the real duration).
+    // If the admin left the length blank, use the player's real duration for this student's completion check. It is
+    // only stored on the lesson when an admin reports it: a student's request must never change shared course data.
     let duration = lesson.durationSec;
     if (!duration && dto.durationSec && dto.durationSec >= 1) {
       duration = Math.round(dto.durationSec);
-      await this.prisma.lesson.update({ where: { id: lesson.id }, data: { durationSec: duration } }).catch(() => undefined);
+      if (c.isAdmin) await this.prisma.lesson.update({ where: { id: lesson.id }, data: { durationSec: duration } }).catch(() => undefined);
     }
     const existing = await this.prisma.lessonProgress.findUnique({ where: { userId_lessonId: { userId: user.id, lessonId } } });
     const position = dto.positionSec === undefined ? existing?.positionSec || 0 : Math.max(0, Math.round(dto.positionSec));

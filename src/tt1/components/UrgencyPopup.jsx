@@ -1,3 +1,4 @@
+import { trackLead } from '../lib/track.js'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { prefersReducedMotion } from '../shared/utils.js'
 import { CLOCK_PULSE_EVENT, FlipDigit, useSecondsLeft } from './FlipCountdown.jsx'
@@ -122,7 +123,7 @@ function RegisterForm({ onDone }) {
       setBusy(false)
       return
     }
-    // TODO: fire the Meta Pixel "Lead" event here.
+    trackLead()
     try { localStorage.setItem(REGISTERED_KEY, '1') } catch { /* storage blocked: popup may return next visit */ }
     onDone()
   }

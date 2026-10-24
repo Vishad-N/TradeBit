@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { forgetAccess } from './access-memo';
 
 const ID = 'default';
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -111,6 +112,7 @@ export class FreeScheduleService {
     if (enabled && !allBooks && valid.length === 0) throw new BadRequestException('Pick at least one book, or choose "All books".');
     const data = { enabled, days: days.sort((a, c) => a - c), startMinute, endMinute, timezone, allBooks, bookIds: valid };
     await this.prisma.freeReadingSchedule.upsert({ where: { id: ID }, create: { id: ID, ...data }, update: data });
+    forgetAccess();
     return this.view();
   }
 

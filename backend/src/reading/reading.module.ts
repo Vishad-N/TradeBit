@@ -30,6 +30,7 @@ import { StorageService } from '../storage/storage.service';
 import { AuthGuard, AuthUser, CurrentUser, Roles } from '../auth/auth.guard';
 import { pageKey } from '../books/books.module';
 import { computeWindow, covers, FreeScheduleService } from './free-schedule';
+import { forgetAccess, getAccess, setAccess } from './access-memo';
 
 // ---------- DTOs ----------
 class SaveProgressDto {
@@ -52,6 +53,9 @@ class RejectDto {
   @IsOptional() @IsString() @MaxLength(500) reason?: string;
 }
 
+/** Rendered pages are immutable until the book is reprocessed, so a small in-memory LRU saves a storage round trip per view. */
+const PAGE_CACHE_BYTES = 64 * 1024 * 1024;
+
 const taskSelect = { id: true, title: true, description: true, isActive: true, createdAt: true, updatedAt: true } as const;
 const taskBooksInclude = { books: { select: { book: { select: { id: true, title: true } } } } } as const;
 const flattenBooks = <T extends { books: { book: { id: string; title: string } }[] }>(t: T) => ({ ...t, books: t.books.map((b) => b.book) });
@@ -60,6 +64,39 @@ const bookPublicSelect = { id: true, title: true, description: true, pageCount: 
 @Injectable()
 export class ReadingService {
   constructor(private readonly prisma: PrismaService, private readonly storage: StorageService, private readonly free: FreeScheduleService) {}
+
+  private readonly pageCache = new Map<string, Buffer>(); // insertion order = least recently used first
+  private pageCacheBytes = 0;
+
+  /** assertAccess with a short-lived memo (see access-memo.ts), for the high-volume page endpoint only. */
+  private async assertAccessMemo(userId: string, bookId: string) {
+    const hit = getAccess(userId, bookId);
+    if (hit) return hit;
+    const value = await this.assertAccess(userId, bookId);
+    setAccess(userId, bookId, value);
+    return value;
+  }
+
+  private async pageBytes(key: string, version: number) {
+    const ck = `${key}@${version}`; // a reprocessed book has a new updatedAt, so it never serves stale pages
+    const hit = this.pageCache.get(ck);
+    if (hit) {
+      this.pageCache.delete(ck);
+      this.pageCache.set(ck, hit);
+      return hit;
+    }
+    const bytes = await this.storage.get(key);
+    if (bytes.length < PAGE_CACHE_BYTES / 4) {
+      this.pageCache.set(ck, bytes);
+      this.pageCacheBytes += bytes.length;
+      for (const [k, v] of this.pageCache) {
+        if (this.pageCacheBytes <= PAGE_CACHE_BYTES) break;
+        this.pageCache.delete(k);
+        this.pageCacheBytes -= v.length;
+      }
+    }
+    return bytes;
+  }
 
   // ---------- helpers ----------
   /** Who is asking: admins can open club-only books (for testing); 1% Club members are an ACTIVE mentorship. */
@@ -276,7 +313,7 @@ export class ReadingService {
   }
 
   async getPage(userId: string, bookId: string, pageNumber: number, sessionToken?: string) {
-    const { book } = await this.assertAccess(userId, bookId);
+    const { book } = await this.assertAccessMemo(userId, bookId);
     if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > book.pageCount) throw new NotFoundException({ code: 'PAGE_NOT_FOUND', message: 'Page not found.' });
 
     const session = await this.prisma.readingSession.findUnique({ where: { userId_bookId: { userId, bookId } } });
@@ -286,7 +323,7 @@ export class ReadingService {
     if (Date.now() - session.lastSeenAt.getTime() > 60_000) {
       await this.prisma.readingSession.update({ where: { id: session.id }, data: { lastSeenAt: new Date() } });
     }
-    return this.storage.get(pageKey(bookId, pageNumber));
+    return this.pageBytes(pageKey(bookId, pageNumber), book.updatedAt.getTime());
   }
 
   // ---------- user: progress ----------
@@ -343,6 +380,7 @@ export class ReadingService {
       data: { ...rest, ...(bookIdList ? { books: { deleteMany: {}, create: bookIdList.map((bookId) => ({ bookId })) } } : {}) },
       select: { ...taskSelect, ...taskBooksInclude },
     });
+    forgetAccess();
     return flattenBooks(task);
   }
 
@@ -350,6 +388,7 @@ export class ReadingService {
   async deleteTask(id: string) {
     if (!(await this.prisma.task.findUnique({ where: { id } }))) throw new NotFoundException('Task not found');
     await this.prisma.task.delete({ where: { id } });
+    forgetAccess();
     return { ok: true };
   }
 
@@ -383,31 +422,35 @@ export class ReadingService {
     const days = Number(process.env.READING_ACCESS_DAYS);
     const expiresAt = days > 0 ? new Date(Date.now() + days * 86_400_000) : null;
     const now = new Date();
-    // Approving one task unlocks every book linked to it.
-    await this.prisma.$transaction([
-      this.prisma.taskSubmission.update({ where: { id }, data: { status: 'APPROVED', rejectionReason: null, reviewedAt: now, reviewedById: admin.id } }),
-      ...sub.task.books.map(({ bookId }) =>
-        this.prisma.readingAccess.upsert({
+    // Approving one task unlocks every book linked to it. The status guard turns a double click (or two admins) into a clear error.
+    await this.prisma.$transaction(async (tx) => {
+      const done = await tx.taskSubmission.updateMany({ where: { id, status: { not: 'APPROVED' } }, data: { status: 'APPROVED', rejectionReason: null, reviewedAt: now, reviewedById: admin.id } });
+      if (done.count === 0) throw new ConflictException('This request is already approved.');
+      for (const { bookId } of sub.task.books) {
+        await tx.readingAccess.upsert({
           where: { userId_bookId: { userId: sub.userId, bookId } },
           update: { status: 'ACTIVE', grantedAt: now, expiresAt },
           create: { userId: sub.userId, bookId, status: 'ACTIVE', grantedAt: now, expiresAt },
-        }),
-      ),
-    ]);
+        });
+      }
+    });
+    forgetAccess(sub.userId);
     return this.getRequest(id);
   }
 
   async reject(id: string, admin: AuthUser, reason?: string) {
     const sub = await this.prisma.taskSubmission.findUnique({ where: { id }, include: { task: { include: { books: { select: { bookId: true } } } } } });
     if (!sub) throw new NotFoundException('Request not found');
-    await this.prisma.$transaction([
-      this.prisma.taskSubmission.update({ where: { id }, data: { status: 'REJECTED', rejectionReason: reason?.trim() || null, reviewedAt: new Date(), reviewedById: admin.id } }),
+    await this.prisma.$transaction(async (tx) => {
+      const done = await tx.taskSubmission.updateMany({ where: { id, status: { not: 'REJECTED' } }, data: { status: 'REJECTED', rejectionReason: reason?.trim() || null, reviewedAt: new Date(), reviewedById: admin.id } });
+      if (done.count === 0) throw new ConflictException('This request is already rejected.');
       // Rejecting a previously approved submission also withdraws the task access it granted (never mentorship access).
-      this.prisma.readingAccess.updateMany({
+      await tx.readingAccess.updateMany({
         where: { userId: sub.userId, bookId: { in: sub.task.books.map((b) => b.bookId) }, status: 'ACTIVE', source: 'TASK' },
         data: { status: 'REVOKED' },
-      }),
-    ]);
+      });
+    });
+    forgetAccess(sub.userId);
     return this.getRequest(id);
   }
 }

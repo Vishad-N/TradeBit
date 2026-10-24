@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { coursesApi } from '../../services/coursesApi.js';
 import { ACCESS_LABEL } from '../../lib/courses.js';
@@ -9,17 +9,18 @@ import '../../styles/courses.css';
 export function useLoad(fetcher, deps = []) {
   const { user, loading: authLoading } = useAuth();
   const [state, setState] = useState({ data: null, error: null, loading: true });
+  const latest = useRef(0); // only the newest request may write state, whether it came from an effect or from reload()
   const run = useCallback(() => {
-    let alive = true;
+    const id = ++latest.current;
     setState((s) => ({ ...s, loading: true }));
     fetcher()
-      .then((data) => alive && setState({ data, error: null, loading: false }))
-      .catch((error) => alive && setState({ data: null, error, loading: false }));
-    return () => { alive = false; };
+      .then((data) => id === latest.current && setState({ data, error: null, loading: false }))
+      .catch((error) => id === latest.current && setState({ data: null, error, loading: false }));
   }, deps); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return undefined;
-    return run();
+    run();
+    return () => { latest.current++; }; // leaving / changing inputs invalidates anything still in flight
   }, [run, authLoading, user?.id]);
   return { ...state, reload: run };
 }

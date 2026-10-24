@@ -29,7 +29,7 @@ export class AuthGuard implements CanActivate {
     const [scheme, token] = header.split(' ');
     if (scheme !== 'Bearer' || !token) throw new UnauthorizedException('Authentication required');
 
-    let payload: { sub: string };
+    let payload: { sub: string; v?: number };
     try {
       payload = await this.jwt.verifyAsync(token);
     } catch {
@@ -37,10 +37,12 @@ export class AuthGuard implements CanActivate {
     }
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
-      select: { id: true, email: true, name: true, role: true },
+      select: { id: true, email: true, name: true, role: true, tokenVersion: true },
     });
     if (!user) throw new UnauthorizedException('Account not found');
-    req.user = user;
+    // A token issued before the last "log out everywhere" / password reset carries an older version.
+    if ((payload.v ?? 0) !== user.tokenVersion) throw new UnauthorizedException('Session expired. Please log in again.');
+    req.user = { id: user.id, email: user.email, name: user.name, role: user.role };
 
     const roles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [ctx.getHandler(), ctx.getClass()]);
     if (roles?.length && !roles.includes(user.role)) throw new ForbiddenException('Insufficient permissions');
