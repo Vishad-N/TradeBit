@@ -92,7 +92,7 @@ export function parseVimeo(input: string): { id: string; hash: string | null } {
 const slugify = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/[\s_]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 70) || 'course';
 
 type Viewer = AuthUser | null;
-type Ctx = { user: Viewer; isAdmin: boolean; isClub: boolean; enrolled: Set<string> };
+type Ctx = { user: Viewer; isAdmin: boolean; isClub: boolean; programme: boolean; enrolled: Set<string> };
 type Reason = 'LOGIN' | 'CLUB' | 'ENROLL' | 'UNAVAILABLE';
 
 /** Lets anonymous visitors through but still identifies logged-in ones (the catalog and previews are public). */
@@ -118,19 +118,21 @@ export class CoursesService {
 
   // ---------- access rules
   private async ctx(user: Viewer): Promise<Ctx> {
-    if (!user) return { user: null, isAdmin: false, isClub: false, enrolled: new Set() };
-    const [m, en] = await Promise.all([
+    if (!user) return { user: null, isAdmin: false, isClub: false, programme: false, enrolled: new Set() };
+    const [m, en, prog] = await Promise.all([
       this.prisma.mentorshipAccess.findUnique({ where: { userId: user.id }, select: { status: true } }),
       this.prisma.courseEnrollment.findMany({ where: { userId: user.id }, select: { courseId: true } }),
+      this.prisma.programEnrollment.findUnique({ where: { userId: user.id }, select: { status: true } }),
     ]);
-    return { user, isAdmin: user.role === ('ADMIN' as Role), isClub: m?.status === 'ACTIVE', enrolled: new Set(en.map((e) => e.courseId)) };
+    return { user, isAdmin: user.role === ('ADMIN' as Role), isClub: m?.status === 'ACTIVE', programme: prog?.status === 'ACTIVE', enrolled: new Set(en.map((e) => e.courseId)) };
   }
 
   /** Whole-course access (ignores free previews). */
   private courseAllowed(c: Ctx, course: { id: string; access: CourseAccess }): { allowed: boolean; reason?: Reason } {
     if (c.isAdmin) return { allowed: true };
     if (!c.user) return { allowed: false, reason: 'LOGIN' };
-    if (course.access === 'PUBLIC' || c.enrolled.has(course.id)) return { allowed: true };
+    // A paid / approved programme enrolment opens every ENROLLED course, including ones added later.
+    if (course.access === 'PUBLIC' || c.enrolled.has(course.id) || (course.access === 'ENROLLED' && c.programme)) return { allowed: true };
     if (course.access === 'CLUB' && c.isClub) return { allowed: true };
     return { allowed: false, reason: course.access === 'CLUB' ? 'CLUB' : 'ENROLL' };
   }

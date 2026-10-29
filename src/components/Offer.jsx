@@ -2,7 +2,7 @@ import Faq from './Faq.jsx';
 import { CapRings } from './Rings.jsx';
 import { GoldAsset } from './FloatingAssets.jsx';
 import CountDown from './CountDown.jsx';
-import { openVip } from './VipModal.jsx';
+import EnrollButton from './EnrollButton.jsx';
 import OfferClock from './OfferClock.jsx';
 import { formatInr, percentOff, usePricing } from '../context/PricingContext.jsx';
 
@@ -52,7 +52,7 @@ export default function Offer() {
           </ul>
         </div>
         <div className="go rv">
-          <button type="button" className="btn btn-lime btn-xl" aria-haspopup="dialog" onClick={openVip}>Get Started Now <span className="ar">→</span></button>
+          <EnrollButton />
           <div className="assure">
             <span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2"/></svg>Secure Payment</span>
             <span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M9 1.5L3.5 9H8l-1 5.5L12.5 7H8z"/></svg>Instant Access</span>

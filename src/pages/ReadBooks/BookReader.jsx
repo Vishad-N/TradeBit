@@ -1,3 +1,4 @@
+import BookLoader from '../../components/BookLoader.jsx';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { readingApi } from '../../services/readingApi.js';
@@ -318,6 +319,8 @@ export default function BookReader({ book, startPage, onAccessLost, onBack }) {
                   ? <button className="btn btn-lime" onClick={() => { clearCache(); start(); }}>Continue reading here</button>
                   : <button className="btn btn-lime" onClick={() => setRetry(r => r + 1)}>Try again</button>}
               </div>
+            ) : pageLoading && !src && !error ? (
+              <div className="rd-stage-msg"><BookLoader /></div>
             ) : (
               <div
                 className={`rd-page${shielded ? ' is-shielded' : ''}${src ? '' : ' is-empty'}`}

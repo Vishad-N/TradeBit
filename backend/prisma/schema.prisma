@@ -55,14 +55,17 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  submissions    TaskSubmission[]
-  accesses       ReadingAccess[]
-  progress       ReadingProgress[]
-  sessions       ReadingSession[]
-  payments       MentorshipPayment[]
-  mentorship     MentorshipAccess?
-  lessonProgress LessonProgress[]
-  enrollments    CourseEnrollment[]
+  submissions       TaskSubmission[]
+  accesses          ReadingAccess[]
+  progress          ReadingProgress[]
+  sessions          ReadingSession[]
+  payments          MentorshipPayment[]
+  mentorship        MentorshipAccess?
+  lessonProgress    LessonProgress[]
+  enrollments       CourseEnrollment[]
+  programme         ProgramEnrollment?
+  programmePayments ProgramPayment[]
+  telegramLink      TelegramLink?
 }
 
 model Book {
@@ -456,4 +459,72 @@ model CourseEnrollment {
 
   @@id([userId, courseId])
   @@index([courseId])
+}
+
+// ---------------------------------------------------------------- Programme enrolment ("Your Invitation")
+// One row per user. Paying (Razorpay) or being approved by an admin (free offer) makes it ACTIVE, and an ACTIVE
+// enrolment opens every published course whose access is ENROLLED.
+enum EnrollmentStatus {
+  PENDING // free offer, waiting for an admin
+  ACTIVE
+  REJECTED
+  REVOKED
+}
+
+enum EnrollmentSource {
+  FREE_APPROVAL
+  PAYMENT
+}
+
+enum OrderStatus {
+  CREATED
+  PAID
+}
+
+model ProgramEnrollment {
+  id              String           @id @default(cuid())
+  userId          String           @unique
+  status          EnrollmentStatus @default(PENDING)
+  source          EnrollmentSource
+  rejectionReason String?
+  requestedAt     DateTime         @default(now())
+  decidedAt       DateTime?
+  decidedById     String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+/// A Razorpay order created for the programme. `amountPaise` is fixed server-side when the order is made.
+model ProgramPayment {
+  id                String      @id @default(cuid())
+  userId            String
+  amountPaise       Int
+  currency          String      @default("INR")
+  razorpayOrderId   String      @unique
+  razorpayPaymentId String?     @unique
+  status            OrderStatus @default(CREATED)
+  createdAt         DateTime    @default(now())
+  paidAt            DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Ties a site account to a Telegram account so the free programme can check the student really joined the channel.
+/// The student opens t.me/<bot>?start=<token>; the bot reads the token and records who sent it.
+model TelegramLink {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  token          String    @unique
+  telegramUserId String?   @unique
+  username       String?
+  linkedAt       DateTime?
+  createdAt      DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

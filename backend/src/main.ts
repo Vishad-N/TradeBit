@@ -6,7 +6,7 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true }); // rawBody: Razorpay's webhook signature is computed over the exact bytes
   app.setGlobalPrefix('api/v1');
   // Railway terminates TLS in front of the app; trust it so client IPs (rate limiting) are right.
   (app.getHttpAdapter().getInstance() as any).set('trust proxy', 1);

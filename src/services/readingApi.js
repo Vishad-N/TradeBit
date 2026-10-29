@@ -88,3 +88,14 @@ adminApi.savePricing = (data) => api.put('/admin/pricing', data);
 export const siteLinksApi = { get: () => api.get('/site-links') };
 adminApi.siteLinks = () => api.get('/admin/site-links');
 adminApi.saveSiteLinks = (data) => api.patch('/admin/site-links', data);
+
+// Programme enrolment ("Your Invitation"): free = request for admin approval, paid = Razorpay.
+export const enrollmentApi = {
+  me: () => api.get('/enrollment/me'),
+  start: () => api.post('/enrollment/start'),
+  verify: (payload) => api.post('/enrollment/verify', payload),
+};
+adminApi.enrollments = (status) => api.get(`/admin/enrollments${status ? `?status=${status}` : ''}`);
+adminApi.approveEnrollment = (id) => api.patch(`/admin/enrollments/${id}/approve`);
+adminApi.rejectEnrollment = (id, reason) => api.patch(`/admin/enrollments/${id}/reject`, { reason });
+adminApi.revokeEnrollment = (id) => api.patch(`/admin/enrollments/${id}/revoke`);

@@ -14,10 +14,11 @@ import Login from './pages/Login.jsx';
 import ReadBooks from './pages/ReadBooks/ReadBooks.jsx';
 import Mentorship from './pages/Mentorship.jsx';
 import Club from './pages/Club.jsx';
+import NotFound from './pages/NotFound.jsx';
 import AdminReading from './pages/admin/AdminReading.jsx';
-import Courses from './pages/courses/Courses.jsx';
-import CourseDetail from './pages/courses/CourseDetail.jsx';
-import LessonPlayer from './pages/courses/LessonPlayer.jsx';
+const Courses = lazy(() => import('./pages/courses/Courses.jsx'));
+const CourseDetail = lazy(() => import('./pages/courses/CourseDetail.jsx'));
+const LessonPlayer = lazy(() => import('./pages/courses/LessonPlayer.jsx'));
 import AdminCourses from './pages/admin/AdminCourses.jsx';
 import AdminCourseEdit from './pages/admin/AdminCourseEdit.jsx';
 import LegalLayout from './components/LegalLayout.jsx';
@@ -56,11 +57,12 @@ export default function App() {
             <Route path="/mentorship" element={<Mentorship />} />
             <Route path="/1-percent-club" element={<Club />} />
             <Route path="/admin/reading" element={<AdminReading />} />
-            <Route path="/courses" element={<Courses />} />
-            <Route path="/courses/:slug" element={<CourseDetail />} />
-            <Route path="/courses/:slug/lesson/:lessonId" element={<LessonPlayer />} />
+            <Route path="/courses" element={<Suspense fallback={null}><Courses /></Suspense>} />
+            <Route path="/courses/:slug" element={<Suspense fallback={null}><CourseDetail /></Suspense>} />
+            <Route path="/courses/:slug/lesson/:lessonId" element={<Suspense fallback={null}><LessonPlayer /></Suspense>} />
             <Route path="/admin/courses" element={<AdminCourses />} />
             <Route path="/admin/courses/:id" element={<AdminCourseEdit />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
         </PricingProvider>

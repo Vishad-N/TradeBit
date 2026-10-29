@@ -12,8 +12,9 @@ import GalleryTab from './GalleryTab.jsx';
 import SocialLinksTab from './SocialLinksTab.jsx';
 import PricingTab from './PricingTab.jsx';
 import FreeDaysTab from './FreeDaysTab.jsx';
+import EnrollmentsTab from './EnrollmentsTab.jsx';
 
-const TABS = [['books', 'Books'], ['tasks', 'Tasks'], ['requests', 'Reading Requests'], ['payments', 'Mentorship Payments'], ['platforms', 'Platforms'], ['webinar', 'Webinar Registrations'], ['testimonials', 'Testimonials'], ['profits', 'Profit Screenshots'], ['gallery', 'Gallery'], ['social', 'Social Links'], ['pricing', 'Pricing'], ['freedays', 'Free Days']];
+const TABS = [['books', 'Books'], ['tasks', 'Tasks'], ['requests', 'Reading Requests'], ['payments', 'Mentorship Payments'], ['platforms', 'Platforms'], ['webinar', 'Webinar Registrations'], ['testimonials', 'Testimonials'], ['profits', 'Profit Screenshots'], ['gallery', 'Gallery'], ['social', 'Social Links'], ['pricing', 'Pricing'], ['enrollments', 'Enrolments'], ['freedays', 'Free Days']];
 const STATUS_LABEL = { PENDING_REVIEW: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected', PROCESSING: 'Processing', READY: 'Ready', FAILED: 'Failed' };
 const fmt = d => (d ? new Date(d).toLocaleString() : '—');
 
@@ -439,6 +440,7 @@ export default function AdminReading() {
       {tab === 'gallery' && <GalleryTab />}
       {tab === 'social' && <SocialLinksTab />}
       {tab === 'pricing' && <PricingTab />}
+      {tab === 'enrollments' && <EnrollmentsTab />}
       {tab === 'freedays' && <FreeDaysTab />}
     </section>
   );

@@ -4,7 +4,7 @@ import { formatEnd, usePricing } from '../../context/PricingContext.jsx';
 import OfferClock from '../../components/OfferClock.jsx';
 
 const PRODUCTS = [
-  { id: 'invitation', name: 'Your Invitation', where: 'The course offer at the bottom of the main page', unit: '₹', note: 'Indian rupees. Use 0 for a free enrolment.' },
+  { id: 'invitation', name: 'Your Invitation', where: 'The course offer at the bottom of the main page', unit: '₹', note: 'Indian rupees. Above 0 = students pay via Razorpay and get course access at once. 0 = free: students request access and you approve them in the Enrolments tab.' },
   { id: 'club', name: '1% Club', where: 'The 1% Club page and sign-up popup', unit: '$', note: 'Dollars on the 1% Club page, USDT in the popup. This is also the amount on the mentorship payment page.' },
 ];
 const TITLES = ['Limited Time Offer', 'New Offer'];
