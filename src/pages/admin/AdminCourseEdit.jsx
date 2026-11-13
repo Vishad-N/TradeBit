@@ -4,6 +4,7 @@ import { coursesAdminApi } from '../../services/coursesApi.js';
 import { ACCESS_HELP, ACCESS_LABEL, fmtClock, fmtDuration, parseClock, parseVimeo } from '../../lib/courses.js';
 import Icon from '../../components/courses/Icons.jsx';
 import { CourseThumb } from '../courses/shared.jsx';
+import CourseIconPicker, { iconPayload, iconValueOf } from '../../components/courses/CourseIconPicker.jsx';
 import AdminGate from './AdminGate.jsx';
 
 // ---------------------------------------------------------------- small pieces
@@ -207,7 +208,7 @@ function Editor({ id }) {
     try {
       const c = await coursesAdminApi.get(id);
       setCourse(c);
-      setForm((f) => f || { title: c.title, slug: c.slug, summary: c.summary, description: c.description, access: c.access });
+      setForm((f) => f || { title: c.title, slug: c.slug, summary: c.summary, description: c.description, access: c.access, icon: iconValueOf(c) });
     } catch (e) { if (e.status === 404) setMissing(true); else setError(e.message); }
   }, [id]);
   useEffect(() => { load(); }, [load]);
@@ -225,7 +226,7 @@ function Editor({ id }) {
   async function saveDetails(e) {
     e.preventDefault(); setBusy(true); setError(''); setMsg('');
     try {
-      const updated = await coursesAdminApi.update(id, { title: form.title.trim(), slug: form.slug.trim(), summary: form.summary.trim(), description: form.description.trim(), access: form.access });
+      const updated = await coursesAdminApi.update(id, { title: form.title.trim(), slug: form.slug.trim(), summary: form.summary.trim(), description: form.description.trim(), access: form.access, ...iconPayload(form.icon) });
       setForm((f) => ({ ...f, slug: updated.slug }));
       await load(); ok('Details saved.');
     } catch (x) { fail(x.message); } finally { setBusy(false); }
@@ -295,6 +296,7 @@ function Editor({ id }) {
               <select value={form.access} onChange={set('access')}>{Object.entries(ACCESS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
               <small>{ACCESS_HELP[form.access]} Lessons marked “Free preview” are always open to everyone.</small>
             </label>
+            <CourseIconPicker value={form.icon} courseId={course.id} onChange={(icon) => setForm((f) => ({ ...f, icon }))} />
             <button className="btn btn-lime cs-btn" type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save details'} <span className="ar">→</span></button>
           </form>
 

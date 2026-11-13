@@ -9,7 +9,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import Icon from '../../components/courses/Icons.jsx';
 import EnrollButton from '../../components/EnrollButton.jsx';
 import AssetBackdrop from '../../components/courses/fx/AssetBackdrop.jsx';
-import HeroArt from '../../components/courses/fx/HeroArt.jsx';
+import CourseIcon from '../../components/courses/fx/CourseIcon.jsx';
 import ProgressRing from '../../components/courses/fx/ProgressRing.jsx';
 import { StateCard, useLoad } from './shared.jsx';
 import { AssetThumb, Crumbs, Faq, Shell, faqLd } from './ui.jsx';
@@ -129,7 +129,7 @@ export default function CourseDetail() {
     <Shell theme={theme}>
       <header className="cx-hero cx-hero-sm">
         <AssetBackdrop seed={theme.key} />
-        <HeroArt kind={theme.key} className="cx-hero-art" />
+        <CourseIcon course={course} fallbackKind={theme.key} className="cx-hero-art" />
         <div className="cx-hero-in">
           <Crumbs items={[['Home', '/'], ['Courses', '/courses'], [course.title]]} />
           {!course.published && <div className="cx-notice" role="status"><Icon name="alert" size={18} className="cs-ic" /><span>This course is a draft. Only admins can see it.</span></div>}

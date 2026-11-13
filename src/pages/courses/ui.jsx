@@ -3,7 +3,7 @@ import { motion, useMotionTemplate, useReducedMotion, useSpring } from 'motion/r
 import { coursesApi } from '../../services/coursesApi.js';
 import Icon from '../../components/courses/Icons.jsx';
 import { assetOf, themeStyle } from '../../lib/courseTheme.js';
-import HeroArt from '../../components/courses/fx/HeroArt.jsx';
+import CourseIcon from '../../components/courses/fx/CourseIcon.jsx';
 import '../../styles/courses-fx.css';
 
 /** Page shell: dark trading-terminal canvas, themed by the asset in `theme` (CSS vars --ac / --ac-rgb). */
@@ -61,7 +61,7 @@ export function AssetThumb({ course, theme, flags }) {
     <div className="cx-thumb">
       {src ? <img src={src} alt={`${course.title} course cover`} loading="lazy" decoding="async" width="640" height="400" />
         : (
-          <HeroArt kind={theme.key} className="cx-thumb-art" />
+          <CourseIcon course={course} fallbackKind={theme.key} className="cx-thumb-art" />
         )}
       <span className="cx-thumb-shade" aria-hidden="true" />
       <span className="cx-asset-tag">{assetOf(course).label}</span>

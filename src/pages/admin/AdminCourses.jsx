@@ -5,6 +5,7 @@ import { coursesAdminApi } from '../../services/coursesApi.js';
 import { ACCESS_HELP, ACCESS_LABEL, fmtDuration } from '../../lib/courses.js';
 import Icon from '../../components/courses/Icons.jsx';
 import { CourseThumb } from '../courses/shared.jsx';
+import CourseIconPicker, { iconPayload } from '../../components/courses/CourseIconPicker.jsx';
 import AdminGate from './AdminGate.jsx';
 
 function CourseRow({ course, onChanged, onError }) {
@@ -54,7 +55,7 @@ export default function AdminCourses() {
   const [courses, setCourses] = useState(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [form, setForm] = useState({ title: '', summary: '', access: 'PUBLIC' });
+  const [form, setForm] = useState({ title: '', summary: '', access: 'PUBLIC', icon: { mode: 'random', svg: '' } });
 
   const load = useCallback(async () => {
     try { setCourses(await coursesAdminApi.list()); } catch (e) { setError(e.message); }
@@ -65,7 +66,7 @@ export default function AdminCourses() {
     e.preventDefault();
     setBusy(true); setError('');
     try {
-      const c = await coursesAdminApi.create({ title: form.title.trim(), summary: form.summary.trim(), access: form.access });
+      const c = await coursesAdminApi.create({ title: form.title.trim(), summary: form.summary.trim(), access: form.access, ...iconPayload(form.icon) });
       navigate(`/admin/courses/${c.id}`);
     } catch (err) {
       setError(err.message); setBusy(false);
@@ -90,6 +91,7 @@ export default function AdminCourses() {
           <label className="rd-field"><span>Who can watch</span>
             <select value={form.access} onChange={set('access')}>{Object.entries(ACCESS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
           </label>
+          <CourseIconPicker value={form.icon} onChange={(icon) => setForm((f) => ({ ...f, icon }))} id="new-course-icon" />
           <button className="btn btn-lime cs-btn" type="submit" disabled={busy || !form.title.trim()}>{busy ? 'Creating…' : 'Create course'} <span className="ar">→</span></button>
           <p className="ca-hint" style={{ gridColumn: '1 / -1' }}>{ACCESS_HELP[form.access]} The course starts as a draft; add modules and lessons, then publish it.</p>
         </form>

@@ -383,6 +383,10 @@ model Course {
   description String       @default("")
   /// Storage key of the optional thumbnail.
   thumbKey    String?
+  /// Animated icon preset (see COURSE_ICON_PRESETS). Null = "random from presets": the card hashes the course id.
+  svgPresetId String?
+  /// Admin-supplied inline SVG. Wins over svgPresetId. Sanitised on write and again on render.
+  customSvg   String?
   access      CourseAccess @default(PUBLIC)
   published   Boolean      @default(false)
   sortOrder   Int          @default(0)

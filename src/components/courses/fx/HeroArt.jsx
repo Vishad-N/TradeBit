@@ -151,10 +151,114 @@ function Forex({ u }) {
   );
 }
 
-const ART = { gold: Gold, silver: Silver, btc: Btc, eth: Eth, sol: Sol, forex: Forex };
+function GoldCoin({ u }) {
+  return (
+    <>
+      <Glow id={`${u}g`} color="#e8b923" />
+      <defs>
+        <linearGradient id={`${u}r`} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#fff3c4" /><stop offset=".5" stopColor="#e8b923" /><stop offset="1" stopColor="#8a6508" /></linearGradient>
+        <linearGradient id={`${u}f`} x1="1" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ffe9a3" /><stop offset="1" stopColor="#c99a14" /></linearGradient>
+      </defs>
+      <ellipse className="ha-spin-slow" cx="200" cy="205" rx="176" ry="58" fill="none" stroke="#e8b923" strokeOpacity=".5" strokeDasharray="2 10" strokeWidth="3" strokeLinecap="round" />
+      <g className="ha-flip ha-float">
+        <circle cx="200" cy="205" r="118" fill={`url(#${u}r)`} />
+        <circle cx="200" cy="205" r="100" fill={`url(#${u}f)`} stroke="#fff" strokeOpacity=".6" strokeWidth="2" />
+        <circle cx="200" cy="205" r="86" fill="none" stroke="#7a5806" strokeOpacity=".5" strokeWidth="2" strokeDasharray="3 7" />
+        <text x="200" y="228" textAnchor="middle" className="ha-text" fontSize="76" fill="#6b4c05">Au</text>
+        <text x="200" y="262" textAnchor="middle" className="ha-text" fontSize="14" fill="#6b4c05" letterSpacing="6">GOLD</text>
+      </g>
+      <Sparkle x={86} y={120} d={0.3} s={1.3} c="#ffe08a" /><Sparkle x={322} y={140} d={1.1} s={1} /><Sparkle x={300} y={300} d={1.8} s={0.8} c="#ffe08a" /><Sparkle x={96} y={300} d={0.7} s={0.7} />
+    </>
+  );
+}
+
+function Xrp({ u }) {
+  return (
+    <>
+      <Glow id={`${u}g`} color="#00aae4" />
+      <defs>
+        <linearGradient id={`${u}c`} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#3a4452" /><stop offset="1" stopColor="#12181f" /></linearGradient>
+        <linearGradient id={`${u}x`} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#7fdcff" /><stop offset="1" stopColor="#00aae4" /></linearGradient>
+      </defs>
+      <g className="ha-spin"><circle cx="200" cy="205" r="172" fill="none" stroke="#00aae4" strokeOpacity=".4" strokeWidth="2" strokeDasharray="1 12" strokeLinecap="round" /><circle cx="200" cy="33" r="6" fill="#7fdcff" /><circle cx="200" cy="377" r="6" fill="#7fdcff" /></g>
+      <g className="ha-spin-rev"><circle cx="200" cy="205" r="140" fill="none" stroke="#00aae4" strokeOpacity=".3" strokeWidth="1.5" /><circle cx="340" cy="205" r="5" fill="#fff" /></g>
+      <g className="ha-float">
+        <circle cx="200" cy="205" r="104" fill={`url(#${u}c)`} stroke="#00aae4" strokeOpacity=".7" strokeWidth="3" />
+        <path d="M142 148L178 186Q200 208 222 186L258 148" fill="none" stroke={`url(#${u}x)`} strokeWidth="18" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M142 262L178 224Q200 202 222 224L258 262" fill="none" stroke={`url(#${u}x)`} strokeWidth="18" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+      {[[200, 56, 200, 84], [200, 354, 200, 326], [48, 205, 76, 205], [352, 205, 324, 205]].map(([a, b, c, d], i) => <line key={i} className="ha-dash" x1={a} y1={b} x2={c} y2={d} stroke="#7fdcff" strokeWidth="3" strokeLinecap="round" strokeDasharray="6 8" />)}
+      <Sparkle x={70} y={90} d={0.2} s={1} c="#7fdcff" /><Sparkle x={332} y={86} d={1.2} s={1.2} /><Sparkle x={330} y={330} d={0.6} s={0.9} c="#7fdcff" />
+    </>
+  );
+}
+
+function Candles({ u }) {
+  // [x, wickTop, wickBottom, bodyTop, bodyBottom, up]
+  const k = [[70, 250, 330, 270, 316, 0], [118, 220, 318, 244, 296, 1], [166, 196, 290, 214, 270, 1], [214, 170, 262, 232, 252, 0], [262, 140, 240, 156, 224, 1], [310, 104, 214, 120, 196, 1]];
+  return (
+    <>
+      <Glow id={`${u}g`} color="#2ee59d" />
+      <g stroke="#2ee59d" strokeOpacity=".18" strokeWidth="1">{[...Array(7)].map((_, i) => <line key={i} x1="30" x2="370" y1={70 + i * 46} y2={70 + i * 46} />)}</g>
+      <g className="ha-float">
+        {k.map(([x, wt, wb, bt, bb, up], i) => {
+          const c = up ? '#2ee59d' : '#ff5470';
+          return (
+            <g key={i} className="ha-rise" style={{ animationDelay: `${i * 0.35}s` }}>
+              <line x1={x} x2={x} y1={wt} y2={wb} stroke={c} strokeWidth="4" strokeLinecap="round" />
+              <rect x={x - 15} y={bt} width="30" height={bb - bt} rx="5" fill={c} />
+            </g>
+          );
+        })}
+      </g>
+      <path className="ha-dash" d="M52 318L100 280L148 248L196 238L244 192L292 150L346 104" fill="none" stroke="#fff" strokeOpacity=".85" strokeWidth="3" strokeLinecap="round" strokeDasharray="6 8" />
+      <circle className="ha-pulse" cx="346" cy="104" r="9" fill="#2ee59d" />
+      <Sparkle x={72} y={110} d={0.2} s={1} c="#2ee59d" /><Sparkle x={338} y={310} d={1.1} s={0.9} />
+    </>
+  );
+}
+
+function Liquidity({ u }) {
+  return (
+    <>
+      <Glow id={`${u}g`} color="#36d1c4" />
+      <rect className="ha-pulse" x="40" y="258" width="320" height="56" rx="8" fill="#36d1c4" fillOpacity=".22" stroke="#36d1c4" strokeOpacity=".8" strokeWidth="2" />
+      <rect className="ha-pulse" x="40" y="96" width="320" height="56" rx="8" fill="#ff5470" fillOpacity=".2" stroke="#ff5470" strokeOpacity=".8" strokeWidth="2" style={{ animationDelay: '-2.5s' }} />
+      <text x="56" y="292" className="ha-text" fontSize="16" fill="#36d1c4" letterSpacing="3">DEMAND OB</text>
+      <text x="56" y="130" className="ha-text" fontSize="16" fill="#ff7a90" letterSpacing="3">SUPPLY OB</text>
+      <line className="ha-dash" x1="30" x2="370" y1="64" y2="64" stroke="#ffe08a" strokeWidth="3" strokeDasharray="6 8" strokeLinecap="round" />
+      <line className="ha-dash" x1="30" x2="370" y1="344" y2="344" stroke="#ffe08a" strokeWidth="3" strokeDasharray="6 8" strokeLinecap="round" />
+      {[110, 160, 210, 260, 310].map((x, i) => <g key={x}><circle className="ha-twinkle" style={{ animationDelay: `${i * 0.4}s` }} cx={x} cy="64" r="5" fill="#ffe08a" /><circle className="ha-twinkle" style={{ animationDelay: `${i * 0.4 + 0.2}s` }} cx={x} cy="344" r="5" fill="#ffe08a" /></g>)}
+      <g className="ha-float">
+        <path d="M44 286L96 214L140 246L190 168L236 214L292 76L340 120" fill="none" stroke="#fff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="292" cy="76" r="9" fill="#ffe08a" /><circle cx="340" cy="120" r="7" fill="#fff" />
+      </g>
+      <text x="200" y="52" textAnchor="middle" className="ha-text" fontSize="14" fill="#ffe08a" letterSpacing="4">LIQUIDITY</text>
+    </>
+  );
+}
+
+function Bos({ u }) {
+  return (
+    <>
+      <Glow id={`${u}g`} color="#ff7a59" />
+      <g stroke="#ff7a59" strokeOpacity=".16" strokeWidth="1">{[...Array(7)].map((_, i) => <line key={i} x1="30" x2="370" y1={70 + i * 46} y2={70 + i * 46} />)}</g>
+      <line className="ha-dash" x1="150" x2="372" y1="150" y2="150" stroke="#ffd27a" strokeWidth="3" strokeDasharray="8 8" strokeLinecap="round" />
+      <g className="ha-float">
+        <path d="M40 316L92 238L130 276L176 150L218 214L262 150L284 118L350 70" fill="none" stroke="#fff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+        {[[92, 238, 'HL'], [176, 150, 'HH'], [218, 214, 'HL']].map(([x, y, t]) => <g key={t + x}><circle cx={x} cy={y} r="8" fill="#ff7a59" /><text x={x} y={y + (t === 'HH' ? -18 : 28)} textAnchor="middle" className="ha-text" fontSize="15" fill="#ffd27a">{t}</text></g>)}
+      </g>
+      <circle className="ha-pulse" cx="262" cy="150" r="12" fill="#ff7a59" />
+      <g className="ha-rise"><rect x="286" y="162" width="76" height="34" rx="17" fill="#ff7a59" /><text x="324" y="185" textAnchor="middle" className="ha-text" fontSize="18" fill="#fff" letterSpacing="2">BOS</text></g>
+      <Sparkle x={340} y={60} d={0.4} s={1.1} c="#ffd27a" /><Sparkle x={70} y={110} d={1.2} s={0.9} /><Sparkle x={330} y={320} d={0.8} s={0.8} c="#ffd27a" />
+    </>
+  );
+}
+
+const ART = { gold: Gold, silver: Silver, btc: Btc, eth: Eth, sol: Sol, forex: Forex, goldcoin: GoldCoin, xrp: Xrp, candles: Candles, liquidity: Liquidity, bos: Bos };
 export const HERO_KEYS = Object.keys(ART);
 
-/** One of six animated market illustrations. `kind` is a key of HERO_KEYS. Decorative: hidden from assistive tech. */
+/** One of eleven animated market illustrations (the 10 course-icon presets in lib/courseIcons.js, plus forex). `kind` is a key of HERO_KEYS. Decorative: hidden from assistive tech. */
 function HeroArt({ kind = 'gold', className = '' }) {
   const u = useId().replace(/:/g, '');
   const Art = ART[kind] || Gold;

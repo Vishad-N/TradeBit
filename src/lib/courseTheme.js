@@ -1,3 +1,5 @@
+import { resolveIcon } from './courseIcons.js';
+
 // Visual identity per market. Purely presentational: the API has no "asset" field, so it is inferred from the
 // course title / slug. Anything unrecognised gets the house lime "general" theme.
 export const ASSET_THEMES = {
@@ -37,10 +39,13 @@ const HERO_ORDER = ['gold', 'btc', 'eth', 'sol', 'forex', 'silver'];
 const hash = (t) => [...String(t)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 17);
 
 /**
- * The market whose illustration + accent colour a course uses. A recognised market (gold, BTC, ...) wins; any other course
- * gets one of the six by a stable hash of its slug, so the choice never changes between visits and the admin needs to do nothing.
+ * The theme (accent colour + illustration key) a course uses. A chosen or id-hashed icon preset sets it, so the accent always
+ * matches the icon (see lib/courseIcons.js). Custom-SVG courses, and courses with no id yet (still loading), keep the original
+ * rule: a recognised market (gold, BTC, ...) wins; any other course gets one of the six by a stable hash of its slug.
  */
 export function visualOf(course) {
+  const icon = resolveIcon(course);
+  if (icon?.type === 'preset') return icon.preset.theme;
   const t = assetOf(course);
   if (t.key !== 'gen') return t;
   const seed = course?.slug || course?.title || course?.id || '';

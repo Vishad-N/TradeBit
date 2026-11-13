@@ -32,6 +32,25 @@ import { StorageService } from '../storage/storage.service';
 import { AuthGuard, AuthUser, CurrentUser, Roles } from '../auth/auth.guard';
 import { sniff } from '../gallery/gallery.module';
 
+/** Keep in sync with src/lib/courseIcons.js (PRESET_IDS). */
+export const COURSE_ICON_PRESETS = ['gold-coin', 'gold-bars', 'silver-coin', 'bitcoin', 'ethereum', 'solana', 'xrp', 'candlestick', 'liquidity', 'bos'] as const;
+const SVG_MAX_CHARS = 20000;
+
+/** Trims and validates an admin-supplied SVG. Returns null for blank input; throws on anything that could run script. */
+export function cleanCustomSvg(input: string): string | null {
+  const svg = input.trim();
+  if (!svg) return null;
+  const bad = () => new BadRequestException('Custom icon must be a single, simple <svg> (no scripts, event handlers, external links or embedded HTML).');
+  if (svg.length > SVG_MAX_CHARS) throw new BadRequestException('Custom icon is too large (20 KB max).');
+  if (!/^<svg[\s>]/i.test(svg) || !/<\/svg>\s*$/i.test(svg)) throw bad();
+  if ((svg.match(/<svg[\s>]/gi) || []).length !== 1) throw bad();
+  if (/<\s*(script|foreignObject|iframe|object|embed|link|meta|image|a|audio|video|style)[\s/>]/i.test(svg)) throw bad();
+  if (/\son[a-z]+\s*=/i.test(svg) || /javascript:|data:text\/html|<!ENTITY|<!DOCTYPE/i.test(svg)) throw bad();
+  if (/(?:xlink:)?href\s*=\s*["']\s*(?!#)/i.test(svg)) throw bad(); // only in-document #refs
+  if (/url\(\s*["']?\s*(?!#)/i.test(svg)) throw bad();
+  return svg;
+}
+
 const THUMB_MAX_BYTES = 3 * 1024 * 1024;
 const MAX_DURATION = 60 * 60 * 24; // a lesson is never longer than a day
 const COMPLETE_AT = 0.9; // watching 90% of a video counts as finished
@@ -46,6 +65,10 @@ class CourseDto {
   @IsOptional() @IsString() @MaxLength(6000) description?: string;
   @IsOptional() @IsIn(['PUBLIC', 'CLUB', 'ENROLLED']) access?: CourseAccess;
   @IsOptional() @IsBoolean() published?: boolean;
+  /** One of COURSE_ICON_PRESETS, or '' / null for "random from presets". */
+  @IsOptional() @IsIn([...COURSE_ICON_PRESETS, '']) svgPresetId?: string | null;
+  /** Inline SVG markup; '' / null clears it. */
+  @IsOptional() @IsString() @MaxLength(SVG_MAX_CHARS) customSvg?: string | null;
 }
 class ModuleDto {
   @IsOptional() @IsString() @MaxLength(160) title?: string;
@@ -168,6 +191,8 @@ export class CoursesService {
         title: course.title,
         summary: course.summary,
         thumbnail: this.thumb(course),
+        svgPresetId: course.svgPresetId,
+        customSvg: course.customSvg,
         access: course.access,
         published: course.published,
         moduleCount: course.modules.length,
@@ -245,6 +270,8 @@ export class CoursesService {
       summary: course.summary,
       description: course.description,
       thumbnail: this.thumb(course),
+      svgPresetId: course.svgPresetId,
+      customSvg: course.customSvg,
       access: course.access,
       published: course.published,
       canAccess: access.allowed,
@@ -280,7 +307,7 @@ export class CoursesService {
     const mine = byLesson.get(lesson.id);
 
     return {
-      course: { id: course.id, slug: course.slug, title: course.title, published: course.published },
+      course: { id: course.id, slug: course.slug, title: course.title, published: course.published, svgPresetId: course.svgPresetId, hasCustomIcon: Boolean(course.customSvg) },
       module: { id: lesson.module.id, title: lesson.module.title },
       lesson: {
         id: lesson.id,
@@ -353,7 +380,7 @@ export class CoursesService {
       const lessons = r.modules.flatMap((m) => m.lessons);
       return {
         id: r.id, slug: r.slug, title: r.title, summary: r.summary, access: r.access, published: r.published,
-        thumbnail: this.thumb(r), createdAt: r.createdAt, updatedAt: r.updatedAt,
+        thumbnail: this.thumb(r), svgPresetId: r.svgPresetId, customSvg: r.customSvg, createdAt: r.createdAt, updatedAt: r.updatedAt,
         moduleCount: r.modules.length, lessonCount: lessons.length, missingVideo: lessons.filter((l) => !l.vimeoId).length,
         durationSec: lessons.reduce((n, l) => n + l.durationSec, 0), enrolled: r._count.enrollments,
       };
@@ -389,6 +416,8 @@ export class CoursesService {
         summary: dto.summary?.trim() || '',
         description: dto.description?.trim() || '',
         access: dto.access || 'PUBLIC',
+        svgPresetId: dto.svgPresetId || null, // null = random from presets
+        customSvg: dto.customSvg ? cleanCustomSvg(dto.customSvg) : null,
         published: false, // always starts as a draft; publish once it has lessons
         sortOrder: (max._max.sortOrder ?? -1) + 1,
       },
@@ -403,6 +432,8 @@ export class CoursesService {
     if (dto.summary !== undefined) data.summary = dto.summary.trim();
     if (dto.description !== undefined) data.description = dto.description.trim();
     if (dto.access !== undefined) data.access = dto.access;
+    if (dto.svgPresetId !== undefined) data.svgPresetId = dto.svgPresetId || null;
+    if (dto.customSvg !== undefined) data.customSvg = dto.customSvg ? cleanCustomSvg(dto.customSvg) : null;
     if (dto.slug !== undefined && dto.slug !== existing.slug) {
       const taken = await this.prisma.course.findUnique({ where: { slug: dto.slug }, select: { id: true } });
       if (taken) throw new ConflictException('Another course already uses that web address.');
