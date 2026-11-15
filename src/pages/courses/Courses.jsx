@@ -95,7 +95,8 @@ export default function Courses() {
         <LazyScene kind="spheres" count={22} className="cx-hero-3d cx-burst" />
         <div className="cx-hero-in">
           <motion.span className="cx-kicker" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}><i className="cx-live" />Trading academy</motion.span>
-          <h1 className="cx-h1"><em>Advanced</em> Trading Courses</h1>
+          <h1 className="cx-h1"><em>Gold and Crypto</em> Advanced Mastery Training</h1>
+          <p className="cx-sub">Complete Professional Trading Program (From Basic to Advanced)</p>
           <p className="cx-lead">From the basics to advanced setups, one module at a time. Clear video lessons that teach you to read price and manage risk with discipline.</p>
           {!authLoading && !user && (
             <motion.div className="cx-login" role="note" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
