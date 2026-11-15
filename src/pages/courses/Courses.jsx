@@ -95,8 +95,8 @@ export default function Courses() {
         <LazyScene kind="spheres" count={22} className="cx-hero-3d cx-burst" />
         <div className="cx-hero-in">
           <motion.span className="cx-kicker" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}><i className="cx-live" />Trading academy</motion.span>
-          <h1 className="cx-h1">Trading courses for <em>gold, silver, forex</em> &amp; crypto</h1>
-          <p className="cx-lead">Structured video lessons on price action, market structure and risk, across XAU, XAG, FX, Bitcoin, Ethereum and Solana. Your place and progress are saved.</p>
+          <h1 className="cx-h1"><em>Advanced</em> Trading Courses</h1>
+          <p className="cx-lead">Structured video lessons on price action, market structure and risk management. Your place and progress are saved.</p>
           {!authLoading && !user && (
             <motion.div className="cx-login" role="note" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
               <span className="cx-login-ic"><Icon name="lock" size={18} /></span>
@@ -104,12 +104,6 @@ export default function Courses() {
               <Link className="btn btn-lime cs-btn" to="/login?next=%2Fcourses">Log in <span className="ar">→</span></Link>
             </motion.div>
           )}
-          <ul className="cx-ticker" aria-label="Markets covered">
-            {['XAU', 'XAG', 'FX', 'BTC', 'ETH', 'SOL'].map((s, i) => {
-              const t = Object.values(ASSET_THEMES).find((x) => x.sym === s);
-              return <motion.li key={s} style={{ '--ac': t.color }} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 + i * 0.07 }}><b>{s}</b><span>{t.label}</span></motion.li>;
-            })}
-          </ul>
         </div>
       </header>
 
