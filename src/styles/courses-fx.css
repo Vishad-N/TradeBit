@@ -30,6 +30,66 @@
 .cx-hero-sm{padding-bottom:clamp(36px,5vw,64px)}
 .cx-hero-in{position:relative;z-index:2;max-width:var(--max);margin:0 auto;display:flex;flex-direction:column;gap:clamp(14px,2vw,22px);align-items:flex-start}
 .cx-hero::after{content:"";position:absolute;inset:auto 0 0;height:40%;background:linear-gradient(0deg,var(--bg1),transparent);z-index:1;pointer-events:none}
+/* Metallic + glass hybrid hero background. Pure CSS: one inline-SVG noise tile (<1 KB, rasterised once), gradients and a screen blend.
+   .cx-metal  = dark base + light leaks around the sphere cluster + a soft floor reflection
+   ::before   = brushed metal (horizontal streaks), strongest on the left, fading out by ~60%
+   ::after    = frosted glass (veil, fine grain, diagonal reflection, left edge highlight), fading in from ~40%
+   The two masks overlap in the middle so the metal melts into the glass. All layers are static: no animation, no backdrop-filter. */
+.cx-metal{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+  background:
+    radial-gradient(ellipse 22% 38% at 79% 46%,rgba(255,196,64,.15),transparent 70%),
+    radial-gradient(ellipse 20% 34% at 90% 36%,rgba(96,150,255,.15),transparent 70%),
+    radial-gradient(ellipse 20% 34% at 70% 70%,rgba(166,107,255,.13),transparent 70%),
+    radial-gradient(ellipse 30% 9% at 80% 96%,rgba(255,255,255,.07),transparent 75%),
+    linear-gradient(180deg,#0b0e13 0%,#080a0e 100%);
+  background-blend-mode:screen,screen,screen,normal,normal}
+.cx-metal::before,.cx-metal::after{content:"";position:absolute;inset:0}
+.cx-metal::before{
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .9' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .7 -.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") 0 0/360px 240px,
+    repeating-linear-gradient(0deg,rgba(255,255,255,.014) 0 1px,transparent 1px 4px),
+    linear-gradient(100deg,rgba(255,255,255,.055) 0%,rgba(255,255,255,.012) 38%,transparent 62%);
+  opacity:.3;
+  -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 18%,transparent 62%);mask-image:linear-gradient(90deg,#000 0%,#000 22%,transparent 64%)}
+.cx-metal::after{
+  background:
+    linear-gradient(115deg,transparent 52%,rgba(255,255,255,.035) 58%,rgba(255,255,255,.07) 61%,transparent 68%),
+    linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.012) 55%,rgba(255,255,255,.035)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .35 -.12'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E") 0 0/160px 160px;
+  box-shadow:inset 1px 0 0 rgba(255,255,255,.06);
+  -webkit-mask-image:linear-gradient(90deg,transparent 38%,#000 78%);mask-image:linear-gradient(90deg,transparent 38%,#000 78%)}
+@media (max-width:900px){
+  /* phones/tablets: the spheres sit behind or below the copy, so keep the whole effect quieter and centre the leaks */
+  .cx-metal::before{opacity:.4;-webkit-mask-image:linear-gradient(90deg,#000,transparent 90%);mask-image:linear-gradient(90deg,#000,transparent 90%)}
+  .cx-metal::after{opacity:.5;-webkit-mask-image:linear-gradient(90deg,transparent 20%,#000);mask-image:linear-gradient(90deg,transparent 20%,#000)}
+}
+/* Depth / layered liquidity zones, stacked above .cx-metal and below the sphere canvas (z 4), so the spheres read as the front layer.
+   Glass planes sit at different translateZ depths inside one perspective box; price lines and order blocks float between them.
+   Everything is low-opacity and masked out on the left so the copy stays clean. Only transform is animated (compositor-only). */
+.cx-depth{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;perspective:1100px;perspective-origin:78% 50%;
+  -webkit-mask-image:linear-gradient(90deg,transparent 14%,rgba(0,0,0,.55) 40%,#000 66%);mask-image:linear-gradient(90deg,transparent 14%,rgba(0,0,0,.55) 40%,#000 66%)}
+.cx-depth>*{position:absolute;display:block;transform-style:preserve-3d}
+.cx-depth .z{--c:111,160,255;left:26%;right:-6%;border-block:1px solid rgba(var(--c),.16);
+  background:linear-gradient(180deg,rgba(var(--c),.07),rgba(var(--c),.012) 70%,rgba(255,255,255,.02));
+  box-shadow:0 0 28px rgba(var(--c),.07),inset 0 1px 0 rgba(255,255,255,.06),inset 0 -14px 28px -18px rgba(var(--c),.10)}
+.cx-depth .z1{--c:54,209,196;top:14%;height:15%;opacity:.55;transform:translateZ(-240px) rotateX(7deg)}
+.cx-depth .z2{top:40%;height:21%;opacity:.8;transform:translateZ(-130px) rotateX(7deg)}
+.cx-depth .z3{--c:255,176,32;top:70%;height:15%;opacity:.7;transform:translateZ(-40px) rotateX(7deg)}
+.cx-depth .ln{right:0;top:0;width:64%;height:100%;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.cx-depth .ln polyline{vector-effect:non-scaling-stroke;stroke-width:1.2}
+.cx-depth .ln .a{stroke:rgba(255,255,255,.13);transform:translateZ(-90px)}
+.cx-depth .ln .b{stroke:rgba(255,196,64,.14);stroke-dasharray:3 7;transform:translateZ(-190px)}
+.cx-depth .ob{--c:46,229,157;border:1px solid rgba(var(--c),.30);border-radius:3px;
+  background:linear-gradient(135deg,rgba(var(--c),.14),rgba(var(--c),.03));box-shadow:0 0 18px rgba(var(--c),.12);will-change:transform}
+.cx-depth .ob1{--c:255,84,112;right:17%;top:23%;width:7%;height:5.5%;transform:translateZ(-170px);animation:cx-ob 15s ease-in-out infinite alternate}
+.cx-depth .ob2{left:50%;top:49%;width:6%;height:5%;transform:translateZ(-90px);animation:cx-ob 18s ease-in-out -6s infinite alternate}
+.cx-depth .ob3{--c:255,176,32;right:7%;top:66%;width:8%;height:5%;transform:translateZ(-30px);animation:cx-ob 13s ease-in-out -3s infinite alternate}
+@keyframes cx-ob{from{translate:0 -6px}to{translate:10px 8px}}
+@media (max-width:900px){
+  .cx-depth{opacity:.7;-webkit-mask-image:linear-gradient(90deg,transparent 4%,#000 70%);mask-image:linear-gradient(90deg,transparent 4%,#000 70%)}
+  .cx-depth .z{left:10%}.cx-depth .ob3,.cx-depth .ob2{display:none}
+}
+@media (prefers-reduced-motion:reduce){.cx-depth .ob{animation:none}}
 .cx-bd{position:absolute;inset:auto 0 0;width:100%;height:78%;opacity:.55;pointer-events:none;z-index:0;-webkit-mask-image:linear-gradient(180deg,transparent,#000 35%);mask-image:linear-gradient(180deg,transparent,#000 35%)}
 .cx-bd-candles line{stroke-width:1.6}
 .cx-bd-candles .up{fill:var(--gain);stroke:var(--gain);opacity:.55}

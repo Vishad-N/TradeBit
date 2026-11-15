@@ -91,6 +91,15 @@ export default function Courses() {
   return (
     <Shell theme={active}>
       <header className="cx-hero">
+        <div className="cx-metal" aria-hidden="true" />
+        <div className="cx-depth" aria-hidden="true">
+          <i className="z z1" /><i className="z z2" /><i className="z z3" />
+          <svg className="ln" viewBox="0 0 600 400" preserveAspectRatio="none" focusable="false">
+            <polyline className="a" points="0,300 70,262 130,282 210,196 270,226 340,140 420,170 520,84 600,104" />
+            <polyline className="b" points="0,338 90,312 170,326 250,258 330,282 410,214 500,236 600,170" />
+          </svg>
+          <i className="ob ob1" /><i className="ob ob2" /><i className="ob ob3" />
+        </div>
         <AssetBackdrop key={active.key} seed={active.key} />
         <LazyScene kind="spheres" count={22} className="cx-hero-3d cx-burst" />
         <div className="cx-hero-in">
