@@ -98,7 +98,7 @@ export default function CourseIconPicker({ value, onChange, courseId, id = 'cour
           ))}
         </ul>
       )}
-      <small className="ci-help">New courses automatically get a random gold/crypto animated icon from the 10 presets. You can change it anytime.</small>
+      <small className="ci-help">New courses automatically get a random gold/crypto animated icon from the 10 gold/crypto presets. The ICT, setup and order-flow icons are concept diagrams you pick by hand. You can change it anytime.</small>
 
       {value.mode === 'custom' && (
         <div className="ci-custom">

@@ -22,10 +22,19 @@ export const ICON_PRESETS = [
   { id: 'candlestick', kind: 'candles',   label: 'Price action / candlesticks', sym: 'PA', color: '#2ee59d', rgb: '46,229,157' },
   { id: 'liquidity',   kind: 'liquidity', label: 'Liquidity / order blocks',  sym: 'LQ',  color: '#36d1c4', rgb: '54,209,196' },
   { id: 'bos',         kind: 'bos',       label: 'SMC · Break of Structure',  sym: 'BOS', color: '#ff7a59', rgb: '255,122,89' },
-].map((p) => ({ ...p, tag: 'Gold & crypto', theme: { key: p.kind, label: p.label, sym: p.sym, color: p.color, rgb: p.rgb, tag: 'Gold & crypto' } }));
+  // Concept illustrations: each one explains the idea its course teaches. Admin-pick only; never chosen by "Random".
+  { id: 'ict',         kind: 'ict',       label: 'ICT · Sweep, shift & FVG',   sym: 'ICT', color: '#ffb020', rgb: '255,176,32',  concept: true },
+  { id: 'setup',       kind: 'setup',     label: 'High-probability setup (1:3)', sym: 'RR', color: '#2ee59d', rgb: '46,229,157',  concept: true },
+  { id: 'order-flow',  kind: 'orderflow', label: 'Order flow & volume profile', sym: 'VOL', color: '#6fa0ff', rgb: '111,160,255', concept: true },
+].map((p) => {
+  const tag = p.concept ? 'Concepts' : 'Gold & crypto';
+  return { ...p, tag, theme: { key: p.kind, label: p.label, sym: p.sym, color: p.color, rgb: p.rgb, tag } };
+});
 
 export const PRESET_IDS = ICON_PRESETS.map((p) => p.id);
 export const presetById = (id) => ICON_PRESETS.find((p) => p.id === id) || null;
+// "Random" keeps drawing from the original gold/crypto set so existing courses keep the icon they already show.
+const RANDOM_POOL = ICON_PRESETS.filter((p) => !p.concept);
 
 /** Mode of the admin picker: 'random' | 'custom' | a preset id. */
 export const iconMode = (c) => (c?.customSvg ? 'custom' : presetById(c?.svgPresetId) ? c.svgPresetId : 'random');
@@ -34,7 +43,7 @@ const hash = (t) => [...String(t)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >
 
 /** Deterministic "random" preset for a course id. Returns null when the course has no id yet (still loading). */
 export function randomPresetFor(courseId) {
-  return courseId ? ICON_PRESETS[hash(courseId) % ICON_PRESETS.length] : null;
+  return courseId ? RANDOM_POOL[hash(courseId) % RANDOM_POOL.length] : null;
 }
 
 /**

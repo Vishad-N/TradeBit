@@ -255,10 +255,103 @@ function Bos({ u }) {
   );
 }
 
-const ART = { gold: Gold, silver: Silver, btc: Btc, eth: Eth, sol: Sol, forex: Forex, goldcoin: GoldCoin, xrp: Xrp, candles: Candles, liquidity: Liquidity, bos: Bos };
+// ---- Concept illustrations: each one draws the idea its course teaches (a short visual explainer, not just a symbol).
+
+/** Advanced ICT: 1 liquidity sits above equal highs -> 2 price sweeps it -> 3 market-structure shift -> 4 retrace into the fair value gap, enter, target the lows. */
+function Ict({ u }) {
+  const step = (n, x, y) => (
+    <g key={n}><circle cx={x} cy={y} r="11" fill="#ffd27a" /><text x={x} y={y + 5} textAnchor="middle" className="ha-text" fontSize="14" fill="#2a1d00">{n}</text></g>
+  );
+  return (
+    <>
+      <Glow id={`${u}g`} color="#ffb020" />
+      <g stroke="#ffb020" strokeOpacity=".14" strokeWidth="1">{[...Array(7)].map((_, i) => <line key={i} x1="24" x2="376" y1={60 + i * 46} y2={60 + i * 46} />)}</g>
+      {/* 1 - equal highs = resting liquidity */}
+      <line className="ha-dash" x1="60" x2="222" y1="124" y2="124" stroke="#ffd27a" strokeWidth="2.5" strokeDasharray="6 8" strokeLinecap="round" />
+      <text x="40" y="106" className="ha-text" fontSize="13" fill="#ffd27a" letterSpacing="2">EQUAL HIGHS</text>
+      {/* 3 - structure shift: price closes through the last low */}
+      <line className="ha-dash" x1="112" x2="252" y1="196" y2="196" stroke="#ff7a90" strokeWidth="2.5" strokeDasharray="6 8" strokeLinecap="round" />
+      <text x="132" y="216" className="ha-text" fontSize="13" fill="#ff7a90" letterSpacing="3">MSS</text>
+      {/* 4 - fair value gap: the imbalance price returns to */}
+      <rect className="ha-pulse" x="262" y="206" width="52" height="42" rx="5" fill="#36d1c4" fillOpacity=".25" stroke="#36d1c4" strokeWidth="2" />
+      <text x="322" y="226" className="ha-text" fontSize="13" fill="#9ff3ea" letterSpacing="2">FVG</text>
+      <g className="ha-float">
+        <path d="M30 282L74 128L112 196L162 124L200 82L252 262L290 208L372 336" fill="none" stroke="#fff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+      <circle className="ha-pulse" cx="200" cy="82" r="9" fill="#ffd27a" />
+      {step(1, 140, 150)}{step(2, 228, 70)}{step(3, 250, 292)}{step(4, 296, 186)}
+      <circle className="ha-twinkle" cx="290" cy="208" r="7" fill="#36d1c4" />
+      <g className="ha-rise"><rect x="318" y="326" width="56" height="28" rx="14" fill="#36d1c4" /><text x="346" y="345" textAnchor="middle" className="ha-text" fontSize="14" fill="#06322e" letterSpacing="2">SELL</text></g>
+      <text x="200" y="378" textAnchor="middle" className="ha-text" fontSize="13" fill="#ffd27a" letterSpacing="4">SWEEP → SHIFT → GAP → ENTRY</text>
+    </>
+  );
+}
+
+/** High-probability setups: three confluences stack up, and only then is a 1 : 3 risk-to-reward trade taken. */
+function Setup({ u }) {
+  const pills = [['TREND', 'with the bigger trend'], ['KEY LEVEL', 'support / demand zone'], ['TRIGGER', 'confirmation candle']];
+  return (
+    <>
+      <Glow id={`${u}g`} color="#2ee59d" />
+      <text x="40" y="62" className="ha-text" fontSize="13" fill="#9ff3c9" letterSpacing="3">CONFLUENCE</text>
+      {pills.map(([t, s], i) => (
+        <g key={t} className="ha-rise" style={{ animationDelay: `${i * 0.5}s` }}>
+          <rect x="40" y={80 + i * 58} width="156" height="46" rx="12" fill="#0f2a22" stroke="#2ee59d" strokeOpacity=".8" strokeWidth="2" />
+          <circle cx="62" cy={103 + i * 58} r="11" fill="#2ee59d" />
+          <path d={`M56 ${103 + i * 58}l4 4 8-9`} fill="none" stroke="#05261a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          <text x="82" y={100 + i * 58} className="ha-text" fontSize="14" fill="#fff" letterSpacing="2">{t}</text>
+          <text x="82" y={115 + i * 58} className="ha-text" fontSize="9.5" fill="#9ff3c9" fontWeight="500">{s}</text>
+        </g>
+      ))}
+      <path className="ha-dash" d="M202 150L230 150" stroke="#2ee59d" strokeWidth="3" strokeLinecap="round" strokeDasharray="6 8" />
+      {/* the trade: entry, stop 1R below, target 3R above */}
+      <rect x="236" y="84" width="130" height="150" rx="6" fill="#2ee59d" fillOpacity=".16" stroke="#2ee59d" strokeOpacity=".7" strokeWidth="2" />
+      <rect x="236" y="234" width="130" height="50" rx="6" fill="#ff5470" fillOpacity=".18" stroke="#ff5470" strokeOpacity=".8" strokeWidth="2" />
+      <line x1="236" x2="366" y1="234" y2="234" stroke="#fff" strokeWidth="2.5" />
+      <text x="246" y="106" className="ha-text" fontSize="13" fill="#2ee59d" letterSpacing="1">TARGET +3R</text>
+      <text x="246" y="226" className="ha-text" fontSize="12" fill="#fff" letterSpacing="2">ENTRY</text>
+      <text x="246" y="274" className="ha-text" fontSize="14" fill="#ff7a90" letterSpacing="2">STOP −1R</text>
+      <g className="ha-float"><path d="M298 252L314 216L328 228L342 168L358 104" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" /></g>
+      <circle className="ha-pulse" cx="358" cy="104" r="7" fill="#2ee59d" />
+      <g className="ha-rise"><rect x="104" y="318" width="192" height="40" rx="20" fill="#2ee59d" /><text x="200" y="344" textAnchor="middle" className="ha-text" fontSize="16" fill="#05261a" letterSpacing="2">RISK 1 : REWARD 3</text></g>
+      <Sparkle x={366} y={66} d={0.3} s={1} c="#9ff3c9" />
+    </>
+  );
+}
+
+/** Order flow & volume profile: volume per price level builds a histogram; the biggest bar is the POC (fair value), the value area frames it. */
+function OrderFlow({ u }) {
+  // [y, widthLeft(sell), widthRight(buy)] one row per price level, top to bottom
+  const rows = [[86, 18, 12], [110, 30, 26], [134, 52, 40], [158, 74, 66], [182, 100, 94], [206, 78, 86], [230, 58, 50], [254, 36, 30], [278, 22, 14]];
+  const cx = 196;
+  return (
+    <>
+      <Glow id={`${u}g`} color="#6fa0ff" />
+      <text x="40" y="56" className="ha-text" fontSize="13" fill="#9db9ff" letterSpacing="3">VOLUME PROFILE</text>
+      <rect className="ha-pulse" x="30" y="146" width="340" height="108" rx="8" fill="#6fa0ff" fillOpacity=".1" stroke="#6fa0ff" strokeOpacity=".5" strokeDasharray="5 7" strokeWidth="1.5" />
+      {rows.map(([y, l, r], i) => (
+        <g key={y} className="ha-slide-a" style={{ animationDelay: `${-i * 0.3}s` }}>
+          <rect x={cx - l} y={y} width={l} height="20" rx="3" fill="#ff5470" fillOpacity=".85" />
+          <rect x={cx} y={y} width={r} height="20" rx="3" fill="#2ee59d" fillOpacity=".85" />
+        </g>
+      ))}
+      <line x1={cx} x2={cx} y1="76" y2="304" stroke="#fff" strokeOpacity=".35" strokeWidth="1.5" />
+      {/* POC = the price with the most volume */}
+      <line className="ha-dash" x1="30" x2="370" y1="192" y2="192" stroke="#ffd27a" strokeWidth="3" strokeDasharray="6 8" strokeLinecap="round" />
+      <g className="ha-rise"><rect x="296" y="168" width="64" height="26" rx="13" fill="#ffd27a" /><text x="328" y="186" textAnchor="middle" className="ha-text" fontSize="14" fill="#2a1d00" letterSpacing="2">POC</text></g>
+      <text x="34" y="140" className="ha-text" fontSize="12" fill="#9db9ff" letterSpacing="2">VAH</text>
+      <text x="34" y="270" className="ha-text" fontSize="12" fill="#9db9ff" letterSpacing="2">VAL</text>
+      <g fontSize="12" className="ha-text"><text x="232" y="322" fill="#ff7a90" letterSpacing="2" textAnchor="end">SELLERS</text><text x="248" y="322" fill="#2ee59d" letterSpacing="2">BUYERS</text></g>
+      <text x="200" y="352" textAnchor="middle" className="ha-text" fontSize="12.5" fill="#9db9ff" letterSpacing="3">MOST VOLUME = FAIR PRICE</text>
+      <Sparkle x={344} y={70} d={0.4} s={1} c="#9db9ff" /><Sparkle x={62} y={330} d={1.2} s={0.8} />
+    </>
+  );
+}
+
+const ART = { gold: Gold, silver: Silver, btc: Btc, eth: Eth, sol: Sol, forex: Forex, goldcoin: GoldCoin, xrp: Xrp, candles: Candles, liquidity: Liquidity, bos: Bos, ict: Ict, setup: Setup, orderflow: OrderFlow };
 export const HERO_KEYS = Object.keys(ART);
 
-/** One of eleven animated market illustrations (the 10 course-icon presets in lib/courseIcons.js, plus forex). `kind` is a key of HERO_KEYS. Decorative: hidden from assistive tech. */
+/** One of fourteen animated illustrations (the course-icon presets in lib/courseIcons.js, plus forex). `kind` is a key of HERO_KEYS. Decorative: hidden from assistive tech. */
 function HeroArt({ kind = 'gold', className = '' }) {
   const u = useId().replace(/:/g, '');
   const Art = ART[kind] || Gold;

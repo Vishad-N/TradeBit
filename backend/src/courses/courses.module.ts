@@ -33,7 +33,7 @@ import { AuthGuard, AuthUser, CurrentUser, Roles } from '../auth/auth.guard';
 import { sniff } from '../gallery/gallery.module';
 
 /** Keep in sync with src/lib/courseIcons.js (PRESET_IDS). */
-export const COURSE_ICON_PRESETS = ['gold-coin', 'gold-bars', 'silver-coin', 'bitcoin', 'ethereum', 'solana', 'xrp', 'candlestick', 'liquidity', 'bos'] as const;
+export const COURSE_ICON_PRESETS = ['gold-coin', 'gold-bars', 'silver-coin', 'bitcoin', 'ethereum', 'solana', 'xrp', 'candlestick', 'liquidity', 'bos', 'ict', 'setup', 'order-flow'] as const;
 const SVG_MAX_CHARS = 20000;
 
 /** Trims and validates an admin-supplied SVG. Returns null for blank input; throws on anything that could run script. */
