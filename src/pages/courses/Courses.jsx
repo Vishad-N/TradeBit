@@ -96,7 +96,7 @@ export default function Courses() {
         <div className="cx-hero-in">
           <motion.span className="cx-kicker" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}><i className="cx-live" />Trading academy</motion.span>
           <h1 className="cx-h1"><em>Advanced</em> Trading Courses</h1>
-          <p className="cx-lead">Structured video lessons on price action, market structure and risk management. Your place and progress are saved.</p>
+          <p className="cx-lead">From the basics to advanced setups, one module at a time. Clear video lessons that teach you to read price and manage risk with discipline.</p>
           {!authLoading && !user && (
             <motion.div className="cx-login" role="note" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
               <span className="cx-login-ic"><Icon name="lock" size={18} /></span>
