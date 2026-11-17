@@ -17,11 +17,17 @@ const RULES = [
   ['eth', /\b(ethereum|eth)\b/i], ['sol', /\b(solana|sol)\b/i], ['forex', /\b(forex|fx|currenc|eurusd|gbpusd|usd)/i],
 ];
 
-export function assetOf(course) {
+// Every course is presented as "Trading": no per-market (gold, silver, crypto...) flags, filters or labels.
+// RULES / per-market themes are kept only for the accent colour and illustration (see visualOf).
+const marketOf = (course) => {
   const text = `${course?.title || ''} ${course?.slug || ''}`;
   const hit = RULES.find(([, re]) => re.test(text));
   return ASSET_THEMES[hit ? hit[0] : 'gen'];
+};
+export function assetOf() {
+  return ASSET_THEMES.gen;
 }
+const asTrading = (t) => ({ ...t, label: ASSET_THEMES.gen.label, sym: ASSET_THEMES.gen.sym, tag: ASSET_THEMES.gen.tag });
 
 export const themeStyle = (t) => ({ '--ac': t.color, '--ac-rgb': t.rgb });
 
@@ -45,9 +51,9 @@ const hash = (t) => [...String(t)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >
  */
 export function visualOf(course) {
   const icon = resolveIcon(course);
-  if (icon?.type === 'preset') return icon.preset.theme;
-  const t = assetOf(course);
-  if (t.key !== 'gen') return t;
+  if (icon?.type === 'preset') return asTrading(icon.preset.theme);
+  const t = marketOf(course);
+  if (t.key !== 'gen') return asTrading(t);
   const seed = course?.slug || course?.title || course?.id || '';
-  return ASSET_THEMES[HERO_ORDER[hash(seed) % HERO_ORDER.length]];
+  return asTrading(ASSET_THEMES[HERO_ORDER[hash(seed) % HERO_ORDER.length]]);
 }
