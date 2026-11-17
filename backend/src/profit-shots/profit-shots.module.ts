@@ -21,7 +21,8 @@ import type { Response } from 'express';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
-import { AuthGuard, Roles } from '../auth/auth.guard';
+import { AuthGuard, AuthUser, CurrentUser, Roles } from '../auth/auth.guard';
+import { auditDelete } from '../audit/audit';
 
 const MAX_BYTES = 3 * 1024 * 1024;
 type Upload = { buffer: Buffer; size: number };
@@ -98,11 +99,12 @@ export class ProfitShotsService {
     return updated;
   }
 
-  async remove(id: string) {
+  /** The stored image file is kept (not deleted) so the audit snapshot is enough to restore the row. */
+  async remove(id: string, admin: AuthUser) {
     const r = await this.prisma.profitShot.findUnique({ where: { id } });
     if (!r) throw new NotFoundException('Image not found');
+    await auditDelete(this.prisma, admin, 'ProfitShot', id, r.imageKey, r);
     await this.prisma.profitShot.delete({ where: { id } });
-    await this.storage.deleteKey(r.imageKey).catch(() => undefined);
     return { deleted: true };
   }
 }
@@ -148,8 +150,8 @@ class ProfitShotsAdminController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.svc.remove(id);
+  remove(@Param('id') id: string, @CurrentUser() admin: AuthUser) {
+    return this.svc.remove(id, admin);
   }
 }
 

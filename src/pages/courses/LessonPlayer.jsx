@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
 import { motion, useMotionValue, useReducedMotion } from 'motion/react';
 import { coursesApi } from '../../services/coursesApi.js';
-import { fmtClock } from '../../lib/courses.js';
+import { fmtClock, mineText, mineTone } from '../../lib/courses.js';
 import { ORG, SITE_URL, assetOf, isoDuration, visualOf } from '../../lib/courseTheme.js';
 import { crumbs, useSeo } from '../../lib/seo.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -30,15 +30,20 @@ function Gate({ icon, title, children, action }) {
   );
 }
 
-function AccessGate({ reason, here }) {
+function AccessGate({ reason, here, slug }) {
   if (reason === 'LOGIN') {
     return <Gate icon="lock" title="Log in to watch this lesson" action={<Link className="btn btn-lime cs-btn" to={`/login?next=${here}`}>Log in <span className="ar">→</span></Link>}>Your progress is saved to your account, so you can pick up where you left off.</Gate>;
   }
+  // The course page is where a learner activates (pay / task) or renews, so every "no access yet" gate points there.
+  const course = slug ? <Link className="btn btn-lime cs-btn" to={`/courses/${slug}`}>See how to unlock it <span className="ar">→</span></Link> : null;
+  if (reason === 'EXPIRED') {
+    return <Gate icon="clock" title="Your access to this course has ended" action={course}>Renew it from the course page to keep watching.</Gate>;
+  }
   if (reason === 'CLUB') {
-    return <Gate icon="lock" title="This lesson is for 1% Club members" action={<Link className="btn btn-lime cs-btn" to="/1-percent-club">Join the 1% Club <span className="ar">→</span></Link>}>Free preview lessons in this course are open to everyone.</Gate>;
+    return <Gate icon="lock" title="This lesson is for 1% Club members" action={course || <Link className="btn btn-lime cs-btn" to="/1-percent-club">Join the 1% Club <span className="ar">→</span></Link>}>Members of the 1% Club can watch it. Other ways to unlock it are on the course page.</Gate>;
   }
   if (reason === 'ENROLL') {
-    return <Gate icon="lock" title="This lesson is for enrolled students" action={<Link className="btn btn-lime cs-btn" to="/contact">Ask about enrolment <span className="ar">→</span></Link>}>Free preview lessons in this course are open to everyone.</Gate>;
+    return <Gate icon="lock" title="This lesson is for enrolled students" action={course || <Link className="btn btn-lime cs-btn" to="/contact">Ask about enrolment <span className="ar">→</span></Link>}>Unlock the course to watch every lesson.</Gate>;
   }
   return <Gate icon="alert" title="This lesson is not available" />;
 }
@@ -128,7 +133,7 @@ function Stage({ data, user, onCompletedChange, playPct }) {
           )}
           {playable && !playerError && !ready && <div className="cx-gate is-loading" role="status"><span className="cx-pulse" />Loading video…</div>}
           {playerError && <Gate icon="alert" title="This video could not be played" action={<button type="button" className="btn btn-lime cs-btn" onClick={() => { setPlayerError(''); setReady(false); }}>Try again</button>}>{playerError}</Gate>}
-          {!access.allowed && <AccessGate reason={access.reason} here={here} />}
+          {!access.allowed && <AccessGate reason={access.reason} here={here} slug={data.course.slug} />}
           {access.allowed && !lesson.hasVideo && <Gate icon="clock" title="Video coming soon">This lesson does not have its video yet. Check back shortly.</Gate>}
         </div>
         <div className="cx-playbar" aria-hidden="true"><motion.b style={{ scaleX: playPct }} /></div>
@@ -156,6 +161,7 @@ function Outline({ data, done }) {
   return (
     <aside className="cx-glass cx-outline" aria-label="Course content">
       <h2>Course content</h2>
+      {mineText(data.mine) && <p className={`cx-valid ${mineTone(data.mine)}`}><Icon name="clock" size={14} /><span><b>{mineText(data.mine)}</b></span></p>}
       <div className="cx-outline-meta">
         <span>{finished} of {total} lessons complete</span>
         <div className="cx-line" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Course progress"><motion.b initial={{ scaleX: 0 }} animate={{ scaleX: pct / 100 }} transition={{ duration: 0.8, ease: EASE }} /></div>
@@ -278,6 +284,11 @@ export default function LessonPlayer() {
     description: (data.lesson.description || `Watch "${data.lesson.title}" from ${data.module.title} in the ${data.course.title} ${asset.label === 'Trading' ? 'trading' : `${asset.label} trading`} course.`).replace(/\s+/g, ' ').slice(0, 158),
     path: `/courses/${data.course.slug}/lesson/${data.lesson.id}`, noindex: !data.course.published, jsonLd: ld,
   } : { title: 'Lesson | TradeBit India', description: 'Trading course lesson by TradeBit India.', path: `/courses/lesson/${lessonId}`, noindex: true });
+
+  // Lectures need an account: a logged-out visitor is sent to log in and returns to this exact lesson afterwards.
+  if (data && !data.access.loggedIn && data.access.reason === 'LOGIN') {
+    return <Navigate to={`/login?next=${encodeURIComponent(`/courses/${data.course.slug}/lesson/${data.lesson.id}`)}`} replace />;
+  }
 
   if (error) {
     const missing = error.status === 404;

@@ -29,6 +29,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { AuthGuard, AuthUser, CurrentUser, Roles } from '../auth/auth.guard';
 import { pageKey } from '../books/books.module';
+import { auditDelete } from '../audit/audit';
 import { computeWindow, covers, FreeScheduleService } from './free-schedule';
 import { forgetAccess, getAccess, setAccess } from './access-memo';
 
@@ -245,6 +246,21 @@ export class ReadingService {
     return { books: out, mentorshipPayment, freeWindow, isClubMember: who.isClub };
   }
 
+  /** Public book list for logged-out visitors: no per-user state, no task details, nothing that opens a book. */
+  async catalog() {
+    const books = await this.prisma.book.findMany({
+      where: { isActive: true, status: 'READY' },
+      select: { ...bookPublicSelect, clubOnly: true, coverKey: true, updatedAt: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    return {
+      books: books.map((b) => ({
+        id: b.id, title: b.title, description: b.description, pageCount: b.pageCount, clubOnly: b.clubOnly,
+        cover: b.coverKey ? `/books/${b.id}/cover?v=${b.updatedAt.getTime()}` : null,
+      })),
+    };
+  }
+
   async submit(user: AuthUser, taskId: string) {
     const task = await this.prisma.task.findUnique({ where: { id: taskId }, include: { books: { select: { bookId: true } } } });
     if (!task) throw new NotFoundException({ code: 'TASK_NOT_FOUND', message: 'Task not found.' });
@@ -347,7 +363,7 @@ export class ReadingService {
 
   // ---------- admin: tasks ----------
   async listTasks() {
-    const rows = await this.prisma.task.findMany({ select: { ...taskSelect, ...taskBooksInclude, _count: { select: { submissions: true } } }, orderBy: { createdAt: 'desc' } });
+    const rows = await this.prisma.task.findMany({ where: { archivedAt: null }, select: { ...taskSelect, ...taskBooksInclude, _count: { select: { submissions: true } } }, orderBy: { createdAt: 'desc' } });
     return rows.map(flattenBooks);
   }
 
@@ -384,9 +400,22 @@ export class ReadingService {
     return flattenBooks(task);
   }
 
-  /** Submissions and book links cascade with the task. */
-  async deleteTask(id: string) {
-    if (!(await this.prisma.task.findUnique({ where: { id } }))) throw new NotFoundException('Task not found');
+  /**
+   * "Deleting" a task never touches what it produced: its requests (submissions) and every reader's book access stay exactly
+   * as they are (access lives in its own rows, and the database refuses to cascade requests away). A task nobody has used is
+   * removed outright; one with requests is archived: hidden from the admin list and the library, no new requests, but its
+   * history stays visible under Requests and a pending request can still be approved.
+   */
+  async deleteTask(id: string, actor: AuthUser) {
+    const task = await this.prisma.task.findUnique({ where: { id }, include: { books: true, _count: { select: { submissions: true } } } });
+    if (!task || task.archivedAt) throw new NotFoundException('Task not found');
+    if (task._count.submissions > 0) {
+      await auditDelete(this.prisma, actor, 'Task', id, task.title, task, 'ARCHIVE');
+      await this.prisma.task.update({ where: { id }, data: { archivedAt: new Date(), isActive: false } });
+      forgetAccess();
+      return { ok: true, archived: true, keptSubmissions: task._count.submissions };
+    }
+    await auditDelete(this.prisma, actor, 'Task', id, task.title, task);
     await this.prisma.task.delete({ where: { id } });
     forgetAccess();
     return { ok: true };
@@ -548,8 +577,8 @@ class AdminReadingController {
   }
 
   @Delete('tasks/:taskId')
-  deleteTask(@Param('taskId') id: string) {
-    return this.reading.deleteTask(id);
+  deleteTask(@Param('taskId') id: string, @CurrentUser() admin: AuthUser) {
+    return this.reading.deleteTask(id, admin);
   }
 
   @Get('reading/requests')
@@ -573,5 +602,16 @@ class AdminReadingController {
   }
 }
 
-@Module({ controllers: [ReadingController, AdminReadingController], providers: [ReadingService, FreeScheduleService] })
+/** Logged-out visitors can see which books exist (title, blurb, cover); reading, tasks and access state all stay behind login. */
+@Controller('reading')
+class PublicReadingController {
+  constructor(private readonly reading: ReadingService) {}
+
+  @Get('catalog')
+  catalog() {
+    return this.reading.catalog();
+  }
+}
+
+@Module({ controllers: [ReadingController, PublicReadingController, AdminReadingController], providers: [ReadingService, FreeScheduleService] })
 export class ReadingModule {}

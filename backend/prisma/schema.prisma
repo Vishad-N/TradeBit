@@ -65,6 +65,7 @@ model User {
   enrollments       CourseEnrollment[]
   programme         ProgramEnrollment?
   programmePayments ProgramPayment[]
+  coursePayments    CoursePayment[]
   telegramLink      TelegramLink?
 }
 
@@ -82,6 +83,8 @@ model Book {
   coverKey         String?
   /// Only 1% Club members (an ACTIVE mentorship) and admins can read it. Tasks and free days never open it.
   clubOnly         Boolean    @default(false)
+  /// "Deleted" from the admin list. The row, its access grants, progress and stored pages are kept (the app never hard-deletes a book).
+  archivedAt       DateTime?
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
 
@@ -97,6 +100,8 @@ model Task {
   title       String
   description String
   isActive    Boolean  @default(true)
+  /// "Deleted" from the admin list. The row stays so its submissions and the access they granted are never lost.
+  archivedAt  DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -113,7 +118,7 @@ model TaskBook {
   createdAt DateTime @default(now())
 
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Restrict)
 
   @@id([taskId, bookId])
   @@index([bookId])
@@ -131,8 +136,9 @@ model TaskSubmission {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
-  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Restrict: a task that has requests can never be hard-deleted (the app archives it instead), so requests cannot cascade away.
+  task Task @relation(fields: [taskId], references: [id], onDelete: Restrict)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@unique([taskId, userId])
   @@index([userId])
@@ -153,8 +159,8 @@ model ReadingAccess {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Restrict)
 
   @@unique([userId, bookId])
   @@index([userId])
@@ -172,8 +178,8 @@ model ReadingProgress {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Restrict)
 
   @@unique([userId, bookId])
   @@index([userId])
@@ -189,8 +195,8 @@ model ReadingSession {
   lastSeenAt DateTime @default(now())
   createdAt  DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Restrict)
 
   @@unique([userId, bookId])
 }
@@ -215,7 +221,7 @@ model MentorshipPayment {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([userId])
   @@index([status])
@@ -229,7 +235,7 @@ model MentorshipAccess {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 }
 
 // A trading platform / broker / partner shown on the landing page. The "Sign up" button goes through
@@ -375,26 +381,55 @@ enum CourseAccess {
   ENROLLED // only users an admin enrolled
 }
 
+/// How long a course stays open for a learner, counted from the moment their access was activated.
+enum ValidityUnit {
+  DAY
+  WEEK
+  MONTH
+  YEAR
+  LIFETIME
+}
+
+/// How a learner's access to one course was granted.
+enum CourseGrant {
+  ADMIN // free assignment by an admin
+  PAYMENT // Razorpay
+  TASK // completed the course task and an admin approved it
+}
+
 model Course {
-  id          String       @id @default(cuid())
-  title       String
-  slug        String       @unique
-  summary     String       @default("")
-  description String       @default("")
+  id              String       @id @default(cuid())
+  title           String
+  slug            String       @unique
+  summary         String       @default("")
+  description     String       @default("")
+  /// Access length from activation. LIFETIME never expires (validityValue is then ignored).
+  validityUnit    ValidityUnit @default(LIFETIME)
+  validityValue   Int          @default(1)
+  /// Activation by payment (Razorpay). Only used when access is not PUBLIC. priceInr is whole rupees.
+  allowPayment    Boolean      @default(false)
+  priceInr        Int          @default(0)
+  /// Activation by completing a task that an admin approves.
+  allowTask       Boolean      @default(false)
+  taskTitle       String       @default("")
+  taskDescription String       @default("")
   /// Storage key of the optional thumbnail.
-  thumbKey    String?
+  thumbKey        String?
   /// Animated icon preset (see COURSE_ICON_PRESETS). Null = "random from presets": the card hashes the course id.
-  svgPresetId String?
+  svgPresetId     String?
   /// Admin-supplied inline SVG. Wins over svgPresetId. Sanitised on write and again on render.
-  customSvg   String?
-  access      CourseAccess @default(PUBLIC)
-  published   Boolean      @default(false)
-  sortOrder   Int          @default(0)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  customSvg       String?
+  access          CourseAccess @default(PUBLIC)
+  published       Boolean      @default(false)
+  /// "Deleted" from the admin list: hidden everywhere, but modules, lessons, learners and payments are all kept.
+  archivedAt      DateTime?
+  sortOrder       Int          @default(0)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   modules     CourseModule[]
   enrollments CourseEnrollment[]
+  payments    CoursePayment[]
 
   @@index([published, sortOrder])
 }
@@ -405,10 +440,12 @@ model CourseModule {
   title       String
   description String   @default("")
   sortOrder   Int      @default(0)
+  /// "Deleted": hidden, never erased (see Course.archivedAt).
+  archivedAt  DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Restrict)
   lessons Lesson[]
 
   @@index([courseId, sortOrder])
@@ -426,10 +463,12 @@ model Lesson {
   durationSec   Int      @default(0)
   isFreePreview Boolean  @default(false)
   sortOrder     Int      @default(0)
+  /// "Deleted": hidden, never erased, so learner progress on it survives.
+  archivedAt    DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  module   CourseModule     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  module   CourseModule     @relation(fields: [moduleId], references: [id], onDelete: Restrict)
   progress LessonProgress[]
 
   @@index([moduleId, sortOrder])
@@ -446,22 +485,55 @@ model LessonProgress {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Restrict)
 
   @@unique([userId, lessonId])
   @@index([lessonId])
 }
 
+/// One learner's access to one course. Rows created before validity existed are ACTIVE, source ADMIN, no expiry.
+/// Access is open only while status = ACTIVE and (expiresAt is null or in the future).
 model CourseEnrollment {
-  userId    String
-  courseId  String
-  createdAt DateTime @default(now())
+  userId          String
+  courseId        String
+  status          EnrollmentStatus @default(ACTIVE)
+  source          CourseGrant      @default(ADMIN)
+  /// When the current access period started (null on legacy rows: createdAt is used).
+  activatedAt     DateTime?
+  /// When it ends. Null = lifetime.
+  expiresAt       DateTime?
+  rejectionReason String?
+  decidedAt       DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @default(now()) @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
 
   @@id([userId, courseId])
+  @@index([courseId])
+  @@index([status])
+}
+
+/// A Razorpay order for one course. `amountPaise` is fixed server-side when the order is made.
+/// Financial record: neither the course nor the user can be deleted while payments reference them (Restrict).
+model CoursePayment {
+  id                String      @id @default(cuid())
+  userId            String
+  courseId          String
+  amountPaise       Int
+  currency          String      @default("INR")
+  razorpayOrderId   String      @unique
+  razorpayPaymentId String?     @unique
+  status            OrderStatus @default(CREATED)
+  createdAt         DateTime    @default(now())
+  paidAt            DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
   @@index([courseId])
 }
 
@@ -483,6 +555,7 @@ enum EnrollmentSource {
 enum OrderStatus {
   CREATED
   PAID
+  REFUNDED // fully refunded through Razorpay; the access it bought has ended
 }
 
 model ProgramEnrollment {
@@ -497,7 +570,7 @@ model ProgramEnrollment {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([status])
 }
@@ -514,7 +587,7 @@ model ProgramPayment {
   createdAt         DateTime    @default(now())
   paidAt            DateTime?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([userId])
 }
@@ -530,5 +603,21 @@ model TelegramLink {
   linkedAt       DateTime?
   createdAt      DateTime  @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+}
+
+/// Who deleted what, with a snapshot of the removed rows (and everything that cascaded with them) so it can be traced and restored.
+model AdminAudit {
+  id         String   @id @default(cuid())
+  adminId    String?
+  adminEmail String
+  action     String
+  entity     String
+  entityId   String
+  label      String
+  snapshot   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entity, createdAt])
+  @@index([createdAt])
 }

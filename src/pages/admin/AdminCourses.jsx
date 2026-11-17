@@ -1,3 +1,4 @@
+import { typeToConfirm } from '../../lib/confirmDelete.js';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -17,9 +18,10 @@ function CourseRow({ course, onChanged, onError }) {
     try { await coursesAdminApi.update(course.id, { published: !course.published }); onChanged(); } catch (e) { onError(e.message); } finally { setBusy(false); }
   };
   const remove = async () => {
-    if (!window.confirm(`Delete "${course.title}"? Its modules, lessons and every student's progress will be removed. This cannot be undone.`)) return;
+    const typed = typeToConfirm(`Remove the course "${course.title}" from the site? Its modules, lessons and records are kept. (A course with learners or payments cannot be removed: unpublish it instead.)`, course.title);
+    if (!typed) return;
     setBusy(true);
-    try { await coursesAdminApi.remove(course.id); onChanged(); } catch (e) { onError(e.message); setBusy(false); }
+    try { await coursesAdminApi.remove(course.id, typed); onChanged(); } catch (e) { onError(e.message); setBusy(false); }
   };
 
   return (

@@ -21,6 +21,7 @@ const STATE_LABEL = {
   EXPIRED: 'Access expired',
   NO_TASK: 'Coming soon',
   CLUB_ONLY: '1% Club only',
+  GUEST: 'Log in to read', // logged-out visitor browsing the public catalog
 };
 
 export function LockIcon({ open }) {

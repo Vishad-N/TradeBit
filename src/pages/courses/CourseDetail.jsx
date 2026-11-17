@@ -2,12 +2,13 @@ import { useMemo } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { coursesApi } from '../../services/coursesApi.js';
-import { fmtClock, fmtDuration, ACCESS_LABEL } from '../../lib/courses.js';
+import { fmtClock, fmtDuration, mineText, mineTone, validityText, ACCESS_LABEL } from '../../lib/courses.js';
 import { ORG, SITE_URL, assetOf, isoDuration, visualOf } from '../../lib/courseTheme.js';
 import { crumbs, useSeo } from '../../lib/seo.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Icon from '../../components/courses/Icons.jsx';
 import EnrollButton from '../../components/EnrollButton.jsx';
+import CourseActivation from '../../components/courses/CourseActivation.jsx';
 import AssetBackdrop from '../../components/courses/fx/AssetBackdrop.jsx';
 import CourseIcon from '../../components/courses/fx/CourseIcon.jsx';
 import ProgressRing from '../../components/courses/fx/ProgressRing.jsx';
@@ -15,27 +16,40 @@ import { StateCard, useLoad } from './shared.jsx';
 import { AssetThumb, Crumbs, Faq, Shell, faqLd } from './ui.jsx';
 
 // What to tell a viewer who cannot open the course's full content.
-function LockNote({ course }) {
+function LockNote({ course, onChanged }) {
   const here = encodeURIComponent(useLocation().pathname);
   if (course.lockReason === 'LOGIN') {
     return (
       <>
         <p className="cx-lock"><Icon name="lock" size={18} className="cs-ic" /><span>Log in to start this course and save your progress.</span></p>
+        {course.validity && <p className="cx-act-valid"><Icon name="clock" size={14} />{validityText(course.validity)}</p>}
         <Link className="btn btn-lime cs-btn" to={`/login?next=${here}`}>Log in to continue <span className="ar">→</span></Link>
       </>
     );
   }
+  // The admin switched on payment and/or a task for this course: offer them (also after an expiry, to renew).
+  if (course.activation?.payment || course.activation?.task) {
+    return (
+      <>
+        {course.lockReason === 'CLUB' && <p className="cx-lock"><Icon name="lock" size={18} className="cs-ic" /><span>Free for 1% Club members. Everyone else can activate it below.</span></p>}
+        <CourseActivation course={course} onChanged={onChanged} />
+      </>
+    );
+  }
+  if (course.lockReason === 'EXPIRED') {
+    return <p className="cx-lock"><Icon name="clock" size={18} className="cs-ic" /><span>{mineText(course.mine)}. Please contact us to renew your access.</span></p>;
+  }
   if (course.lockReason === 'CLUB') {
     return (
       <>
-        <p className="cx-lock"><Icon name="lock" size={18} className="cs-ic" /><span>This course is for 1% Club members. Free previews are open to everyone.</span></p>
+        <p className="cx-lock"><Icon name="lock" size={18} className="cs-ic" /><span>This course is for 1% Club members.</span></p>
         <Link className="btn btn-lime cs-btn" to="/1-percent-club">Join the 1% Club <span className="ar">→</span></Link>
       </>
     );
   }
   return (
     <>
-      <p className="cx-lock"><Icon name="lock" size={18} className="cs-ic" /><span>This course is for enrolled students. Free previews are open to everyone.</span></p>
+      <p className="cx-lock"><Icon name="lock" size={18} className="cs-ic" /><span>This course is for enrolled students.</span></p>
       <EnrollButton className="btn btn-lime cs-btn">Enrol to unlock</EnrollButton>
     </>
   );
@@ -59,9 +73,13 @@ function LessonRow({ course, lesson, n }) {
       </span>
     </>
   );
-  return open
-    ? <li><Link className={`cx-lesson ${state}`} to={`/courses/${course.slug}/lesson/${lesson.id}`}>{body}</Link></li>
-    : <li><div className={`cx-lesson ${state}`} aria-disabled="true">{body}</div></li>;
+  if (open) return <li><Link className={`cx-lesson ${state}`} to={`/courses/${course.slug}/lesson/${lesson.id}`}>{body}</Link></li>;
+  // Logged out: a lesson with a video is a door to the login page, which returns the visitor to this lesson.
+  if (lesson.locked && lesson.hasVideo && course.lockReason === 'LOGIN') {
+    const back = encodeURIComponent(`/courses/${course.slug}/lesson/${lesson.id}`);
+    return <li><Link className={`cx-lesson ${state}`} to={`/login?next=${back}`} title="Log in to watch">{body}</Link></li>;
+  }
+  return <li><div className={`cx-lesson ${state}`} aria-disabled="true">{body}</div></li>;
 }
 
 export default function CourseDetail() {
@@ -136,6 +154,7 @@ export default function CourseDetail() {
           <div className="cx-chips">
             <span className="cx-chip asset">{asset.sym} · {asset.label}</span>
             <span className={`cx-chip ${course.access === 'PUBLIC' ? 'gain' : ''}`}>{course.access !== 'PUBLIC' && <Icon name="lock" size={11} />}{ACCESS_LABEL[course.access]}</span>
+            {course.validity && <span className="cx-chip cx-chip-valid"><Icon name="clock" size={11} />{course.validity.lifetime ? 'Lifetime access' : `Valid ${course.validity.label}`}</span>}
           </div>
           <h1 className="cx-h1 sm">{course.title}</h1>
           {course.summary && <p className="cx-lead">{course.summary}</p>}
@@ -188,14 +207,17 @@ export default function CourseDetail() {
                 <span><strong>{course.completedCount} of {course.lessonCount}</strong> lessons complete</span>
               </div>
             )}
+            {course.mine?.state === 'ACTIVE' && (
+              <p className={`cx-valid ${mineTone(course.mine)}`}><Icon name="clock" size={14} /><span><b>{mineText(course.mine)}</b></span></p>
+            )}
             {course.canAccess ? (
               resumeTo
                 ? <Link className="btn btn-lime cs-btn" to={resumeTo}>{course.resumeStarted ? 'Continue learning' : 'Start course'} <span className="ar">→</span></Link>
                 : <p className="cx-lock"><Icon name="clock" size={18} className="cs-ic" /><span>Videos are being added. Check back soon.</span></p>
             ) : (
               <>
-                <LockNote course={course} />
-                {previewLesson && (
+                <LockNote course={course} onChanged={reload} />
+                {previewLesson && course.lockReason !== 'LOGIN' && (
                   <Link className="cx-ghost" to={`/courses/${course.slug}/lesson/${previewLesson.id}`}><Icon name="play" size={14} />Watch a free preview</Link>
                 )}
               </>

@@ -9,6 +9,7 @@ export const authApi = {
 
 export const readingApi = {
   library: () => api.get('/reading/library'),
+  catalog: () => api.get('/reading/catalog'), // public: the book list for logged-out visitors
   submitTask: (taskId) => api.post(`/reading/tasks/${taskId}/submit`),
   startSession: (bookId) => api.post(`/reading/books/${bookId}/session`),
   // Pages are fetched with the auth + session headers (an <img src> cannot send them) and shown from a blob URL.
@@ -25,7 +26,7 @@ export const adminApi = {
   addBookFromLink: (data) => api.post('/admin/books/from-link', data),
   updateBook: (id, data) => api.patch(`/admin/books/${id}`, data),
   reprocessBook: (id) => api.post(`/admin/books/${id}/reprocess`),
-  deleteBook: (id) => api.delete(`/admin/books/${id}`),
+  deleteBook: (id, confirm) => api.delete(`/admin/books/${id}?confirm=${encodeURIComponent(confirm ?? '')}`),
   setBookCover: (id, form) => api.upload(`/admin/books/${id}/cover`, form),
   clearBookCover: (id) => api.delete(`/admin/books/${id}/cover`),
   tasks: () => api.get('/admin/tasks'),

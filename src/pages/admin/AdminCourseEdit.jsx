@@ -1,7 +1,8 @@
+import { typeToConfirm } from '../../lib/confirmDelete.js';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { coursesAdminApi } from '../../services/coursesApi.js';
-import { ACCESS_HELP, ACCESS_LABEL, fmtClock, fmtDuration, parseClock, parseVimeo } from '../../lib/courses.js';
+import { ACCESS_HELP, ACCESS_LABEL, VALIDITY_UNIT_LABEL, fmtClock, fmtDate, fmtDuration, parseClock, parseVimeo } from '../../lib/courses.js';
 import Icon from '../../components/courses/Icons.jsx';
 import { CourseThumb } from '../courses/shared.jsx';
 import CourseIconPicker, { iconPayload, iconValueOf } from '../../components/courses/CourseIconPicker.jsx';
@@ -119,7 +120,10 @@ function ModuleCard({ mod, index, count, onMove, reload, fail }) {
           <IconBtn icon="chevronUp" label="Move module up" onClick={() => onMove(index, -1)} disabled={index === 0} />
           <IconBtn icon="chevronDown" label="Move module down" onClick={() => onMove(index, 1)} disabled={index === count - 1} />
           <IconBtn icon="edit" label="Edit module" onClick={() => setEdit({ kind: 'module' })} />
-          <IconBtn icon="trash" label="Delete module" danger onClick={() => window.confirm(`Delete module "${mod.title}" and its ${mod.lessons.length} lesson(s)? Student progress on them is removed too.`) && run(() => coursesAdminApi.removeModule(mod.id))} />
+          <IconBtn icon="trash" label="Delete module" danger onClick={() => {
+            const typed = mod.lessons.length ? typeToConfirm(`Remove the module "${mod.title}" and its ${mod.lessons.length} lesson(s) from the course? Learner progress on them is kept.`, mod.title) : (window.confirm(`Delete the empty module "${mod.title}"?`) ? mod.title : null);
+            if (typed) run(() => coursesAdminApi.removeModule(mod.id, typed));
+          }} />
         </div>
       </div>
       {mod.lessons.length === 0 ? <p className="ca-empty">No lessons yet.</p> : (
@@ -139,7 +143,7 @@ function ModuleCard({ mod, index, count, onMove, reload, fail }) {
                 <IconBtn icon="chevronUp" label="Move lesson up" onClick={() => moveLesson(i, -1)} disabled={i === 0} />
                 <IconBtn icon="chevronDown" label="Move lesson down" onClick={() => moveLesson(i, 1)} disabled={i === mod.lessons.length - 1} />
                 <IconBtn icon="edit" label="Edit lesson" onClick={() => setEdit({ kind: 'lesson', lesson: l })} />
-                <IconBtn icon="trash" label="Delete lesson" danger onClick={() => window.confirm(`Delete lesson "${l.title}"?`) && run(() => coursesAdminApi.removeLesson(l.id))} />
+                <IconBtn icon="trash" label="Delete lesson" danger onClick={() => { const typed = typeToConfirm(`Remove the lesson "${l.title}" from the course? Learner progress on it is kept.`, l.title); if (typed) run(() => coursesAdminApi.removeLesson(l.id, typed)); }} />
               </div>
             </li>
           ))}
@@ -158,6 +162,9 @@ function ModuleCard({ mod, index, count, onMove, reload, fail }) {
   );
 }
 
+const SOURCE_LABEL = { ADMIN: 'Assigned by admin', PAYMENT: 'Paid online', TASK: 'Task' };
+
+/** Who has the course: free assignments, buyers and task requests, with each person's start and end date. */
 function Enrollments({ course }) {
   const [rows, setRows] = useState(null);
   const [email, setEmail] = useState('');
@@ -165,30 +172,130 @@ function Enrollments({ course }) {
   const [err, setErr] = useState('');
   useEffect(() => { coursesAdminApi.enrollments(course.id).then(setRows).catch((e) => setErr(e.message)); }, [course.id]);
 
+  const run = async (fn) => { setErr(''); try { setRows(await fn()); } catch (x) { setErr(x.message); } };
   async function add(e) {
     e.preventDefault(); setBusy(true); setErr('');
     try { setRows(await coursesAdminApi.enroll(course.id, email.trim())); setEmail(''); } catch (x) { setErr(x.message); } finally { setBusy(false); }
   }
+  const status = (r) => (r.status === 'ACTIVE' ? (r.expired ? ['Expired', 'warn'] : ['Active', 'acc']) : r.status === 'PENDING' ? ['Waiting for approval', 'draft'] : r.status === 'REJECTED' ? ['Rejected', 'warn'] : ['Revoked', 'warn']);
+  const dates = (r) => (r.status !== 'ACTIVE' ? `Requested ${fmtDate(r.requestedAt)}` : `${fmtDate(r.activatedAt)} → ${r.expiresAt ? `${fmtDate(r.expiresAt)}${r.expired ? '' : ` · ${Math.max(0, Math.ceil((new Date(r.expiresAt) - Date.now()) / 86400000))} days left`}` : 'Lifetime'}`);
+
   return (
     <div className="cs-box rd-form ca-card" style={{ padding: 'clamp(18px,2.4vw,28px)', maxWidth: 'none' }}>
-      <h2 className="rd-h2">Enrolled students</h2>
-      <p className="ca-hint">{course.access === 'PUBLIC' ? 'This course is open to every logged-in user, so enrolment is not needed. It matters if you switch it to 1% Club or Enrolled students.' : 'Students you add here can watch every lesson, whatever their other access.'}</p>
+      <h2 className="rd-h2">Students &amp; access</h2>
+      <p className="ca-hint">{course.access === 'PUBLIC' ? 'This course is open to every logged-in user, so activation is not needed. It matters if you switch it to 1% Club or Enrolled students.' : 'Assign a student for free (works whether or not payment or a task is switched on). Their validity starts now, using the length set above. Paid students and task requests appear here too.'}</p>
       <form className="ca-add" onSubmit={add}>
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="student@email.com" required maxLength={200} aria-label="Student email" />
-        <button className="btn btn-dark cs-btn" type="submit" disabled={busy || !email.trim()}>{busy ? 'Adding…' : 'Enrol'}</button>
+        <button className="btn btn-dark cs-btn" type="submit" disabled={busy || !email.trim()}>{busy ? 'Assigning…' : 'Assign free access'}</button>
       </form>
       {err && <p className="rd-error" role="alert">{err}</p>}
-      {!rows ? <p>Loading…</p> : rows.length === 0 ? <p className="ca-hint">No one enrolled yet.</p> : (
+      {!rows ? <p>Loading…</p> : rows.length === 0 ? <p className="ca-hint">No one has this course yet.</p> : (
         <ul className="ca-enr">
-          {rows.map((r) => (
-            <li key={r.userId}>
-              <div className="t"><strong style={{ fontWeight: 500 }}>{r.name}</strong><small>{r.email}</small></div>
-              <IconBtn icon="trash" label={`Remove ${r.name}`} danger onClick={async () => { try { setRows(await coursesAdminApi.unenroll(course.id, r.userId)); } catch (x) { setErr(x.message); } }} />
-            </li>
-          ))}
+          {rows.map((r) => {
+            const [label, tone] = status(r);
+            return (
+              <li key={r.userId}>
+                <div className="t">
+                  <strong style={{ fontWeight: 500 }}>{r.name}</strong>
+                  <small>{r.email}</small>
+                  <small><span className={`cs-chip ${tone}`}>{label}</span> {SOURCE_LABEL[r.source]} · {dates(r)}</small>
+                  {r.status === 'REJECTED' && r.rejectionReason && <small>Reason: {r.rejectionReason}</small>}
+                  {r.payment && <small>Paid ₹{(r.payment.amountPaise / 100).toLocaleString('en-IN')}{r.payment.status === 'REFUNDED' ? ' · refunded' : ''} · {r.payment.razorpayPaymentId || 'no payment id'}{r.payment.paidAt ? ` · ${fmtDate(r.payment.paidAt)}` : ''}</small>}
+                </div>
+                <div className="ca-tools">
+                  {r.status === 'PENDING' && <>
+                    <button type="button" className="rd-mini rd-go" onClick={() => run(() => coursesAdminApi.approveEnrollment(course.id, r.userId))}>Approve</button>
+                    <button type="button" className="rd-mini" onClick={() => { const reason = window.prompt('Reason for rejecting (optional):', ''); if (reason !== null) run(() => coursesAdminApi.rejectEnrollment(course.id, r.userId, reason)); }}>Reject</button>
+                  </>}
+                  {(r.status === 'REJECTED' || r.status === 'REVOKED' || r.expired) && (
+                    <button type="button" className="rd-mini rd-go" onClick={() => run(() => coursesAdminApi.approveEnrollment(course.id, r.userId))}>{r.expired ? 'Renew' : 'Activate'}</button>
+                  )}
+                  {r.status === 'ACTIVE' && !r.expired && <button type="button" className="rd-mini" onClick={() => window.confirm(`Withdraw ${r.name}'s access?`) && run(() => coursesAdminApi.revokeEnrollment(course.id, r.userId))}>Revoke</button>}
+                  <IconBtn icon="trash" label={`Remove ${r.name}`} danger onClick={() => window.confirm(`Remove ${r.name} from this course entirely?`) && run(() => coursesAdminApi.unenroll(course.id, r.userId))} />
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
+  );
+}
+
+/** Validity length + the two ways a learner can switch the course on by themselves (payment, task). Free assignment is always available. */
+function Activation({ course, onSaved, fail, ok }) {
+  const [f, setF] = useState(() => ({
+    unit: course.validityUnit || 'LIFETIME', value: String(course.validityValue || 1),
+    allowPayment: Boolean(course.allowPayment), price: String(course.priceInr || ''),
+    allowTask: Boolean(course.allowTask), taskTitle: course.taskTitle || '', taskDescription: course.taskDescription || '',
+  }));
+  const [busy, setBusy] = useState(false);
+  const lifetime = f.unit === 'LIFETIME';
+  const preview = lifetime ? 'Lifetime: never expires.' : `Each activation lasts ${f.value || '?'} ${VALIDITY_UNIT_LABEL[f.unit].toLowerCase()} from the moment it is activated.`;
+
+  async function save(e) {
+    e.preventDefault();
+    const value = Number(f.value);
+    const price = f.price === '' ? 0 : Number(f.price);
+    if (!lifetime && (!Number.isInteger(value) || value < 1)) return fail('Validity must be a whole number of 1 or more.');
+    if (f.allowPayment && (!Number.isInteger(price) || price < 1)) return fail('Enter a whole-rupee price of at least 1 to sell this course online.');
+    if (!Number.isInteger(price) || price < 0) return fail('The price must be a whole number of rupees.');
+    if (f.allowTask && !f.taskTitle.trim()) return fail('Give the task a title so learners know what to do.');
+    setBusy(true);
+    try {
+      await coursesAdminApi.update(course.id, {
+        validityUnit: f.unit, ...(lifetime ? {} : { validityValue: value }),
+        allowPayment: f.allowPayment, priceInr: price,
+        allowTask: f.allowTask, taskTitle: f.taskTitle.trim(), taskDescription: f.taskDescription.trim(),
+      });
+      await onSaved(); ok('Activation settings saved.');
+    } catch (x) { fail(x.message); } finally { setBusy(false); }
+  }
+
+  return (
+    <form className="cs-box rd-form ca-card" onSubmit={save} style={{ padding: 'clamp(18px,2.4vw,28px)', maxWidth: 'none' }}>
+      <h2 className="rd-h2">Validity &amp; activation</h2>
+      <p className="ca-hint">{course.access === 'PUBLIC'
+        ? 'This course is open to every logged-in member, so none of this applies yet. Switch “Who can watch” to 1% Club or Enrolled students to use it.'
+        : 'Learners see the validity on the course. It is counted from the day their access is activated. Changing it affects future activations only; people already active keep their end date.'}</p>
+
+      <div className="ca-grid2">
+        <label className="rd-field"><span>Validity</span>
+          <select value={f.unit} onChange={(e) => setF({ ...f, unit: e.target.value })}>
+            {Object.entries(VALIDITY_UNIT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+        </label>
+        {!lifetime && (
+          <label className="rd-field"><span>How many {VALIDITY_UNIT_LABEL[f.unit].toLowerCase()}</span>
+            <input type="number" min={1} step={1} value={f.value} onChange={(e) => setF({ ...f, value: e.target.value })} required />
+          </label>
+        )}
+      </div>
+      <small className="ca-hint">{preview}</small>
+
+      <label className="ca-check">
+        <input type="checkbox" checked={f.allowPayment} onChange={(e) => setF({ ...f, allowPayment: e.target.checked })} />
+        <span><b>Activate by payment (Razorpay)</b><small>Learners can buy the course online. The amount is set by you; Razorpay keys are read from the server settings.</small></span>
+      </label>
+      {f.allowPayment && (
+        <label className="rd-field"><span>Price (₹, whole rupees)</span>
+          <input type="number" min={1} step={1} value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} placeholder="e.g. 4999" required />
+        </label>
+      )}
+
+      <label className="ca-check">
+        <input type="checkbox" checked={f.allowTask} onChange={(e) => setF({ ...f, allowTask: e.target.checked })} />
+        <span><b>Activate by completing a task</b><small>Learners hand in the task; access starts when you approve it under Students &amp; access.</small></span>
+      </label>
+      {f.allowTask && (
+        <>
+          <label className="rd-field"><span>Task title</span><input value={f.taskTitle} onChange={(e) => setF({ ...f, taskTitle: e.target.value })} maxLength={160} required /></label>
+          <label className="rd-field"><span>What the learner must do</span><textarea rows={4} value={f.taskDescription} onChange={(e) => setF({ ...f, taskDescription: e.target.value })} maxLength={3000} /></label>
+        </>
+      )}
+      <p className="ca-hint">Assigning a student for free is always available below, with or without these two options.</p>
+      <button className="btn btn-lime cs-btn" type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save activation settings'} <span className="ar">→</span></button>
+    </form>
   );
 }
 
@@ -247,8 +354,9 @@ function Editor({ id }) {
     try { await coursesAdminApi.clearThumbnail(id); await load(); ok('Thumbnail removed.'); } catch (x) { fail(x.message); } finally { setBusy(false); }
   }
   async function deleteCourse() {
-    if (!window.confirm(`Delete "${course.title}"? Its modules, lessons and every student's progress will be removed. This cannot be undone.`)) return;
-    try { await coursesAdminApi.remove(id); navigate('/admin/courses'); } catch (x) { fail(x.message); }
+    const typed = typeToConfirm(`Remove the course "${course.title}" from the site? Its modules, lessons and records are kept. (A course with learners or payments cannot be removed: unpublish it instead.)`, course.title);
+    if (!typed) return;
+    try { await coursesAdminApi.remove(id, typed); navigate('/admin/courses'); } catch (x) { fail(x.message); }
   }
   async function addModule(e) {
     e.preventDefault();
@@ -314,6 +422,8 @@ function Editor({ id }) {
               </div>
             </div>
           </div>
+
+          <Activation course={course} onSaved={load} fail={fail} ok={ok} />
 
           <Enrollments course={course} />
 

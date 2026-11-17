@@ -59,3 +59,13 @@ services:
         value: 'false'
       - key: TELEGRAM_URL
         value: https://t.me/tradebitindia_Official
+
+      # Razorpay (programme + course payments). Set the values in the Render dashboard; leave unset to keep online payment switched off.
+      # The webhook secret is REQUIRED once payments are on: point Razorpay at <API>/api/v1/enrollment/webhook
+      # (events: payment.captured, order.paid, refund.processed). Keep auto-capture ON in the Razorpay dashboard.
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false

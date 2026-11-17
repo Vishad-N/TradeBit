@@ -22,7 +22,8 @@ import { Prisma } from '@prisma/client';
 import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
-import { AuthGuard, Roles } from '../auth/auth.guard';
+import { AuthGuard, AuthUser, CurrentUser, Roles } from '../auth/auth.guard';
+import { auditDelete } from '../audit/audit';
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 type UploadedPhoto = { buffer: Buffer; size: number };
@@ -140,11 +141,12 @@ export class TestimonialsService {
     return this.prisma.testimonial.update({ where: { id }, data });
   }
 
-  async remove(id: string) {
+  /** The stored photo is kept (not deleted) so the audit snapshot is enough to restore the testimonial. */
+  async remove(id: string, admin: AuthUser) {
     const t = await this.prisma.testimonial.findUnique({ where: { id } });
     if (!t) throw new NotFoundException('Testimonial not found');
+    await auditDelete(this.prisma, admin, 'Testimonial', id, t.name, t);
     await this.prisma.testimonial.delete({ where: { id } });
-    if (t.photoKey) await this.storage.deleteKey(t.photoKey).catch(() => undefined);
     return { deleted: true };
   }
 
@@ -220,8 +222,8 @@ class TestimonialsAdminController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.svc.remove(id);
+  remove(@Param('id') id: string, @CurrentUser() admin: AuthUser) {
+    return this.svc.remove(id, admin);
   }
 
   @Post(':id/photo')

@@ -6,8 +6,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import assert from 'node:assert/strict';
 import EmbeddedPostgres from 'embedded-postgres';
+import { createRequire } from 'node:module';
+const { PrismaClient } = createRequire(import.meta.url)('@prisma/client');
 
-const PG_PORT = 54329;
+const PG_PORT = Number(process.env.PG_PORT) || 54329; // override when Windows reserves this range (netsh int ipv4 show excludedportrange protocol=tcp)
 const API_PORT = 3999;
 const BASE = `http://127.0.0.1:${API_PORT}/api/v1`;
 const dataDir = mkdtempSync(join(tmpdir(), 'rd-pg-'));
@@ -407,8 +409,59 @@ async function main() {
   await call('PATCH', `/admin/books/${bookId}`, { token: ADMIN, body: { isActive: false } });
   assert.equal((await call('GET', `/reading/books/${bookId}/pages/1`, { token: A, headers: { 'X-Reading-Session': s3.sessionToken } })).status, 404);
   ok('inactive book -> unavailable (404)');
-  assert.equal((await call('DELETE', `/admin/books/${bookId}`, { token: ADMIN })).data.deleted, true);
-  ok('admin can delete a book (and its stored files)');
+  const bookTitle = (await call('GET', '/admin/books', { token: ADMIN })).data.find((b) => b.id === bookId).title;
+  assert.equal((await call('DELETE', `/admin/books/${bookId}`, { token: ADMIN })).status, 400, 'a bare delete is refused');
+  assert.equal((await call('DELETE', `/admin/books/${bookId}?confirm=wrong`, { token: ADMIN })).status, 400);
+  assert.equal((await call('DELETE', `/admin/books/${bookId}?confirm=${encodeURIComponent(bookTitle)}`, { token: ADMIN })).data.archived, true);
+  assert.equal((await call('GET', '/admin/books', { token: ADMIN })).data.some((b) => b.id === bookId), false, 'archived book leaves the admin list');
+  assert.equal((await call('GET', `/reading/books/${bookId}/pages/1`, { token: A, headers: { 'X-Reading-Session': s3.sessionToken } })).status, 404, 'and is unavailable to readers');
+  ok('"deleting" a book needs its typed name and only archives it (access, progress and pages are kept)');
+
+  console.log('Nothing a delete touches can take other data with it');
+  const db = new PrismaClient({ datasourceUrl: DATABASE_URL });
+  try {
+    // course content: "deleting" a lesson/module/course archives it, and learner progress / records survive
+    const course = (await call('POST', '/admin/courses', { token: ADMIN, body: { title: 'Archive Me Course' } })).data;
+    const mod = (await call('POST', `/admin/courses/${course.id}/modules`, { token: ADMIN, body: { title: 'Module One' } })).data;
+    const lesA = (await call('POST', `/admin/course-modules/${mod.id}/lessons`, { token: ADMIN, body: { title: 'Lesson A', isFreePreview: true } })).data;
+    const lesB = (await call('POST', `/admin/course-modules/${mod.id}/lessons`, { token: ADMIN, body: { title: 'Lesson B' } })).data;
+    await call('PATCH', `/admin/courses/${course.id}`, { token: ADMIN, body: { published: true } });
+    assert.equal((await call('PUT', `/learn/lessons/${lesA.id}/progress`, { token: A, body: { positionSec: 30 } })).status, 200);
+    assert.equal((await call('DELETE', `/admin/course-lessons/${lesA.id}`, { token: ADMIN })).status, 400, 'bare delete refused');
+    assert.equal((await call('DELETE', `/admin/course-lessons/${lesA.id}?confirm=${encodeURIComponent('Lesson A')}`, { token: ADMIN })).data.archived, true);
+    const left = (await call('GET', `/admin/courses/${course.id}`, { token: ADMIN })).data;
+    assert.deepEqual(left.modules[0].lessons.map((l) => l.title), ['Lesson B'], 'archived lesson is hidden from the course');
+    assert.equal((await call('GET', `/learn/lessons/${lesA.id}`, { token: A })).status, 404);
+    assert.equal(await db.lesson.count({ where: { id: lesA.id, archivedAt: { not: null } } }), 1, 'but the row is still in the database');
+    assert.equal(await db.lessonProgress.count({ where: { lessonId: lesA.id } }), 1, 'and so is the learner progress on it');
+    ok('removing a lesson archives it: hidden everywhere, row and learner progress kept');
+
+    // a hand-typed DELETE of anything that others reference is refused by the database itself
+    for (const [label, run] of [
+      ['lesson with progress', () => db.lesson.delete({ where: { id: lesA.id } })],
+      ['module with lessons', () => db.courseModule.delete({ where: { id: mod.id } })],
+      ['course with modules', () => db.course.delete({ where: { id: course.id } })],
+      ['book with access/progress', () => db.book.delete({ where: { id: book2 } })],
+      ['user with data', () => db.user.deleteMany({ where: { email: 'rahul@test.dev' } })],
+    ]) {
+      await assert.rejects(run, (e) => e.code === 'P2003' || /foreign key|constraint|restrict|violates/i.test(e.message), `${label} must not be deletable`);
+    }
+    ok('the database refuses to delete a lesson, module, course, book or user that other rows still reference');
+
+    // a task with requests: removing it keeps every request and every reader's access
+    const subsBefore = await db.taskSubmission.count();
+    const accessBefore = await db.readingAccess.count();
+    const usedTask = await db.task.findFirst({ where: { submissions: { some: {} } } });
+    assert.ok(usedTask, 'the suite created tasks with requests');
+    const res = (await call('DELETE', `/admin/tasks/${usedTask.id}`, { token: ADMIN })).data;
+    assert.equal(res.archived, true);
+    assert.equal(await db.taskSubmission.count(), subsBefore, 'no request was deleted');
+    assert.equal(await db.readingAccess.count(), accessBefore, 'no reader lost access');
+    await assert.rejects(() => db.task.delete({ where: { id: usedTask.id } }), (e) => e.code === 'P2003' || /restrict|foreign key|violates/i.test(e.message), 'a task with requests cannot be hard-deleted');
+    ok('removing a task that has requests archives it: every request and every reader access is kept');
+  } finally {
+    await db.$disconnect();
+  }
 
   console.log(`\nAll ${passed} checks passed.`);
   return logs;

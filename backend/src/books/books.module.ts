@@ -13,6 +13,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Res,
   StreamableFile,
   UploadedFile,
@@ -26,7 +27,8 @@ import { IsBoolean, IsOptional, IsString, MaxLength, MinLength } from 'class-val
 import { Transform, Type } from 'class-transformer';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
-import { AuthGuard, Roles } from '../auth/auth.guard';
+import { AuthGuard, AuthUser, CurrentUser, Roles } from '../auth/auth.guard';
+import { assertTyped, auditDelete } from '../audit/audit';
 import { PdfProcessor } from './pdf-processor';
 import { fetchPdfFromLink } from './link-fetch';
 import { forgetAccess } from '../reading/access-memo';
@@ -96,7 +98,7 @@ export class BooksService implements OnModuleInit {
   }
 
   list() {
-    return this.prisma.book.findMany({ select: bookSelect, orderBy: { createdAt: 'desc' } });
+    return this.prisma.book.findMany({ where: { archivedAt: null }, select: bookSelect, orderBy: { createdAt: 'desc' } });
   }
 
   async create(dto: CreateBookDto, file?: UploadedPdf) {
@@ -206,13 +208,19 @@ export class BooksService implements OnModuleInit {
     return { cleared: true };
   }
 
-  async remove(id: string) {
+  /**
+   * "Delete" = archive. The book is hidden from the library and the admin list, but nothing is erased: its stored pages, every
+   * reader's access grant and reading progress stay (the foreign keys are RESTRICT, so a hard delete is refused anyway).
+   */
+  async remove(id: string, confirm: string | undefined, actor: AuthUser) {
     const book = await this.prisma.book.findUnique({ where: { id } });
-    if (!book) throw new NotFoundException('Book not found');
-    await this.prisma.book.delete({ where: { id } });
+    if (!book || book.archivedAt) throw new NotFoundException('Book not found');
+    const [access, progress] = await Promise.all([this.prisma.readingAccess.count({ where: { bookId: id } }), this.prisma.readingProgress.count({ where: { bookId: id } })]);
+    assertTyped(confirm, book.title, `the book "${book.title}" (${access} reader(s) have access to it)`);
+    await auditDelete(this.prisma, actor, 'Book', id, book.title, { book, accessGrants: access, progressRows: progress }, 'ARCHIVE');
+    await this.prisma.book.update({ where: { id }, data: { archivedAt: new Date(), isActive: false } });
     forgetAccess();
-    await this.storage.deletePrefix(`books/${id}`);
-    return { deleted: true };
+    return { deleted: true, archived: true };
   }
 }
 
@@ -260,8 +268,8 @@ class AdminBooksController {
   }
 
   @Delete(':bookId')
-  remove(@Param('bookId') id: string) {
-    return this.books.remove(id);
+  remove(@Param('bookId') id: string, @Query('confirm') confirm: string | undefined, @CurrentUser() admin: AuthUser) {
+    return this.books.remove(id, confirm, admin);
   }
 }
 

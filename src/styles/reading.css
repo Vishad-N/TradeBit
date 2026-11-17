@@ -302,7 +302,7 @@ button.rd-bar-back{background:none;border:0;color:inherit;font:inherit;font-weig
 .lib-chip{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;border-radius:100px;background:var(--c-12);color:var(--c)}
 .lib-chip-pending_review{background:#f1e3a4}
 .lib-chip-rejected{background:#f4c9c2}
-.lib-chip-locked{background:var(--lime)}
+.lib-chip-locked,.lib-chip-guest{background:var(--lime)}
 .lib-bundle{font-size:11.5px;color:var(--c-60)}
 /* a book that has just been approved */
 .is-fresh .lib-cover{animation:libGlow 1.6s var(--ease) 3}

@@ -9,6 +9,7 @@ import {
   ForbiddenException,
   Get,
   Header,
+  HttpCode,
   Injectable,
   Module,
   NotFoundException,
@@ -20,21 +21,33 @@ import {
   StreamableFile,
   UploadedFile,
   UseGuards,
+  Query,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtService } from '@nestjs/jwt';
+import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
-import { CourseAccess, Role } from '@prisma/client';
+import { CourseAccess, Role, ValidityUnit } from '@prisma/client';
 import { ArrayMaxSize, IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min } from 'class-validator';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { AuthGuard, AuthUser, CurrentUser, Roles } from '../auth/auth.guard';
 import { sniff } from '../gallery/gallery.module';
+import { assertTyped, auditDelete } from '../audit/audit';
+import { CourseActivationService, VALIDITY_UNITS, assertValidity, isOpen, validityLabel } from './course-activation';
 
 /** Keep in sync with src/lib/courseIcons.js (PRESET_IDS). */
 export const COURSE_ICON_PRESETS = ['gold-coin', 'gold-bars', 'silver-coin', 'bitcoin', 'ethereum', 'solana', 'xrp', 'candlestick', 'liquidity', 'bos', 'ict', 'setup', 'order-flow'] as const;
 const SVG_MAX_CHARS = 20000;
+
+/** Same allow-list as sanitizeSvg in src/lib/courseIcons.js (which also runs at render time). */
+const SVG_TAGS = new Set(['svg', 'g', 'defs', 'path', 'circle', 'ellipse', 'rect', 'line', 'polyline', 'polygon', 'text', 'tspan', 'lineargradient', 'radialgradient',
+  'stop', 'clippath', 'mask', 'use', 'symbol', 'title', 'desc', 'animate', 'animatetransform', 'animatemotion', 'set', 'mpath', 'filter', 'fegaussianblur',
+  'feoffset', 'fecolormatrix', 'femerge', 'femergenode', 'feblend', 'feflood', 'fecomposite', 'fedropshadow']);
+// One well-formed tag: attributes need whitespace before them and a quoted value, so tricks like <a/onload=...> or unquoted values never match.
+const SVG_TAG = /<(\/?)([a-zA-Z][\w-]*)((?:\s+[a-zA-Z_:][\w:.-]*(?:\s*=\s*(?:"[^"<>]*"|'[^'<>]*'))?)*)\s*(\/?)>/g;
+const SVG_ATTR = /\s+([a-zA-Z_:][\w:.-]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'))?/g;
 
 /** Trims and validates an admin-supplied SVG. Returns null for blank input; throws on anything that could run script. */
 export function cleanCustomSvg(input: string): string | null {
@@ -44,12 +57,27 @@ export function cleanCustomSvg(input: string): string | null {
   if (svg.length > SVG_MAX_CHARS) throw new BadRequestException('Custom icon is too large (20 KB max).');
   if (!/^<svg[\s>]/i.test(svg) || !/<\/svg>\s*$/i.test(svg)) throw bad();
   if ((svg.match(/<svg[\s>]/gi) || []).length !== 1) throw bad();
-  if (/<\s*(script|foreignObject|iframe|object|embed|link|meta|image|a|audio|video|style)[\s/>]/i.test(svg)) throw bad();
-  if (/\son[a-z]+\s*=/i.test(svg) || /javascript:|data:text\/html|<!ENTITY|<!DOCTYPE/i.test(svg)) throw bad();
-  if (/(?:xlink:)?href\s*=\s*["']\s*(?!#)/i.test(svg)) throw bad(); // only in-document #refs
-  if (/url\(\s*["']?\s*(?!#)/i.test(svg)) throw bad();
+  // Allow-list: every "<" must open a well-formed tag from the allowed set, and every attribute must be safe.
+  const rest = svg.replace(SVG_TAG, (_m, _close: string, name: string, attrs: string) => {
+    if (!SVG_TAGS.has(name.toLowerCase())) throw bad();
+    for (const m of attrs.matchAll(SVG_ATTR)) {
+      const key = m[1].toLowerCase();
+      const val = m[2] ?? m[3] ?? '';
+      if (key.startsWith('on')) throw bad();
+      if ((key === 'href' || key === 'xlink:href') && !val.trim().startsWith('#')) throw bad();
+      if (key === 'attributename' && /^\s*(?:xlink:)?href\s*$|^\s*on/i.test(val)) throw bad();
+    }
+    return '';
+  });
+  if (rest.includes('<')) throw bad(); // comments, CDATA, doctype, entities declarations, stray markup
+  if (/&#|&colon;|&tab;|&newline;/i.test(svg)) throw bad(); // entity-encoded tricks
+  if (/javascript:|vbscript:|data:|<!ENTITY|<!DOCTYPE|expression\(|@import/i.test(svg)) throw bad();
+  if (/url\(\s*["']?\s*(?!#)/i.test(svg)) throw bad(); // only in-document #refs
   return svg;
 }
+
+/** Archived ("deleted") rows stay in the database but are invisible to every read. */
+const LIVE = { archivedAt: null } as const;
 
 const THUMB_MAX_BYTES = 3 * 1024 * 1024;
 const MAX_DURATION = 60 * 60 * 24; // a lesson is never longer than a day
@@ -65,6 +93,15 @@ class CourseDto {
   @IsOptional() @IsString() @MaxLength(6000) description?: string;
   @IsOptional() @IsIn(['PUBLIC', 'CLUB', 'ENROLLED']) access?: CourseAccess;
   @IsOptional() @IsBoolean() published?: boolean;
+  /** How long access lasts from activation. Only affects activations from now on; people already active keep their end date. */
+  @IsOptional() @IsIn(VALIDITY_UNITS) validityUnit?: ValidityUnit;
+  @IsOptional() @IsInt() @Min(1) @Max(3650) validityValue?: number;
+  @IsOptional() @IsBoolean() allowPayment?: boolean;
+  /** Whole rupees. */
+  @IsOptional() @IsInt() @Min(0) @Max(10000000) priceInr?: number;
+  @IsOptional() @IsBoolean() allowTask?: boolean;
+  @IsOptional() @IsString() @MaxLength(160) taskTitle?: string;
+  @IsOptional() @IsString() @MaxLength(3000) taskDescription?: string;
   /** One of COURSE_ICON_PRESETS, or '' / null for "random from presets". */
   @IsOptional() @IsIn([...COURSE_ICON_PRESETS, '']) svgPresetId?: string | null;
   /** Inline SVG markup; '' / null clears it. */
@@ -87,6 +124,14 @@ class OrderDto {
 }
 class EnrollDto {
   @IsEmail() @MaxLength(200) email!: string;
+}
+class ReasonDto {
+  @IsOptional() @IsString() @MaxLength(500) reason?: string;
+}
+class VerifyDto {
+  @IsString() @MaxLength(100) razorpay_order_id!: string;
+  @IsString() @MaxLength(100) razorpay_payment_id!: string;
+  @IsString() @MaxLength(200) razorpay_signature!: string;
 }
 class ProgressDto {
   @IsOptional() @IsNumber() @Min(0) @Max(MAX_DURATION) positionSec?: number;
@@ -115,8 +160,11 @@ export function parseVimeo(input: string): { id: string; hash: string | null } {
 const slugify = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/[\s_]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 70) || 'course';
 
 type Viewer = AuthUser | null;
-type Ctx = { user: Viewer; isAdmin: boolean; isClub: boolean; programme: boolean; enrolled: Set<string> };
-type Reason = 'LOGIN' | 'CLUB' | 'ENROLL' | 'UNAVAILABLE';
+type EnrolRow = { courseId: string; status: string; source: string; activatedAt: Date | null; expiresAt: Date | null; rejectionReason: string | null; createdAt: Date };
+/** `enrolled` = courses this user may open through their own enrolment right now (active and not expired); `mine` = every row they have. */
+type Ctx = { user: Viewer; isAdmin: boolean; isClub: boolean; programme: boolean; enrolled: Set<string>; mine: Map<string, EnrolRow> };
+type Reason = 'LOGIN' | 'CLUB' | 'ENROLL' | 'EXPIRED' | 'UNAVAILABLE';
+const DAY_MS = 86_400_000;
 
 /** Lets anonymous visitors through but still identifies logged-in ones (the catalog and previews are public). */
 @Injectable()
@@ -141,13 +189,13 @@ export class CoursesService {
 
   // ---------- access rules
   private async ctx(user: Viewer): Promise<Ctx> {
-    if (!user) return { user: null, isAdmin: false, isClub: false, programme: false, enrolled: new Set() };
+    if (!user) return { user: null, isAdmin: false, isClub: false, programme: false, enrolled: new Set(), mine: new Map() };
     const [m, en, prog] = await Promise.all([
       this.prisma.mentorshipAccess.findUnique({ where: { userId: user.id }, select: { status: true } }),
-      this.prisma.courseEnrollment.findMany({ where: { userId: user.id }, select: { courseId: true } }),
+      this.prisma.courseEnrollment.findMany({ where: { userId: user.id }, select: { courseId: true, status: true, source: true, activatedAt: true, expiresAt: true, rejectionReason: true, createdAt: true } }),
       this.prisma.programEnrollment.findUnique({ where: { userId: user.id }, select: { status: true } }),
     ]);
-    return { user, isAdmin: user.role === ('ADMIN' as Role), isClub: m?.status === 'ACTIVE', programme: prog?.status === 'ACTIVE', enrolled: new Set(en.map((e) => e.courseId)) };
+    return { user, isAdmin: user.role === ('ADMIN' as Role), isClub: m?.status === 'ACTIVE', programme: prog?.status === 'ACTIVE', enrolled: new Set(en.filter((e) => isOpen(e)).map((e) => e.courseId)), mine: new Map(en.map((e) => [e.courseId, e])) };
   }
 
   /** Whole-course access (ignores free previews). */
@@ -157,14 +205,54 @@ export class CoursesService {
     // A paid / approved programme enrolment opens every ENROLLED course, including ones added later.
     if (course.access === 'PUBLIC' || c.enrolled.has(course.id) || (course.access === 'ENROLLED' && c.programme)) return { allowed: true };
     if (course.access === 'CLUB' && c.isClub) return { allowed: true };
+    const own = c.mine.get(course.id);
+    if (own?.status === 'ACTIVE' && !isOpen(own)) return { allowed: false, reason: 'EXPIRED' }; // had access, the validity ran out
     return { allowed: false, reason: course.access === 'CLUB' ? 'CLUB' : 'ENROLL' };
   }
 
   private lessonAllowed(c: Ctx, course: { id: string; access: CourseAccess; published: boolean }, lesson: { isFreePreview: boolean }) {
     if (c.isAdmin) return { allowed: true } as { allowed: boolean; reason?: Reason };
     if (!course.published) return { allowed: false, reason: 'UNAVAILABLE' as Reason };
+    // Watching any lesson needs an account, free previews included (the catalog and curriculum stay public).
+    if (!c.user) return { allowed: false, reason: 'LOGIN' as Reason };
     if (lesson.isFreePreview) return { allowed: true };
     return this.courseAllowed(c, course);
+  }
+
+  /** What the course's validity is, for display. Null for open-to-all courses (nothing to activate, nothing expires). */
+  private validity(course: { access: CourseAccess; validityUnit: ValidityUnit; validityValue: number }) {
+    if (course.access === 'PUBLIC') return null;
+    const lifetime = course.validityUnit === 'LIFETIME';
+    return { unit: course.validityUnit, value: lifetime ? null : course.validityValue, label: validityLabel(course.validityUnit, course.validityValue), lifetime };
+  }
+
+  /** How a learner can switch the course on. Null when it is open to everyone. */
+  private activation(course: { access: CourseAccess; allowPayment: boolean; priceInr: number; allowTask: boolean; taskTitle: string; taskDescription: string }) {
+    if (course.access === 'PUBLIC') return null;
+    return {
+      payment: course.allowPayment && course.priceInr >= 1 ? { priceInr: course.priceInr } : null,
+      task: course.allowTask && course.taskTitle.trim() ? { title: course.taskTitle, description: course.taskDescription } : null,
+    };
+  }
+
+  /** This viewer's own access period for the course (null when it does not apply: logged out, admin, or open-to-all course). */
+  private mine(c: Ctx, course: { id: string; access: CourseAccess }) {
+    if (!c.user || c.isAdmin || course.access === 'PUBLIC') return null;
+    const row = c.mine.get(course.id);
+    const now = new Date();
+    if (row && isOpen(row, now)) {
+      return {
+        state: 'ACTIVE' as const, source: row.source, lifetime: !row.expiresAt, activatedAt: row.activatedAt ?? row.createdAt, expiresAt: row.expiresAt,
+        daysLeft: row.expiresAt ? Math.max(0, Math.ceil((row.expiresAt.getTime() - now.getTime()) / DAY_MS)) : null, via: null as string | null,
+      };
+    }
+    // Open through the 1% Club or the programme instead: no personal end date.
+    if (this.courseAllowed(c, course).allowed) {
+      return { state: 'ACTIVE' as const, source: null, lifetime: true, activatedAt: null, expiresAt: null, daysLeft: null, via: c.programme && course.access === 'ENROLLED' ? 'PROGRAMME' : 'CLUB' };
+    }
+    if (!row) return { state: 'NONE' as const };
+    if (row.status === 'ACTIVE') return { state: 'EXPIRED' as const, expiresAt: row.expiresAt };
+    return { state: row.status as 'PENDING' | 'REJECTED' | 'REVOKED', rejectionReason: row.status === 'REJECTED' ? row.rejectionReason : null };
   }
 
   private thumb(c: { id: string; thumbKey: string | null; updatedAt: Date }) {
@@ -175,9 +263,9 @@ export class CoursesService {
   async catalog(user: Viewer) {
     const c = await this.ctx(user);
     const courses = await this.prisma.course.findMany({
-      where: c.isAdmin ? {} : { published: true },
+      where: { ...LIVE, ...(c.isAdmin ? {} : { published: true }) },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
-      include: { modules: { select: { lessons: { select: { id: true, durationSec: true, isFreePreview: true } } } } },
+      include: { modules: { where: LIVE, select: { lessons: { where: LIVE, select: { id: true, durationSec: true, isFreePreview: true } } } } },
     });
     const done = new Set(
       user ? (await this.prisma.lessonProgress.findMany({ where: { userId: user.id, completed: true }, select: { lessonId: true } })).map((p) => p.lessonId) : [],
@@ -202,6 +290,8 @@ export class CoursesService {
         completedCount: lessons.filter((l) => done.has(l.id)).length,
         canAccess: access.allowed,
         lockReason: access.reason || null,
+        validity: this.validity(course),
+        mine: this.mine(c, course),
       };
     });
   }
@@ -218,9 +308,9 @@ export class CoursesService {
     const c = await this.ctx(user);
     const course = await this.prisma.course.findUnique({
       where: { slug },
-      include: { modules: { orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }], include: { lessons: { orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] } } } },
+      include: { modules: { where: LIVE, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }], include: { lessons: { where: LIVE, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] } } } },
     });
-    if (!course || (!course.published && !c.isAdmin)) throw new NotFoundException('Course not found');
+    if (!course || course.archivedAt || (!course.published && !c.isAdmin)) throw new NotFoundException('Course not found');
     const lessonIds = course.modules.flatMap((m) => m.lessons.map((l) => l.id));
     const prog = user && lessonIds.length
       ? await this.prisma.lessonProgress.findMany({ where: { userId: user.id, lessonId: { in: lessonIds } } })
@@ -276,6 +366,9 @@ export class CoursesService {
       published: course.published,
       canAccess: access.allowed,
       lockReason: access.reason || null,
+      validity: this.validity(course),
+      activation: this.activation(course),
+      mine: this.mine(c, course),
       loggedIn: Boolean(user),
       lessonCount: total,
       completedCount: completed,
@@ -291,13 +384,13 @@ export class CoursesService {
     const c = await this.ctx(user);
     const lesson = await this.prisma.lesson.findUnique({ where: { id: lessonId }, include: { module: { include: { course: true } } } });
     const course = lesson?.module.course;
-    if (!lesson || !course || (!course.published && !c.isAdmin)) throw new NotFoundException('Lesson not found');
+    if (!lesson || !course || lesson.archivedAt || lesson.module.archivedAt || course.archivedAt || (!course.published && !c.isAdmin)) throw new NotFoundException('Lesson not found');
     const ok = this.lessonAllowed(c, course, lesson);
 
     const modules = await this.prisma.courseModule.findMany({
-      where: { courseId: course.id },
+      where: { courseId: course.id, ...LIVE },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-      include: { lessons: { orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }], select: { id: true, title: true, durationSec: true, isFreePreview: true, vimeoId: true } } },
+      include: { lessons: { where: LIVE, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }], select: { id: true, title: true, durationSec: true, isFreePreview: true, vimeoId: true } } },
     });
     const flat = modules.flatMap((m) => m.lessons);
     const idx = flat.findIndex((l) => l.id === lesson.id);
@@ -321,6 +414,7 @@ export class CoursesService {
         vimeoHash: ok.allowed ? lesson.vimeoHash : null,
       },
       access: { allowed: ok.allowed, reason: ok.reason || null, loggedIn: Boolean(user) },
+      mine: this.mine(c, course), // this learner's own access period (start, end, days left)
       progress: { positionSec: mine?.positionSec || 0, completed: Boolean(mine?.completed) },
       prev: nav(flat[idx - 1]),
       next: nav(flat[idx + 1]),
@@ -344,7 +438,7 @@ export class CoursesService {
     const c = await this.ctx(user);
     const lesson = await this.prisma.lesson.findUnique({ where: { id: lessonId }, include: { module: { include: { course: true } } } });
     const course = lesson?.module.course;
-    if (!lesson || !course) throw new NotFoundException('Lesson not found');
+    if (!lesson || !course || lesson.archivedAt || lesson.module.archivedAt || course.archivedAt) throw new NotFoundException('Lesson not found');
     if (!this.lessonAllowed(c, course, lesson).allowed) throw new ForbiddenException('You do not have access to this lesson.');
 
     // If the admin left the length blank, use the player's real duration for this student's completion check. It is
@@ -373,8 +467,9 @@ export class CoursesService {
   // ---------- admin: courses
   async adminList() {
     const rows = await this.prisma.course.findMany({
+      where: LIVE,
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
-      include: { modules: { select: { lessons: { select: { id: true, durationSec: true, vimeoId: true } } } }, _count: { select: { enrollments: true } } },
+      include: { modules: { where: LIVE, select: { lessons: { where: LIVE, select: { id: true, durationSec: true, vimeoId: true } } } }, _count: { select: { enrollments: { where: { status: 'ACTIVE' } } } } },
     });
     return rows.map((r) => {
       const lessons = r.modules.flatMap((m) => m.lessons);
@@ -390,9 +485,9 @@ export class CoursesService {
   async adminGet(id: string) {
     const r = await this.prisma.course.findUnique({
       where: { id },
-      include: { modules: { orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }], include: { lessons: { orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] } } } },
+      include: { modules: { where: LIVE, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }], include: { lessons: { where: LIVE, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] } } } },
     });
-    if (!r) throw new NotFoundException('Course not found');
+    if (!r || r.archivedAt) throw new NotFoundException('Course not found');
     return { ...r, thumbKey: undefined, thumbnail: this.thumb(r) };
   }
 
@@ -426,7 +521,7 @@ export class CoursesService {
 
   async updateCourse(id: string, dto: CourseDto) {
     const existing = await this.prisma.course.findUnique({ where: { id } });
-    if (!existing) throw new NotFoundException('Course not found');
+    if (!existing || existing.archivedAt) throw new NotFoundException('Course not found');
     const data: Record<string, unknown> = {};
     if (dto.title !== undefined) { if (!dto.title.trim()) throw new BadRequestException('The title cannot be empty.'); data.title = dto.title.trim(); }
     if (dto.summary !== undefined) data.summary = dto.summary.trim();
@@ -439,9 +534,31 @@ export class CoursesService {
       if (taken) throw new ConflictException('Another course already uses that web address.');
       data.slug = dto.slug;
     }
+    if (dto.validityUnit !== undefined || dto.validityValue !== undefined) {
+      const unit = dto.validityUnit ?? existing.validityUnit;
+      const value = dto.validityValue ?? existing.validityValue;
+      assertValidity(unit, value);
+      data.validityUnit = unit;
+      data.validityValue = unit === 'LIFETIME' ? 1 : value;
+    }
+    if (dto.allowPayment !== undefined || dto.priceInr !== undefined) {
+      const allow = dto.allowPayment ?? existing.allowPayment;
+      const price = dto.priceInr ?? existing.priceInr;
+      if (allow && price < 1) throw new BadRequestException('Set a price of at least Rs 1 to sell this course online.');
+      data.allowPayment = allow;
+      data.priceInr = price;
+    }
+    if (dto.allowTask !== undefined || dto.taskTitle !== undefined || dto.taskDescription !== undefined) {
+      const allow = dto.allowTask ?? existing.allowTask;
+      const title = (dto.taskTitle ?? existing.taskTitle).trim();
+      if (allow && !title) throw new BadRequestException('Give the task a title so learners know what to do.');
+      data.allowTask = allow;
+      data.taskTitle = title;
+      data.taskDescription = (dto.taskDescription ?? existing.taskDescription).trim();
+    }
     if (dto.published !== undefined) {
       if (dto.published) {
-        const lessons = await this.prisma.lesson.count({ where: { module: { courseId: id } } });
+        const lessons = await this.prisma.lesson.count({ where: { ...LIVE, module: { courseId: id, ...LIVE } } });
         if (lessons === 0) throw new BadRequestException('Add at least one lesson before publishing this course.');
       }
       data.published = dto.published;
@@ -449,12 +566,26 @@ export class CoursesService {
     return this.prisma.course.update({ where: { id }, data });
   }
 
-  async deleteCourse(id: string) {
-    const c = await this.prisma.course.findUnique({ where: { id } });
-    if (!c) throw new NotFoundException('Course not found');
-    await this.prisma.course.delete({ where: { id } });
-    if (c.thumbKey) await this.storage.deleteKey(c.thumbKey).catch(() => undefined);
-    return { deleted: true };
+  /**
+   * "Delete" = archive. Nothing is erased: the course, its modules and lessons, every learner's enrolment and progress and
+   * every payment stay in the database (the foreign keys are RESTRICT, so even a hand-typed DELETE is refused). The course just
+   * disappears from the site and the admin list. A course that has learners or payments is not archived at all:
+   * unpublish it instead, so nobody who paid loses their course.
+   */
+  async deleteCourse(id: string, confirm: string | undefined, actor: AuthUser) {
+    const c = await this.prisma.course.findUnique({ where: { id }, include: { modules: { include: { lessons: true } } } });
+    if (!c || c.archivedAt) throw new NotFoundException('Course not found');
+    const [payments, enrolled] = await Promise.all([
+      this.prisma.coursePayment.count({ where: { courseId: id } }),
+      this.prisma.courseEnrollment.count({ where: { courseId: id } }),
+    ]);
+    if (payments || enrolled) {
+      throw new ConflictException(`This course has ${enrolled} learner(s) and ${payments} payment record(s), so it cannot be removed. Unpublish it instead.`);
+    }
+    assertTyped(confirm, c.title, `the course "${c.title}" and its modules and lessons`);
+    await auditDelete(this.prisma, actor, 'Course', id, c.title, c, 'ARCHIVE');
+    await this.prisma.course.update({ where: { id }, data: { archivedAt: new Date(), published: false } });
+    return { deleted: true, archived: true };
   }
 
   async setThumbnail(id: string, file?: Upload) {
@@ -481,7 +612,7 @@ export class CoursesService {
 
   // ---------- admin: modules
   async createModule(courseId: string, dto: ModuleDto) {
-    if (!(await this.prisma.course.findUnique({ where: { id: courseId }, select: { id: true } }))) throw new NotFoundException('Course not found');
+    if (!(await this.prisma.course.findFirst({ where: { id: courseId, ...LIVE }, select: { id: true } }))) throw new NotFoundException('Course not found');
     const title = dto.title?.trim();
     if (!title) throw new BadRequestException('Give the module a title.');
     const max = await this.prisma.courseModule.aggregate({ where: { courseId }, _max: { sortOrder: true } });
@@ -489,23 +620,26 @@ export class CoursesService {
   }
 
   async updateModule(id: string, dto: ModuleDto) {
-    if (!(await this.prisma.courseModule.findUnique({ where: { id }, select: { id: true } }))) throw new NotFoundException('Module not found');
+    if (!(await this.prisma.courseModule.findFirst({ where: { id, ...LIVE }, select: { id: true } }))) throw new NotFoundException('Module not found');
     const data: Record<string, string> = {};
     if (dto.title !== undefined) { if (!dto.title.trim()) throw new BadRequestException('The title cannot be empty.'); data.title = dto.title.trim(); }
     if (dto.description !== undefined) data.description = dto.description.trim();
     return this.prisma.courseModule.update({ where: { id }, data });
   }
 
-  async deleteModule(id: string) {
-    const m = await this.prisma.courseModule.findUnique({ where: { id }, include: { course: { select: { id: true, published: true } } } });
-    if (!m) throw new NotFoundException('Module not found');
-    await this.prisma.courseModule.delete({ where: { id } });
+  /** Archives the module; its lessons and every learner's progress on them are kept. */
+  async deleteModule(id: string, confirm: string | undefined, actor: AuthUser) {
+    const m = await this.prisma.courseModule.findUnique({ where: { id }, include: { course: { select: { id: true, published: true } }, lessons: { where: LIVE } } });
+    if (!m || m.archivedAt) throw new NotFoundException('Module not found');
+    if (m.lessons.length) assertTyped(confirm, m.title, `the module "${m.title}" and its ${m.lessons.length} lesson(s)`);
+    await auditDelete(this.prisma, actor, 'CourseModule', id, m.title, { ...m, course: undefined, courseId: m.course.id }, 'ARCHIVE');
+    await this.prisma.courseModule.update({ where: { id }, data: { archivedAt: new Date() } });
     await this.unpublishIfEmpty(m.course.id, m.course.published);
-    return { deleted: true };
+    return { deleted: true, archived: true };
   }
 
   async reorderModules(courseId: string, ids: string[]) {
-    const rows = await this.prisma.courseModule.findMany({ where: { courseId }, select: { id: true } });
+    const rows = await this.prisma.courseModule.findMany({ where: { courseId, ...LIVE }, select: { id: true } });
     this.assertSameSet(rows.map((r) => r.id), ids);
     await this.prisma.$transaction(ids.map((id, i) => this.prisma.courseModule.update({ where: { id }, data: { sortOrder: i } })));
     return { ok: true };
@@ -521,7 +655,7 @@ export class CoursesService {
   }
 
   async createLesson(moduleId: string, dto: LessonDto) {
-    if (!(await this.prisma.courseModule.findUnique({ where: { id: moduleId }, select: { id: true } }))) throw new NotFoundException('Module not found');
+    if (!(await this.prisma.courseModule.findFirst({ where: { id: moduleId, ...LIVE }, select: { id: true } }))) throw new NotFoundException('Module not found');
     const title = dto.title?.trim();
     if (!title) throw new BadRequestException('Give the lesson a title.');
     const max = await this.prisma.lesson.aggregate({ where: { moduleId }, _max: { sortOrder: true } });
@@ -537,7 +671,7 @@ export class CoursesService {
   }
 
   async updateLesson(id: string, dto: LessonDto) {
-    if (!(await this.prisma.lesson.findUnique({ where: { id }, select: { id: true } }))) throw new NotFoundException('Lesson not found');
+    if (!(await this.prisma.lesson.findFirst({ where: { id, ...LIVE }, select: { id: true } }))) throw new NotFoundException('Lesson not found');
     const data: Record<string, unknown> = {};
     if (dto.title !== undefined) { if (!dto.title.trim()) throw new BadRequestException('The title cannot be empty.'); data.title = dto.title.trim(); }
     if (dto.description !== undefined) data.description = dto.description.trim();
@@ -547,16 +681,19 @@ export class CoursesService {
     return this.prisma.lesson.update({ where: { id }, data });
   }
 
-  async deleteLesson(id: string) {
+  /** Archives the lesson; learners' progress on it is kept. */
+  async deleteLesson(id: string, confirm: string | undefined, actor: AuthUser) {
     const l = await this.prisma.lesson.findUnique({ where: { id }, include: { module: { include: { course: { select: { id: true, published: true } } } } } });
-    if (!l) throw new NotFoundException('Lesson not found');
-    await this.prisma.lesson.delete({ where: { id } });
+    if (!l || l.archivedAt) throw new NotFoundException('Lesson not found');
+    assertTyped(confirm, l.title, `the lesson "${l.title}"`);
+    await auditDelete(this.prisma, actor, 'Lesson', id, l.title, { ...l, module: undefined, moduleId: l.moduleId, courseId: l.module.course.id }, 'ARCHIVE');
+    await this.prisma.lesson.update({ where: { id }, data: { archivedAt: new Date() } });
     await this.unpublishIfEmpty(l.module.course.id, l.module.course.published);
-    return { deleted: true };
+    return { deleted: true, archived: true };
   }
 
   async reorderLessons(moduleId: string, ids: string[]) {
-    const rows = await this.prisma.lesson.findMany({ where: { moduleId }, select: { id: true } });
+    const rows = await this.prisma.lesson.findMany({ where: { moduleId, ...LIVE }, select: { id: true } });
     this.assertSameSet(rows.map((r) => r.id), ids);
     await this.prisma.$transaction(ids.map((id, i) => this.prisma.lesson.update({ where: { id }, data: { sortOrder: i } })));
     return { ok: true };
@@ -565,7 +702,7 @@ export class CoursesService {
   /** A published course with no lessons left would show an empty page, so it goes back to draft. */
   private async unpublishIfEmpty(courseId: string, published: boolean) {
     if (!published) return;
-    if ((await this.prisma.lesson.count({ where: { module: { courseId } } })) === 0) {
+    if ((await this.prisma.lesson.count({ where: { ...LIVE, module: { courseId, ...LIVE } } })) === 0) {
       await this.prisma.course.update({ where: { id: courseId }, data: { published: false } });
     }
   }
@@ -574,25 +711,6 @@ export class CoursesService {
     if (current.length !== next.length || new Set(next).size !== next.length || !next.every((id) => current.includes(id))) {
       throw new BadRequestException('The list changed while you were editing. Reload and try again.');
     }
-  }
-
-  // ---------- admin: enrollments
-  async enrollments(courseId: string) {
-    const rows = await this.prisma.courseEnrollment.findMany({ where: { courseId }, orderBy: { createdAt: 'desc' }, include: { user: { select: { id: true, name: true, email: true } } } });
-    return rows.map((r) => ({ userId: r.userId, name: r.user.name, email: r.user.email, createdAt: r.createdAt }));
-  }
-
-  async enroll(courseId: string, email: string) {
-    if (!(await this.prisma.course.findUnique({ where: { id: courseId }, select: { id: true } }))) throw new NotFoundException('Course not found');
-    const user = await this.prisma.user.findUnique({ where: { email: email.trim().toLowerCase() }, select: { id: true } });
-    if (!user) throw new NotFoundException('No account with that email. The person must sign up first.');
-    await this.prisma.courseEnrollment.upsert({ where: { userId_courseId: { userId: user.id, courseId } }, create: { userId: user.id, courseId }, update: {} });
-    return this.enrollments(courseId);
-  }
-
-  async unenroll(courseId: string, userId: string) {
-    await this.prisma.courseEnrollment.deleteMany({ where: { courseId, userId } });
-    return this.enrollments(courseId);
   }
 }
 
@@ -623,6 +741,22 @@ class CoursesPublicController {
   }
 }
 
+/** A logged-in learner switching a course on: pay through Razorpay, or hand in the course task. */
+@Controller('courses')
+@UseGuards(AuthGuard)
+class CourseActivationController {
+  constructor(private readonly act: CourseActivationService) {}
+
+  @Post(':id/pay') @HttpCode(200) @Throttle({ default: { ttl: 60_000, limit: 10 } })
+  pay(@Param('id') id: string, @CurrentUser() u: AuthUser) { return this.act.startPayment(u, id); }
+
+  @Post(':id/pay/verify') @HttpCode(200) @Throttle({ default: { ttl: 60_000, limit: 20 } })
+  verify(@Param('id') id: string, @Body() dto: VerifyDto, @CurrentUser() u: AuthUser) { return this.act.verifyPayment(u.id, id, dto); }
+
+  @Post(':id/task') @HttpCode(200) @Throttle({ default: { ttl: 60_000, limit: 10 } })
+  task(@Param('id') id: string, @CurrentUser() u: AuthUser) { return this.act.submitTask(u.id, id); }
+}
+
 @Controller('learn')
 class LearnController {
   constructor(private readonly svc: CoursesService) {}
@@ -645,13 +779,13 @@ class LearnController {
 @UseGuards(AuthGuard)
 @Roles('ADMIN')
 class CoursesAdminController {
-  constructor(private readonly svc: CoursesService) {}
+  constructor(private readonly svc: CoursesService, private readonly act: CourseActivationService) {}
 
   @Get() list() { return this.svc.adminList(); }
   @Post() create(@Body() dto: CourseDto) { return this.svc.createCourse(dto); }
   @Get(':id') get(@Param('id') id: string) { return this.svc.adminGet(id); }
   @Patch(':id') update(@Param('id') id: string, @Body() dto: CourseDto) { return this.svc.updateCourse(id, dto); }
-  @Delete(':id') remove(@Param('id') id: string) { return this.svc.deleteCourse(id); }
+  @Delete(':id') remove(@Param('id') id: string, @Query('confirm') confirm: string | undefined, @CurrentUser() admin: AuthUser) { return this.svc.deleteCourse(id, confirm, admin); }
 
   @Post(':id/thumbnail')
   @UseInterceptors(FileInterceptor('image', { limits: { fileSize: THUMB_MAX_BYTES, files: 1 } }))
@@ -661,9 +795,13 @@ class CoursesAdminController {
   @Post(':id/modules') createModule(@Param('id') id: string, @Body() dto: ModuleDto) { return this.svc.createModule(id, dto); }
   @Put(':id/modules/order') reorderModules(@Param('id') id: string, @Body() dto: OrderDto) { return this.svc.reorderModules(id, dto.ids); }
 
-  @Get(':id/enrollments') enrollments(@Param('id') id: string) { return this.svc.enrollments(id); }
-  @Post(':id/enrollments') enroll(@Param('id') id: string, @Body() dto: EnrollDto) { return this.svc.enroll(id, dto.email); }
-  @Delete(':id/enrollments/:userId') unenroll(@Param('id') id: string, @Param('userId') userId: string) { return this.svc.unenroll(id, userId); }
+  // Who has this course: free assignments, paid buyers and task requests, each with their start and end dates.
+  @Get(':id/enrollments') enrollments(@Param('id') id: string) { return this.act.list(id); }
+  @Post(':id/enrollments') enroll(@Param('id') id: string, @Body() dto: EnrollDto) { return this.act.assign(id, dto.email); }
+  @Patch(':id/enrollments/:userId/approve') approve(@Param('id') id: string, @Param('userId') userId: string) { return this.act.approve(id, userId); }
+  @Patch(':id/enrollments/:userId/reject') reject(@Param('id') id: string, @Param('userId') userId: string, @Body() dto: ReasonDto) { return this.act.reject(id, userId, dto.reason); }
+  @Patch(':id/enrollments/:userId/revoke') revoke(@Param('id') id: string, @Param('userId') userId: string) { return this.act.revoke(id, userId); }
+  @Delete(':id/enrollments/:userId') unenroll(@Param('id') id: string, @Param('userId') userId: string, @CurrentUser() admin: AuthUser) { return this.act.remove(id, userId, admin); }
 }
 
 @Controller('admin/course-modules')
@@ -673,7 +811,7 @@ class ModulesAdminController {
   constructor(private readonly svc: CoursesService) {}
 
   @Patch(':id') update(@Param('id') id: string, @Body() dto: ModuleDto) { return this.svc.updateModule(id, dto); }
-  @Delete(':id') remove(@Param('id') id: string) { return this.svc.deleteModule(id); }
+  @Delete(':id') remove(@Param('id') id: string, @Query('confirm') confirm: string | undefined, @CurrentUser() admin: AuthUser) { return this.svc.deleteModule(id, confirm, admin); }
   @Post(':id/lessons') createLesson(@Param('id') id: string, @Body() dto: LessonDto) { return this.svc.createLesson(id, dto); }
   @Put(':id/lessons/order') reorderLessons(@Param('id') id: string, @Body() dto: OrderDto) { return this.svc.reorderLessons(id, dto.ids); }
 }
@@ -685,11 +823,11 @@ class LessonsAdminController {
   constructor(private readonly svc: CoursesService) {}
 
   @Patch(':id') update(@Param('id') id: string, @Body() dto: LessonDto) { return this.svc.updateLesson(id, dto); }
-  @Delete(':id') remove(@Param('id') id: string) { return this.svc.deleteLesson(id); }
+  @Delete(':id') remove(@Param('id') id: string, @Query('confirm') confirm: string | undefined, @CurrentUser() admin: AuthUser) { return this.svc.deleteLesson(id, confirm, admin); }
 }
 
 @Module({
-  controllers: [CoursesPublicController, LearnController, CoursesAdminController, ModulesAdminController, LessonsAdminController],
-  providers: [CoursesService, OptionalAuthGuard],
+  controllers: [CoursesPublicController, CourseActivationController, LearnController, CoursesAdminController, ModulesAdminController, LessonsAdminController],
+  providers: [CoursesService, CourseActivationService, OptionalAuthGuard],
 })
 export class CoursesModule {}

@@ -107,7 +107,7 @@ export class FreeScheduleService {
     const allBooks = b.allBooks !== false;
     const requested = Array.isArray(b.bookIds) ? [...new Set(b.bookIds.filter((x): x is string => typeof x === 'string'))].slice(0, 500) : [];
     // Only real, public books can be listed; club-only books are dropped.
-    const valid = requested.length ? (await this.prisma.book.findMany({ where: { id: { in: requested }, clubOnly: false }, select: { id: true } })).map((x) => x.id) : [];
+    const valid = requested.length ? (await this.prisma.book.findMany({ where: { id: { in: requested }, clubOnly: false, archivedAt: null }, select: { id: true } })).map((x) => x.id) : [];
     if (enabled && days.length === 0) throw new BadRequestException('Pick at least one free day.');
     if (enabled && !allBooks && valid.length === 0) throw new BadRequestException('Pick at least one book, or choose "All books".');
     const data = { enabled, days: days.sort((a, c) => a - c), startMinute, endMinute, timezone, allBooks, bookIds: valid };

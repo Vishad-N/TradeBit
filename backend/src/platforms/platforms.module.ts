@@ -24,7 +24,8 @@ import { Prisma } from '@prisma/client';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
-import { AuthGuard, Roles } from '../auth/auth.guard';
+import { AuthGuard, AuthUser, CurrentUser, Roles } from '../auth/auth.guard';
+import { auditDelete } from '../audit/audit';
 
 const MAX_LOGO_BYTES = 1024 * 1024;
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -225,11 +226,12 @@ export class PlatformsService {
     return updated;
   }
 
-  async remove(id: string) {
+  /** The stored logo file is kept (not deleted) so the audit snapshot is enough to restore the card. */
+  async remove(id: string, admin: AuthUser) {
     const p = await this.prisma.platform.findUnique({ where: { id } });
     if (!p) throw new NotFoundException('Platform not found');
+    await auditDelete(this.prisma, admin, 'Platform', id, p.name, p);
     await this.prisma.platform.delete({ where: { id } });
-    if (p.logoKey) await this.storage.deleteKey(p.logoKey).catch(() => undefined);
     return { deleted: true };
   }
 }
@@ -283,8 +285,8 @@ class PlatformsAdminController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.svc.remove(id);
+  remove(@Param('id') id: string, @CurrentUser() admin: AuthUser) {
+    return this.svc.remove(id, admin);
   }
 }
 

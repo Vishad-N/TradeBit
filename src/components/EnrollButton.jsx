@@ -5,19 +5,7 @@ import { enrollmentApi } from '../services/readingApi.js';
 import { usePricing } from '../context/PricingContext.jsx';
 import { useSiteLinks } from '../context/SiteLinksContext.jsx';
 
-let rzpScript;
-/** Loads Razorpay's checkout script once. */
-const loadRazorpay = () => {
-  if (window.Razorpay) return Promise.resolve();
-  rzpScript ||= new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    s.onload = resolve;
-    s.onerror = () => { rzpScript = null; reject(new Error('Could not load the payment window. Check your connection and try again.')); };
-    document.body.appendChild(s);
-  });
-  return rzpScript;
-};
+import { loadRazorpay } from '../lib/razorpay.js';
 
 /**
  * "Enrol" for the programme. Logged out -> login first.

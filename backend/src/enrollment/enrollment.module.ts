@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Body,
+  ConflictException,
   Controller,
   ForbiddenException,
   Get,
@@ -27,6 +28,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuthGuard, AuthUser, CurrentUser, Roles } from '../auth/auth.guard';
 import { TelegramService } from './telegram.service';
 import { PricingModule, PricingService, effectivePrice } from '../pricing/pricing.module';
+import { RZP_TIMEOUT_MS, confirmCapture, refundCoursePayment, settleCoursePayment } from '../courses/course-activation';
 
 const RZP_API = 'https://api.razorpay.com/v1';
 const STATUSES: EnrollmentStatus[] = ['PENDING', 'ACTIVE', 'REJECTED', 'REVOKED'];
@@ -112,6 +114,7 @@ export class EnrollmentService {
       const res = await fetch(`${RZP_API}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Basic ${Buffer.from(`${k.id}:${k.secret}`).toString('base64')}` },
+        signal: AbortSignal.timeout(RZP_TIMEOUT_MS),
         body: JSON.stringify({ amount: amountPaise, currency: 'INR', receipt: `prog_${userId}`.slice(0, 40), notes: { userId, product: 'invitation' } }),
       });
       if (!res.ok) throw new Error(`Razorpay ${res.status}: ${(await res.text()).slice(0, 300)}`);
@@ -133,36 +136,71 @@ export class EnrollmentService {
     }
     const order = await this.prisma.programPayment.findUnique({ where: { razorpayOrderId: dto.razorpay_order_id } });
     if (!order || order.userId !== userId) throw new NotFoundException('Order not found.');
+    if (order.status === 'PAID' && order.razorpayPaymentId && order.razorpayPaymentId !== dto.razorpay_payment_id) throw new ConflictException('This order was already paid.');
+    if (order.status !== 'PAID' && !(await confirmCapture(k, dto.razorpay_payment_id, order.razorpayOrderId, order.amountPaise, order.currency))) {
+      throw new ConflictException('Your payment is still being confirmed. Your access switches on automatically within a few minutes.');
+    }
     await this.settle(order.razorpayOrderId, dto.razorpay_payment_id);
     return this.status(userId);
   }
 
-  /** Marks the order paid and activates the enrolment. Safe to call twice (browser callback + webhook). */
-  private async settle(orderId: string, paymentId: string) {
-    await this.prisma.$transaction(async (tx) => {
+  /**
+   * Marks the order paid and activates the enrolment. Safe to call twice (browser callback + webhook): only the call that
+   * flips CREATED -> PAID activates, so a repeat callback can never re-activate someone an admin revoked afterwards.
+   * `paid` (webhook only) is Razorpay's own amount/currency; a mismatch with the order we created is refused.
+   */
+  private async settle(orderId: string, paymentId: string, paid?: { amount: number; currency: string }) {
+    const done = await this.prisma.$transaction(async (tx) => {
       const order = await tx.programPayment.findUnique({ where: { razorpayOrderId: orderId } });
-      if (!order) return;
-      if (order.status !== 'PAID') {
-        await tx.programPayment.update({ where: { id: order.id }, data: { status: 'PAID', razorpayPaymentId: paymentId, paidAt: new Date() } });
+      if (!order) return false;
+      if (paid && (paid.amount !== order.amountPaise || paid.currency !== order.currency)) {
+        this.log.error(`Refusing to settle ${orderId}: Razorpay says ${paid.amount} ${paid.currency}, order was ${order.amountPaise} ${order.currency}`);
+        return false;
       }
-      const now = new Date();
-      await tx.programEnrollment.upsert({
-        where: { userId: order.userId },
-        update: { status: 'ACTIVE', source: 'PAYMENT', rejectionReason: null, decidedAt: now },
-        create: { userId: order.userId, status: 'ACTIVE', source: 'PAYMENT', decidedAt: now },
-      });
+      const flipped = await tx.programPayment.updateMany({ where: { id: order.id, status: 'CREATED' }, data: { status: 'PAID', razorpayPaymentId: paymentId, paidAt: new Date() } });
+      if (flipped.count === 1) {
+        const now = new Date();
+        await tx.programEnrollment.upsert({
+          where: { userId: order.userId },
+          update: { status: 'ACTIVE', source: 'PAYMENT', rejectionReason: null, decidedAt: now },
+          create: { userId: order.userId, status: 'ACTIVE', source: 'PAYMENT', decidedAt: now },
+        });
+      }
+      return flipped.count === 1;
     });
-    this.log.log(`Order ${orderId} paid (${paymentId})`);
+    if (done) this.log.log(`Order ${orderId} paid (${paymentId})`);
   }
 
-  /** Razorpay -> us. Covers the buyer who pays and then closes the tab before the browser callback runs. */
+  /** A full refund withdraws the programme access that payment bought; a partial one is only logged for the admin. */
+  private async refund(paymentId: string, refundPaise: number) {
+    const pay = await this.prisma.programPayment.findUnique({ where: { razorpayPaymentId: paymentId } });
+    if (!pay) return;
+    if (refundPaise < pay.amountPaise) { this.log.warn(`Partial refund (${refundPaise} of ${pay.amountPaise} paise) on ${paymentId}: access left as it is.`); return; }
+    await this.prisma.$transaction([
+      this.prisma.programPayment.update({ where: { id: pay.id }, data: { status: 'REFUNDED' } }),
+      this.prisma.programEnrollment.updateMany({ where: { userId: pay.userId, source: 'PAYMENT', status: 'ACTIVE' }, data: { status: 'REVOKED', decidedAt: new Date() } }),
+    ]);
+    this.log.log(`Payment ${paymentId} refunded: programme access for ${pay.userId} withdrawn`);
+  }
+
+  /** Razorpay -> us. Covers the buyer who pays and then closes the tab before the browser callback runs, and refunds. */
   async webhook(raw: Buffer | undefined, signature: string | undefined) {
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET?.trim();
+    if (!secret) this.log.error('RAZORPAY_WEBHOOK_SECRET is not set: every Razorpay webhook is being rejected, so buyers who close the tab after paying are not activated and refunds are not applied.');
     if (!secret || !raw || !signature || !sameHex(hmac(secret, raw), signature)) throw new ForbiddenException();
     const event = JSON.parse(raw.toString('utf8'));
     const pay = event?.payload?.payment?.entity;
-    if ((event?.event === 'payment.captured' || event?.event === 'order.paid') && pay?.order_id && pay?.id) {
-      await this.settle(pay.order_id, pay.id);
+    if ((event?.event === 'payment.captured' || event?.event === 'order.paid') && pay?.order_id && pay?.id && pay?.status === 'captured') {
+      const paid = { amount: Number(pay.amount), currency: String(pay.currency) };
+      // One Razorpay webhook serves both products: each settle is a no-op for an order that is not its own.
+      await this.settle(pay.order_id, pay.id, paid);
+      await settleCoursePayment(this.prisma, pay.order_id, pay.id, paid);
+    } else if (event?.event === 'refund.processed') {
+      const refund = event?.payload?.refund?.entity;
+      if (refund?.payment_id && Number.isFinite(Number(refund.amount))) {
+        await this.refund(refund.payment_id, Number(refund.amount));
+        await refundCoursePayment(this.prisma, refund.payment_id, Number(refund.amount));
+      }
     }
     return { ok: true };
   }

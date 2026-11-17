@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { coursesApi } from '../../services/coursesApi.js';
-import { fmtDuration } from '../../lib/courses.js';
+import { fmtDuration, mineText, mineTone, validityChip } from '../../lib/courses.js';
 import { ASSET_THEMES, ORG, SITE_URL, assetOf, visualOf } from '../../lib/courseTheme.js';
 import { crumbs, useSeo } from '../../lib/seo.js';
 import Icon from '../../components/courses/Icons.jsx';
@@ -37,6 +37,11 @@ function CourseCard({ course, i }) {
           <div className="cx-card-body">
             <div className="cx-chips">
               <span className={`cx-chip ${course.access === 'PUBLIC' ? 'gain' : ''}`}>{course.access !== 'PUBLIC' && <Icon name="lock" size={11} />}{course.access === 'PUBLIC' ? 'Free for members' : course.access === 'CLUB' ? '1% Club' : 'Enrolled'}</span>
+              {validityChip(course) && (
+                <span className={`cx-chip ${mineTone(course.mine)}`} title={mineText(course.mine) || 'How long access lasts once activated'}>
+                  <Icon name="clock" size={11} />{validityChip(course)}
+                </span>
+              )}
               {course.previewCount > 0 && !course.canAccess && <span className="cx-chip"><Icon name="play" size={11} />{course.previewCount} free</span>}
             </div>
             <h2 className="cx-card-title">{course.title}</h2>
@@ -103,7 +108,7 @@ export default function Courses() {
         <AssetBackdrop key={active.key} seed={active.key} />
         <LazyScene kind="spheres" count={22} className="cx-hero-3d cx-burst" />
         <div className="cx-hero-in">
-          <motion.span className="cx-kicker" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}><i className="cx-live" />Trading academy</motion.span>
+          <motion.span className="cx-kicker" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}><i className="cx-live" />The Modern Trading Framework</motion.span>
           <h1 className="cx-h1"><em>Gold and Crypto</em> Advanced Mastery Training</h1>
           <p className="cx-sub">Complete Professional Trading Program (From Basic to Advanced)</p>
           <p className="cx-lead">From the basics to advanced setups, one module at a time. Clear video lessons that teach you to read price and manage risk with discipline.</p>
@@ -119,7 +124,7 @@ export default function Courses() {
 
       <section className="cx-wrap" aria-labelledby="cx-cat-h">
         <div className="cx-bar">
-          <h2 id="cx-cat-h" className="cx-h2">Course catalog</h2>
+          <h2 id="cx-cat-h" className="cx-h2">Learning path</h2>
           {tabs.length > 1 && (
             <>
               <div className="cx-filters" role="group" aria-label="Filter courses by market">

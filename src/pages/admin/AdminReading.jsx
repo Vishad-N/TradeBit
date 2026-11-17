@@ -1,3 +1,4 @@
+import { typeToConfirm } from '../../lib/confirmDelete.js';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -189,7 +190,7 @@ function BooksTab() {
                     <button className="rd-mini" onClick={act(() => adminApi.updateBook(b.id, { isActive: !b.isActive }))}>{b.isActive ? 'Hide' : 'Show'}</button>
                     <button className="rd-mini" onClick={act(() => adminApi.updateBook(b.id, { clubOnly: !b.clubOnly }))}>{b.clubOnly ? 'Make public' : 'Club only'}</button>
                     {b.status === 'FAILED' && <button className="rd-mini" onClick={act(() => adminApi.reprocessBook(b.id))}>Retry</button>}
-                    <button className="rd-mini rd-danger" onClick={() => window.confirm(`Delete "${b.title}" and all its pages?`) && act(() => adminApi.deleteBook(b.id))()}>Delete</button>
+                    <button className="rd-mini rd-danger" onClick={() => { const typed = typeToConfirm(`Remove the book "${b.title}" from the site? Its pages, every reader's access and their progress are kept.`, b.title); if (typed) act(() => adminApi.deleteBook(b.id, typed))(); }}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -260,10 +261,17 @@ function TasksTab() {
                   <td data-label="Actions" className="rd-actions">
                     <button className="rd-mini" onClick={() => setEditing(t)}>Edit books</button>
                     <button className="rd-mini" onClick={async () => { await adminApi.updateTask(t.id, { isActive: !t.isActive }).catch(err => setMsg({ error: err.message })); reload(); }}>{t.isActive ? 'Deactivate' : 'Make active'}</button>
-                    <button className="rd-mini rd-danger" onClick={async () => {
-                      if (!window.confirm(`Delete task "${t.title}"? Its ${t._count.submissions} submission(s) will be removed too, and books users unlocked only through this task will lock again.`)) return;
-                      try { await adminApi.deleteTask(t.id); reload(); } catch (err) { setMsg({ error: err.message }); }
-                    }}>Delete</button>
+                    <button className="rd-mini rd-danger"
+                      title={t._count.submissions > 0 ? 'Removes the task from this list. Its requests and all book access are kept.' : 'Delete this unused task'}
+                      onClick={async () => {
+                        const n = t._count.submissions;
+                        if (!window.confirm(n > 0
+                          ? `Remove the task "${t.title}" from this list?
+
+Its ${n} request(s) and every reader's book access are KEPT. It just stops taking new requests.`
+                          : `Delete the unused task "${t.title}"?`)) return;
+                        try { await adminApi.deleteTask(t.id); setMsg({ ok: n > 0 ? `Task removed. Its ${n} request(s) and all book access were kept.` : 'Task deleted.' }); reload(); } catch (err) { setMsg({ error: err.message }); }
+                      }}>Delete</button>
                   </td>
                 </tr>
               ))}

@@ -17,6 +17,7 @@ import { PricingModule } from './pricing/pricing.module';
 import { HealthModule } from './health/health.module';
 import { CoursesModule } from './courses/courses.module';
 import { EnrollmentModule } from './enrollment/enrollment.module';
+import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { EnrollmentModule } from './enrollment/enrollment.module';
     HealthModule,
     CoursesModule,
     EnrollmentModule,
+    AuditModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

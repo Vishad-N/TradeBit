@@ -118,6 +118,19 @@
 .cx-login strong{color:var(--ink);font-weight:600}
 .cx-login .btn{flex:none}
 
+/* ---------- course activation (pay / task) and validity lines ---------- */
+.cx-act{display:flex;flex-direction:column;gap:12px;align-items:stretch}
+.cx-act-valid,.cx-valid{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;line-height:1.4;color:var(--ink-2)}
+.cx-act-valid svg,.cx-valid svg{flex:none;margin-top:2px}
+.cx-valid b{color:var(--ink);font-weight:600}
+.cx-valid.soon b,.cx-valid.ended b{color:#e8a33d}
+.cx-chip.soon{color:#e8a33d;border-color:rgba(232,163,61,.45)}
+.cx-chip.ended{color:#e8a33d}
+.cx-outline .cx-valid{margin:2px 0 10px}
+.cx-act-task{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03)}
+.cx-act-task p{font-size:14px;color:var(--ink-2);white-space:pre-line}
+.cx-act-or{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+
 /* ---------- animated hero illustrations (HeroArt) ---------- */
 .ha{width:100%;height:100%;overflow:visible}
 .ha *{transform-box:fill-box;transform-origin:center}
@@ -362,4 +375,14 @@ a.cx-o-item:focus-visible{outline:2px solid var(--ac);outline-offset:-2px}
 }
 @media (prefers-reduced-motion:reduce){
   .cx *,.cx *::before,.cx *::after{animation:none!important;transition-duration:.01ms!important}
+}
+
+/* phones: the hero chip row stays short (the validity is stated again in the access panel), and a lesson row with a badge
+   moves the badge under the title instead of squeezing the title into a narrow column */
+@media (max-width:560px){
+  .cx-chip-valid{display:none}
+}
+@media (max-width:400px){
+  .cx-lesson{flex-wrap:wrap;row-gap:6px}
+  .cx-les-r:has(.cx-chip){order:3;flex:1 0 100%;padding-left:48px}
 }

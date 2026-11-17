@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, Navigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { readingApi } from '../../services/readingApi.js';
 import { BookCard, LibrarySkeleton, LockIcon, TaskPanel } from './Library.jsx';
@@ -79,9 +79,38 @@ function FreeBanner({ fw }) {
   );
 }
 
+// What a logged-out visitor sees: the real book shelf, every card asking them to log in first.
+function GuestLibrary({ books, onOpen }) {
+  if (books === null) return <Shell lead="Loading…" />;
+  if (books.length === 0) {
+    return (
+      <Shell lead="Access your available reading material.">
+        <div className="rd-card">
+          <p>Please log in to continue.</p>
+          <Link className="btn btn-lime" to="/login?next=/read/books">Login to Continue <span className="ar">→</span></Link>
+        </div>
+      </Shell>
+    );
+  }
+  return (
+    <section className="rd-section lib">
+      <header className="lib-head">
+        <span className="label">Free Books</span>
+        <h1 className="h-l lib-h">Pick a book to <span className="hl">start reading.</span></h1>
+        <p className="lib-sub">Browse the library below. Log in (it is free) when you are ready to open a book, and we will bring you straight back to it.</p>
+        <Link className="btn btn-lime" style={{ width: 'fit-content' }} to="/login?next=/read/books">Log in to read <span className="ar">→</span></Link>
+      </header>
+      <ul className="lib-grid">
+        {books.map((b, i) => <BookCard key={b.id} book={{ ...b, state: 'GUEST', task: null }} index={i} onOpen={onOpen} />)}
+      </ul>
+    </section>
+  );
+}
+
 function ReaderPage() {
   const { user, loading: authLoading, isAdmin } = useAuth();
   const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
   const [lib, setLib] = useState(null);
   const [error, setError] = useState(null);
   const [submitError, setSubmitError] = useState(null);
@@ -121,6 +150,15 @@ function ReaderPage() {
     else { setLib(null); setError(null); prev.current = null; }
   }, [user, load]);
 
+  // Visitors who are not logged in still get to see what is on the shelf.
+  const [catalog, setCatalog] = useState(null); // null = loading, [] = none / unavailable
+  useEffect(() => {
+    if (user || authLoading) return undefined;
+    let live = true;
+    readingApi.catalog().then(r => live && setCatalog(r.books || []), () => live && setCatalog([]));
+    return () => { live = false; };
+  }, [user, authLoading]);
+
   // While a task is waiting for the admin, check back so approval shows up without a manual refresh.
   const waiting = lib?.books.some(b => b.state === 'PENDING_REVIEW');
   useEffect(() => {
@@ -156,16 +194,14 @@ function ReaderPage() {
     }
   }
 
-  // ---- logged out ----
+  // ---- logged out: the catalog is public; opening a book sends the visitor to log in, then straight back to that book ----
   if (authLoading) return <Shell lead="Loading…" />;
   if (!user) {
     return (
-      <Shell lead="Access your available reading material.">
-        <div className="rd-card">
-          <p>Please log in to continue.</p>
-          <Link className="btn btn-lime" to="/login?next=/read/books">Login to Continue <span className="ar">→</span></Link>
-        </div>
-      </Shell>
+      <GuestLibrary
+        books={catalog}
+        onOpen={b => navigate(`/login?next=${encodeURIComponent(`/read/books?book=${b.id}`)}`)}
+      />
     );
   }
 
