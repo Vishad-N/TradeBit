@@ -10,7 +10,7 @@ const MENTORS = [
     name: 'Satyendra Kushwaha',
     // PHOTO: put the image in /public/mentors and use the path without "public".
     // Leave it empty to keep the illustrated placeholder.
-    photo: '/mentors/satyendra_.png',
+    photo: '/mentors/satyendra.webp',
     role: 'Gold & Crypto Trading Expert',
     tags: ['Gold', 'Crypto', '7+ Years'],
     tagline: 'Welcome to TradeBit India – Mastering Gold & Crypto with 7+ Years of Market Expertise.',
@@ -23,7 +23,7 @@ const MENTORS = [
     key: 'maam',
     tone: 'light',
     name: 'Madhu Kushwaha',
-    photo: '/mentors/maam.png', 
+    photo: '/mentors/maam.webp', 
     photoDrop: 110, // pushes a tall photo down inside the arch so her head is not cropped
     role: 'Mentor',
     tags: ['Gold', 'Crypto', 'Strategy'],

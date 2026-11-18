@@ -1,26 +1,26 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing.jsx';
-import Privacy from './pages/Privacy.jsx';
-import Terms from './pages/Terms.jsx';
-import Refund from './pages/Refund.jsx';
-import About from './pages/About.jsx';
-import Contact from './pages/Contact.jsx';
+const Privacy = lazy(() => import('./pages/Privacy.jsx'));
+const Terms = lazy(() => import('./pages/Terms.jsx'));
+const Refund = lazy(() => import('./pages/Refund.jsx'));
+const About = lazy(() => import('./pages/About.jsx'));
+const Contact = lazy(() => import('./pages/Contact.jsx'));
 // three.js is only needed here, so the Gallery loads on demand and the landing page stays light.
 const Gallery = lazy(() => import('./pages/Gallery.jsx'));
-import MarketNews from './pages/MarketNews.jsx';
-import RiskDisclosure from './pages/RiskDisclosure.jsx';
-import Login from './pages/Login.jsx';
-import ReadBooks from './pages/ReadBooks/ReadBooks.jsx';
-import Mentorship from './pages/Mentorship.jsx';
-import Club from './pages/Club.jsx';
-import NotFound from './pages/NotFound.jsx';
-import AdminReading from './pages/admin/AdminReading.jsx';
+const MarketNews = lazy(() => import('./pages/MarketNews.jsx'));
+const RiskDisclosure = lazy(() => import('./pages/RiskDisclosure.jsx'));
+const Login = lazy(() => import('./pages/Login.jsx'));
+const ReadBooks = lazy(() => import('./pages/ReadBooks/ReadBooks.jsx'));
+const Mentorship = lazy(() => import('./pages/Mentorship.jsx'));
+const Club = lazy(() => import('./pages/Club.jsx'));
+const NotFound = lazy(() => import('./pages/NotFound.jsx'));
+const AdminReading = lazy(() => import('./pages/admin/AdminReading.jsx'));
 const Courses = lazy(() => import('./pages/courses/Courses.jsx'));
 const CourseDetail = lazy(() => import('./pages/courses/CourseDetail.jsx'));
 const LessonPlayer = lazy(() => import('./pages/courses/LessonPlayer.jsx'));
-import AdminCourses from './pages/admin/AdminCourses.jsx';
-import AdminCourseEdit from './pages/admin/AdminCourseEdit.jsx';
+const AdminCourses = lazy(() => import('./pages/admin/AdminCourses.jsx'));
+const AdminCourseEdit = lazy(() => import('./pages/admin/AdminCourseEdit.jsx'));
 import LegalLayout from './components/LegalLayout.jsx';
 import SiteLayout from './components/SiteLayout.jsx';
 import ScrollToTop from './components/ScrollToTop.jsx';
@@ -39,6 +39,7 @@ export default function App() {
         <ScrollToTop />
         <WhatsAppButton />
         <OfferBadge />
+        <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route element={<LegalLayout />}>
@@ -65,6 +66,7 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
+        </Suspense>
         </PricingProvider>
         </SiteLinksProvider>
       </AuthProvider>

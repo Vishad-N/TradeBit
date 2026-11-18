@@ -14,7 +14,7 @@ const PHOTOS = Array.from({ length: 9 }, (_, i) => ({
   alt: `TradeBit India in Dubai, photo ${i + 1}`,
 }));
 const STOCK = Array.from({ length: 15 }, (_, i) => ({
-  src: `/gallery/dubai-${String(i + 1).padStart(2, '0')}.jpg`,
+  src: `/gallery/dubai-${String(i + 1).padStart(2, '0')}.webp`,
   alt: 'Dubai skyline and landmarks',
 }));
 const SAMPLES = [...PHOTOS, ...STOCK];

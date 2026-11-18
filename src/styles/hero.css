@@ -44,7 +44,7 @@
 .sc-ln{display:block;overflow:hidden;padding:.1em 0 .14em;margin:-.1em 0 -.14em}
 .sc-ln>span{display:inline-block;white-space:nowrap}
 /* headline: each letter rises out of its line mask, un-blurring as it lands */
-.ch{display:inline-block;transform:translateY(115%) rotate(4deg);opacity:0;filter:blur(8px);
+.ch{display:inline-block;transform:translateY(115%) rotate(4deg);opacity:0;filter:blur(3px);
   animation:ch-in 1.1s var(--ease) var(--d) forwards}
 @keyframes ch-in{60%{opacity:1}to{transform:none;opacity:1;filter:blur(0)}}
 /* gold letters: a gradient spread across the word, then a glint that ripples through it on a loop */

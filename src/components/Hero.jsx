@@ -18,8 +18,9 @@ const MARKETS = [
 ];
 const TICK_MS = 4000;
 const TICK_MAX_BACKOFF_MS = 60000;
-const TICKER_URL = 'https://fapi.binance.com/fapi/v1/ticker/24hr?symbols=' +
-  encodeURIComponent(JSON.stringify(MARKETS.map((m) => m.sym)));
+// The futures API has no multi-symbol filter (`symbols=` is silently ignored and returns ~67 KB of every contract),
+// so ask for each of the four symbols on its own: ~0.5 KB each instead of 67 KB per tick.
+const TICKER_URLS = MARKETS.map((m) => `https://fapi.binance.com/fapi/v1/ticker/24hr?symbol=${m.sym}`);
 const FLIP_EVERY = 4500;
 const FLIP_HALF = 280;
 
@@ -48,9 +49,9 @@ function MarketPill({ onGold }) {
       if (!document.hidden) {
         ok = false;
         try {
-          const res = await fetch(TICKER_URL);
-          if (res.ok) {
-            const rows = await res.json();
+          const resps = await Promise.all(TICKER_URLS.map((u) => fetch(u)));
+          if (resps.every((r) => r.ok)) {
+            const rows = await Promise.all(resps.map((r) => r.json()));
             if (!alive) return;
             const next = {};
             rows.forEach((r) => { next[r.symbol] = { price: parseFloat(r.lastPrice), chg: parseFloat(r.priceChangePercent) }; });
