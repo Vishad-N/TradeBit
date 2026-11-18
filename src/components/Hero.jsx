@@ -175,6 +175,27 @@ function useHeroLife(ref, goldRef) {
     const chars = [...root.querySelectorAll('.sc-h1 .ch')].map((el) => ({ el, x: 0, y: 0, k: 0 }));
     const cross = root.querySelector('.hx-cross');
     const tag = root.querySelector('.hx-tag');
+    // Parallax is written straight onto each layer's `translate` (same maths the CSS calc() used). Writing --px/--py on
+    // the root instead made the browser restyle the whole hero subtree every frame, which dominated main-thread time.
+    const mq = window.matchMedia('(max-width: 900px)');
+    const layers = [];
+    const collect = () => {
+      layers.length = 0;
+      const small = mq.matches;
+      root.querySelectorAll('.hx').forEach((el) => {
+        const z = parseFloat(el.style.getPropertyValue('--z')) || 1;
+        layers.push([el, z * (small ? -16 : -34), z * (small ? -10 : -22)]);
+      });
+      if (!small) {
+        [['.sc-label-in', 6, 4], ['.sc-ln:nth-child(1)', 14, 8], ['.sc-ln:nth-child(2)', 22, 12], ['.sc-lead', 9, 6],
+          ['.sc-hook', 7, 5], ['.sc-ctas', 4, 3], ['.hero-pill-slot', -10, -7]].forEach(([sel, kx, ky]) => {
+          root.querySelectorAll(sel).forEach((el) => layers.push([el, kx, ky]));
+        });
+      }
+    };
+    collect();
+    mq.addEventListener('change', collect);
+    let skip = false;
     const st = { tx: 0, ty: 0, x: 0, y: 0, mx: 0, my: 0, cx: 0, cy: 0, inside: false, vis: true, raf: 0, t0: performance.now() };
 
     // letter centres relative to .hero-copy (offset* ignores transforms, so parallax/animations don't skew them)
@@ -202,8 +223,9 @@ function useHeroLife(ref, goldRef) {
       const sx = st.inside ? st.tx : Math.sin(t * 0.35) * 0.45;
       const sy = st.inside ? st.ty : Math.cos(t * 0.27) * 0.35;
       st.x += (sx - st.x) * 0.06; st.y += (sy - st.y) * 0.06;
-      root.style.setProperty('--px', st.x.toFixed(4));
-      root.style.setProperty('--py', st.y.toFixed(4));
+      // idle sway is slow, so it only needs every other frame; pointer-driven motion runs at full rate
+      skip = !st.inside && !skip;
+      if (!skip) for (const [el, kx, ky] of layers) el.style.translate = `${(st.x * kx).toFixed(2)}px ${(st.y * ky).toFixed(2)}px`;
 
       // letters near the cursor lean away, grow a touch and warm towards gold (after the intro animation)
       if (now - st.t0 > 2300) {
@@ -257,7 +279,7 @@ function useHeroLife(ref, goldRef) {
 
     return () => {
       if (st.raf) cancelAnimationFrame(st.raf);
-      io.disconnect(); ro.disconnect();
+      io.disconnect(); ro.disconnect(); mq.removeEventListener('change', collect);
       document.removeEventListener('visibilitychange', onVis);
       window.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerleave', onLeave);
