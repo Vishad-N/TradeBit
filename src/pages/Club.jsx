@@ -176,7 +176,7 @@ export default function Club() {
           </div>
           <div className="cl-hero-art rv d2">
             <div className="cl-portrait">
-              <img src="/mentors/ways.webp" alt="Satyendra Kushwaha, founder of TradeBit India" width="640" height="866" decoding="async" />
+              <img src="/mentors/satyendra.webp" alt="Satyendra Kushwaha, founder of TradeBit India" width="1040" height="950" decoding="async" />
               <div className="cl-chip"><b>Satyendra Kushwaha</b><span>Founder · TradeBit India</span></div>
             </div>
           </div>

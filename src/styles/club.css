@@ -34,7 +34,8 @@
 @keyframes clglow{0%{box-shadow:0 0 0 0 rgba(184,216,61,.5)}70%,100%{box-shadow:0 0 0 22px rgba(184,216,61,0)}}
 .cl-hero-art{position:relative;display:flex;justify-content:center}
 .cl-portrait{position:relative;width:min(100%,430px);aspect-ratio:3/4;border-radius:220px 220px 28px 28px;background:linear-gradient(180deg,rgba(184,216,61,.22),rgba(184,216,61,.05));border:1px solid rgba(184,216,61,.35);display:flex;align-items:flex-end;justify-content:center;overflow:visible}
-.cl-portrait img{height:104%;width:auto;max-width:none;object-fit:contain;margin-bottom:-1px;filter:drop-shadow(0 30px 40px rgba(0,0,0,.5))}
+/* full photo (not a cut-out): fill the arch and crop to it */
+.cl-portrait img{position:absolute;inset:0;height:100%;width:100%;max-width:none;object-fit:cover;object-position:42% 30%;border-radius:219px 219px 27px 27px;box-shadow:0 30px 60px -30px rgba(0,0,0,.6)}
 .cl-chip{position:absolute;left:-6%;bottom:8%;background:var(--cl);color:var(--cd);padding:14px 18px;border-radius:16px;box-shadow:0 24px 50px -20px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:2px;transition:transform .5s var(--ease)}
 .cl-chip b{font-size:15px;font-weight:600;letter-spacing:-.01em}.cl-chip span{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(21,24,20,.6);font-weight:600}
 .cl-portrait:hover .cl-chip{transform:translateY(-6px)}

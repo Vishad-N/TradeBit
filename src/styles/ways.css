@@ -23,20 +23,29 @@
 .ways-steps li:last-child{background:var(--c);color:var(--l);border-color:var(--c)}
 
 .ways-grid{position:relative;z-index:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(16px,2vw,28px);align-items:start}
-.w1{margin-top:clamp(0px,9vw,150px)}
-.w2{margin-top:clamp(0px,4.5vw,75px)}
+/* all three cards sit on one level */
+.ways-grid{align-items:stretch}
+.wslot{display:flex}
+.wslot .wcard{width:100%}
+.wcard .btn{margin-top:auto}
 
 .wcard{position:relative;display:flex;flex-direction:column;gap:14px;padding:clamp(16px,1.7vw,22px);border-radius:28px;min-width:0;box-shadow:0 30px 60px -46px rgba(21,24,20,.55);transition:transform .55s var(--ease),box-shadow .55s var(--ease)}
 .w1 .wcard{background:#24472F;color:var(--l)}
 .w1 .wcard .btn-dark{background:var(--lime);color:var(--c)}
 .w1 .wcard .btn-dark:hover{background:var(--lime);box-shadow:0 0 0 8px rgba(184,216,61,.25)}
-.w2 .wcard{background:#34297F;color:var(--l)}
+/* middle card: signature lime, charcoal type, dark CTA — sits between deep green and charcoal */
+.w2 .wcard{background:linear-gradient(160deg,#C4E04A 0%,#B8D83D 55%,#A5C632 100%);color:var(--c);box-shadow:0 30px 60px -40px rgba(21,24,20,.6),inset 0 0 0 1px rgba(21,24,20,.08)}
+.w2 .wcard .btn-pale{background:var(--c);color:var(--lime)}
+.w2 .wcard .btn-pale:hover{background:var(--c);box-shadow:0 0 0 8px rgba(21,24,20,.15)}
+.w2 .w-media{background:var(--c)}
+.w2 .w-course{background:var(--l);box-shadow:0 0 0 1px rgba(21,24,20,.12)}
 .w3 .wcard{background:var(--c);color:var(--l)}
 
 .w-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .w-top .meta{opacity:.7;padding-top:4px}
 .w-num{font-size:clamp(54px,5.6vw,84px);font-weight:500;letter-spacing:-.05em;line-height:.78;color:transparent;-webkit-text-stroke:1px var(--c);opacity:.35;font-variant-numeric:tabular-nums}
-.w1 .w-num,.w2 .w-num,.w3 .w-num{-webkit-text-stroke-color:var(--pl);opacity:.45}
+.w1 .w-num,.w3 .w-num{-webkit-text-stroke-color:var(--pl);opacity:.45}
+.w2 .w-num{-webkit-text-stroke-color:var(--c);opacity:.5}
 .wcard h3{font-size:clamp(28px,2.6vw,40px);font-weight:500;text-transform:uppercase;letter-spacing:-.035em;line-height:.95}
 .w-head{font-size:clamp(18px,1.6vw,22px);font-weight:500;letter-spacing:-.015em;line-height:1.2}
 .w-desc{font-size:15px;opacity:.72}
@@ -82,7 +91,6 @@
   .ways{margin:calc(-1 * 40px) 8px calc(-1 * var(--r-lens));border-radius:48px 28px 28px 28px;padding-top:64px}
   .ways-curve{display:none}
   .ways-grid{grid-template-columns:1fr;gap:18px}
-  .w1,.w2{margin-top:0}
   .ways .asset-sol{right:-30%;top:1%;width:300px}
   .ways .asset-gold{left:-20%;bottom:10%;width:240px}
   .wcard{padding:18px}

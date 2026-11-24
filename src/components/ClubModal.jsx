@@ -60,7 +60,7 @@ export default function ClubModal({ open, onClose }) {
         <div className="club-stage" aria-hidden="true">
           <i className="club-arch" />
           <svg className="club-orbit" viewBox="0 0 400 300" fill="none"><ellipse cx="200" cy="150" rx="190" ry="78" stroke="#B8D83D" strokeOpacity=".7" transform="rotate(-14 200 150)" /><circle cx="378" cy="200" r="5" fill="#B8D83D" /></svg>
-          <img src="/mentors/ways.webp" alt="" width="640" height="866" decoding="async" />
+          <img src="/mentors/club-1percent.webp" alt="" width="1152" height="2048" decoding="async" />
           <span className="club-badge">Private · 1:1</span>
         </div>
 
