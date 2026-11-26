@@ -137,10 +137,11 @@ body.lp .nav:not(.solid) .brand small{opacity:.7}
 /* ---------- ALIVE: mouse-driven parallax layers ----------
    useHeroLife() writes --px / --py (-1..1, eased) on .hero. Every layer shifts by its own depth (--z) using the
    independent `translate` property, so it never fights the keyframe `transform`s used for the intro / bobbing. */
-.hx{translate:calc(var(--px,0) * var(--z,1) * -34px) calc(var(--py,0) * var(--z,1) * -22px);will-change:translate}
+.hx{translate:calc(var(--px,0) * var(--z,1) * -34px) calc(var(--py,0) * var(--z,1) * -22px)}
+@media (pointer:fine){.hx{will-change:translate}}
 
 /* far: glows that breathe + drift */
-.hx-orb{position:absolute;border-radius:50%;pointer-events:none;filter:blur(70px);animation:hx-drift 16s ease-in-out infinite alternate}
+.hx-orb{position:absolute;border-radius:50%;pointer-events:none;animation:hx-drift 16s ease-in-out infinite alternate}
 .hx-orb-a{width:min(46vw,640px);aspect-ratio:1;left:50%;top:-8%;background:radial-gradient(circle,rgba(127,231,255,.28),transparent 68%)}
 .hx-orb-b{width:min(36vw,520px);aspect-ratio:1;right:-6%;bottom:2%;background:radial-gradient(circle,rgba(212,175,55,.26),transparent 68%);animation-duration:19s;animation-delay:-6s}
 .hx-orb-c{width:min(30vw,440px);aspect-ratio:1;left:16%;bottom:-14%;background:radial-gradient(circle,rgba(127,231,255,.16),transparent 70%);animation-duration:22s;animation-delay:-11s}
@@ -198,4 +199,12 @@ body.lp .nav:not(.solid) .brand small{opacity:.7}
   .hx,.sc-label-in,.sc-ln,.sc-lead,.sc-hook,.sc-ctas,.hero-pill-slot{translate:none!important}
   .hx-orb,.hx-row,.hx-candles svg,.hx-plus{animation:none}
   .hx-cross{display:none}
+}
+
+/* Phones / touch: drop the effects that repaint every frame (an animated filter on each gold letter, a sliding
+   3500px-wide word band, blur behind the labels that sit over the moving 3D canvas). The letter intro still plays. */
+@media (pointer:coarse),(max-width:900px){
+  .ch.g{animation:ch-in 1.1s var(--ease) var(--d) forwards}
+  .hx-row{animation:none}
+  .sc-label{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(8,12,18,.72)}
 }

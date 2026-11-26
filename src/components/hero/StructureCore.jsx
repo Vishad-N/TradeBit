@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
 // "Institutional Structure Core": market noise resolves into HH / HL structure, demand + supply zones,
 // support / resistance levels and a metallic core. Vanilla Three.js, one instanced Points draw call.
@@ -193,7 +192,9 @@ export default function StructureCore({ onReady }) {
 
     let renderer;
     try {
-      renderer = new THREE.WebGLRenderer({ canvas, antialias: !small, alpha: true, powerPreference: 'high-performance' });
+      // failIfMajorPerformanceCaveat: without a working GPU the browser would draw this scene on the CPU and freeze
+      // the page, so in that case it is left out.
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: !small, alpha: true, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: true });
     } catch {
       setFailed(true);
       return undefined;
@@ -207,11 +208,6 @@ export default function StructureCore({ onReady }) {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 60);
     camera.position.set(0, 0, 9);
-
-    // Reflections for the metallic core, from a tiny procedural room (no external HDR to download).
-    const pmrem = new THREE.PMREMGenerator(renderer);
-    const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    scene.environment = envTex;
 
     const rig = new THREE.Group();
     scene.add(rig);
@@ -284,7 +280,9 @@ export default function StructureCore({ onReady }) {
     core.scale.setScalar(0.001);
     const body = new THREE.Mesh(
       new THREE.IcosahedronGeometry(CORE_R, 1),
-      new THREE.MeshStandardMaterial({ color: '#0f131b', metalness: 1, roughness: 0.2, flatShading: true, envMapIntensity: 1.1 }),
+      // Specular highlights instead of an environment map: building one compiles several heavy shaders synchronously,
+      // which froze the page for about a second when the scene started.
+      new THREE.MeshPhongMaterial({ color: '#0f131b', emissive: '#05070b', specular: '#3d4c60', shininess: 60, flatShading: true }),
     );
     const wire = new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(CORE_R * 1.012, 1)),
       new THREE.LineBasicMaterial({ color: CYAN, transparent: true, opacity: 0.32, depthWrite: false, blending: THREE.AdditiveBlending }));
@@ -367,7 +365,7 @@ export default function StructureCore({ onReady }) {
     };
 
     // ---- loop
-    let raf = 0, visible = true, running = false;
+    let raf = 0, visible = true, running = false, ready = false, disposed = false;
     let lastT = performance.now();
     let elapsed = 0, startWait = 0.35, frames = 0, slow = 0, dropped = false;
     const RESOLVE = 2.8;
@@ -375,6 +373,8 @@ export default function StructureCore({ onReady }) {
     const frame = () => {
       raf = 0;
       if (!running) return;
+      // phones: 30fps is plenty for this slow drift and halves the CPU, GPU and battery cost
+      if (small && !reduced && performance.now() - lastT < 31) { raf = requestAnimationFrame(frame); return; }
       // wall-clock time: the resolve always takes ~3s, even on a slow GPU (frames just get coarser)
       const now = performance.now();
       const dt = Math.min((now - lastT) / 1000, 0.5);
@@ -424,7 +424,7 @@ export default function StructureCore({ onReady }) {
 
       // one-time adaptive quality: if the GPU struggles, drop resolution and thin the field
       if (!dropped && ++frames > 40) {
-        if (dt > 0.034) slow++;
+        if (dt > (small ? 0.055 : 0.034)) slow++;
         if (frames > 140) {
           if (slow > 55) {
             dropped = true;
@@ -436,17 +436,23 @@ export default function StructureCore({ onReady }) {
       if (reduced) { running = false; return; }
       raf = requestAnimationFrame(frame);
     };
-    const start = () => { if (running || reduced && frames > 0) return; running = true; lastT = performance.now(); raf = requestAnimationFrame(frame); };
+    const start = () => { if (!ready || running || reduced && frames > 0) return; running = true; lastT = performance.now(); raf = requestAnimationFrame(frame); };
     const stop = () => { running = false; if (raf) cancelAnimationFrame(raf); raf = 0; };
 
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible && !document.hidden) start(); else stop(); }, { threshold: 0 });
     io.observe(wrap);
     const onVis = () => { if (document.hidden) stop(); else if (visible) start(); };
     document.addEventListener('visibilitychange', onVis);
-    start();
-    onReady?.();
+    // Compile shaders off the main thread where the browser supports it, then start drawing.
+    renderer.compileAsync(scene, camera).catch(() => {}).then(() => {
+      if (disposed) return;
+      ready = true;
+      if (visible && !document.hidden) start();
+      onReady?.();
+    });
 
     return () => {
+      disposed = true;
       stop();
       io.disconnect(); ro.disconnect();
       document.removeEventListener('visibilitychange', onVis);
@@ -456,7 +462,7 @@ export default function StructureCore({ onReady }) {
         if (o.geometry) o.geometry.dispose();
         if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose());
       });
-      envTex.dispose(); pmrem.dispose(); renderer.dispose();
+      renderer.dispose();
     };
   }, [onReady]);
 

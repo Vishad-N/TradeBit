@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { phoneChart, uiChart } from '../lib/charts.js';
 import { html } from '../lib/html.js';
 
@@ -11,12 +11,14 @@ const RINGS_CUT = [1, 2, 3, 4].map(k => `calc(var(--cut-r) * 2 - ${k * 70}px)`);
 function useFitScale(designWidth) {
   const ref = useRef(null);
   const [scale, setScale] = useState(1);
-  useLayoutEffect(() => {
-    const el = ref.current;
-    const fit = () => setScale(el.clientWidth / designWidth);
-    fit();
-    const ro = new ResizeObserver(fit);
-    ro.observe(el);
+  // ResizeObserver reports the size when it starts observing, so reading clientWidth up front is unnecessary
+  // (it forced a layout of the whole page during first load).
+  useEffect(() => {
+    const ro = new ResizeObserver(([entry]) => {
+      const width = entry.contentRect.width;
+      if (width) setScale(width / designWidth);
+    });
+    ro.observe(ref.current);
     return () => ro.disconnect();
   }, [designWidth]);
   return [ref, { transform: `scale(${scale})` }];

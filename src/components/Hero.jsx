@@ -7,6 +7,13 @@ import '../styles/hero.css';
 // three.js is heavy and only the hero needs it: load it on demand so the headline and CTAs paint first.
 const StructureCore = lazy(() => import('./hero/StructureCore.jsx'));
 const SWEEP_EVENT = 'tb:liquidity-sweep';
+const SCENE_DELAY_MS = 1500;
+
+function canAfford3d() {
+  const net = navigator.connection;
+  if (net?.saveData || /(^|-)[23]g$/.test(net?.effectiveType || '')) return false;
+  return !(navigator.deviceMemory <= 2 || navigator.hardwareConcurrency <= 2);
+}
 
 // Live quotes from Binance public futures (CORS-open, no key). Metals trade there as USDT perpetuals.
 // The card flips through these markets; Gold leads.
@@ -165,12 +172,12 @@ function Candles({ seed = 1, n = 9 }) {
 const WORDS = 'Market structure · Price action · Risk management · Liquidity · Order block · Break of structure · ';
 
 // Pointer-driven life for the hero: layered parallax (CSS vars --px/--py in -1..1), letters that lean away from the
-// cursor, and a chart-style crosshair. With no mouse (touch) it sways gently on its own. Off for reduced motion.
+// cursor, and a chart-style crosshair. Mouse devices only: on touch screens a per-frame JS loop costs far more than the
+// effect is worth (the CSS animations keep the hero moving there). Off for reduced motion.
 function useHeroLife(ref, goldRef) {
   useEffect(() => {
     const root = ref.current;
-    if (!root || prefersReducedMotion()) return undefined;
-    const fine = window.matchMedia('(pointer: fine)').matches;
+    if (!root || prefersReducedMotion() || !window.matchMedia('(pointer: fine)').matches) return undefined;
     const copy = root.querySelector('.hero-copy');
     const chars = [...root.querySelectorAll('.sc-h1 .ch')].map((el) => ({ el, x: 0, y: 0, k: 0 }));
     const cross = root.querySelector('.hx-cross');
@@ -219,6 +226,11 @@ function useHeroLife(ref, goldRef) {
       st.raf = 0;
       if (!st.vis) return;
       const now = performance.now(), t = (now - st.t0) / 1000;
+      // Layout reads come first: reading after the style writes below would force a synchronous reflow every frame.
+      // They are only needed while the pointer is over the hero or the letters are still easing back.
+      const lettersLive = now - st.t0 > 2300 && (st.inside || chars.some((c) => c.k > 0));
+      const cr = lettersLive ? copy.getBoundingClientRect() : null;
+      const r = st.inside && cross ? root.getBoundingClientRect() : null;
       // pointer drives the layers; without one they idle in a slow figure-of-eight
       const sx = st.inside ? st.tx : Math.sin(t * 0.35) * 0.45;
       const sy = st.inside ? st.ty : Math.cos(t * 0.27) * 0.35;
@@ -228,8 +240,7 @@ function useHeroLife(ref, goldRef) {
       if (!skip) for (const [el, kx, ky] of layers) el.style.translate = `${(st.x * kx).toFixed(2)}px ${(st.y * ky).toFixed(2)}px`;
 
       // letters near the cursor lean away, grow a touch and warm towards gold (after the intro animation)
-      if (now - st.t0 > 2300) {
-        const cr = copy.getBoundingClientRect();
+      if (cr) {
         const lx = st.mx - cr.left, ly = st.my - cr.top;
         for (const c of chars) {
           let target = 0, ux = 0, uy = 0;
@@ -248,13 +259,12 @@ function useHeroLife(ref, goldRef) {
       }
 
       // crosshair: eases after the cursor, reads out a price scaled from the live gold quote
-      if (cross && fine) {
-        const r = root.getBoundingClientRect();
+      if (cross) cross.classList.toggle('on', st.inside);
+      if (r) {
         st.cx += ((st.mx - r.left) - st.cx) * 0.2; st.cy += ((st.my - r.top) - st.cy) * 0.2;
         cross.style.setProperty('--cx', `${st.cx.toFixed(1)}px`);
         cross.style.setProperty('--cy', `${st.cy.toFixed(1)}px`);
-        cross.classList.toggle('on', st.inside);
-        if (st.inside && tag) {
+        if (tag) {
           const base = goldRef.current || 4030;
           const px = base * (1 + (0.5 - st.cy / r.height) * 0.014);
           tag.textContent = 'XAUUSD ' + px.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -274,7 +284,8 @@ function useHeroLife(ref, goldRef) {
       else if (!document.hidden && st.vis && !st.raf) st.raf = requestAnimationFrame(frame);
     };
     document.addEventListener('visibilitychange', onVis);
-    if (fine) { window.addEventListener('pointermove', onMove, { passive: true }); document.addEventListener('pointerleave', onLeave); }
+    window.addEventListener('pointermove', onMove, { passive: true });
+    document.addEventListener('pointerleave', onLeave);
     st.raf = requestAnimationFrame(frame);
 
     return () => {
@@ -296,15 +307,25 @@ export default function Hero({ onPlayVideo }) {
   const onGold = useCallback((p) => { goldRef.current = p; }, []);
   useHeroLife(heroRef, goldRef);
 
-  // Start the 3D scene once the page has painted (idle), so it never competes with the headline.
+  // The 3D scene is decoration, so it waits until the page has loaded and the headline has settled, then starts
+  // when the browser is idle. Data-saver, 2G/3G and very low-end devices skip it (and never download three.js).
   useEffect(() => {
+    if (!canAfford3d()) return undefined;
+    let timer, idle;
     const go = () => setShow3d(true);
-    if ('requestIdleCallback' in window) {
-      const id = requestIdleCallback(go, { timeout: 600 });
-      return () => cancelIdleCallback(id);
-    }
-    const t = setTimeout(go, 200);
-    return () => clearTimeout(t);
+    const schedule = () => {
+      timer = setTimeout(() => {
+        if ('requestIdleCallback' in window) idle = requestIdleCallback(go, { timeout: 2000 });
+        else go();
+      }, SCENE_DELAY_MS);
+    };
+    if (document.readyState === 'complete') schedule();
+    else window.addEventListener('load', schedule, { once: true });
+    return () => {
+      window.removeEventListener('load', schedule);
+      clearTimeout(timer);
+      if (idle) cancelIdleCallback(idle);
+    };
   }, []);
 
   // Primary CTA: a short liquidity sweep runs through the scene, then the page glides to the offer.

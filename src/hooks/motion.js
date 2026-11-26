@@ -1,17 +1,25 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 export const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // Sets --len on every .dr / .ln path inside `ref` so stroke-draw animations know
-// the real path length. Runs before paint so nothing flashes half-drawn.
+// the real path length. Measured only as the element approaches the viewport (every user of this hook is below the
+// fold), so it costs nothing during first load. All lengths are read before any is written: alternating the two
+// forces a full-page style recalculation for every path.
 export function useStrokeLengths(ref, deps = []) {
-  useLayoutEffect(() => {
-    if (!ref.current) return;
-    ref.current.querySelectorAll('.dr, .ln').forEach(p => {
-      if (typeof p.getTotalLength !== 'function') return;
-      p.style.setProperty('--len', Math.ceil(p.getTotalLength() + 2));
-    });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      const paths = [...el.querySelectorAll('.dr, .ln')].filter(p => typeof p.getTotalLength === 'function');
+      const lengths = paths.map(p => Math.ceil(p.getTotalLength() + 2));
+      paths.forEach((p, i) => p.style.setProperty('--len', lengths[i]));
+    }, { rootMargin: '800px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
   }, deps);
 }
 

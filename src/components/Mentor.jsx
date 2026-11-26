@@ -1,5 +1,7 @@
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Counter from './Counter.jsx';
+import { useInViewOnce } from '../hooks/motion.js';
 
 // Two mentors. Satyendra Sir and "Ma'am" share one composition: mirrored arch portraits, the second one
 // lighter and set lower so the pair reads as a staggered duo rather than two identical cards.
@@ -42,9 +44,13 @@ function Portrait({ uid, tone, name, photo, photoDrop = 0 }) {
   const c = dark
     ? { arch: '#151814', accent: '#DCE8C0', contour: '#DCE8C0', orbit: '#B8D83D', collar: '#DCE8C0', hair: '#151814', skinA: '#151814', skinB: '#2b3026', skinC: '#DCE8C0', skinCo: 0.85, body: ['#151814', '#232720', '#5d6452'], rim: '#DCE8C0' }
     : { arch: '#DCE8C0', accent: '#151814', contour: '#151814', orbit: '#151814', collar: '#F3F4EF', hair: '#151814', skinA: '#2b3026', skinB: '#3a4033', skinC: '#151814', skinCo: 1, body: ['#151814', '#1d211a', '#3a4033'], rim: '#151814' };
+  // SVG <image> has no loading="lazy", so the photo's href is only set once the portrait is near the viewport.
+  const svgRef = useRef(null);
+  const [near, setNear] = useState(false);
+  useInViewOnce(svgRef, () => setNear(true), { rootMargin: '600px 0px' });
   const arch = 'M40 820 V330 C40 170 160 60 300 60 C440 60 560 170 560 330 V820 Z';
   return (
-    <svg viewBox="0 0 600 820" preserveAspectRatio="xMidYMax meet" role="img" aria-label={`Duotone portrait of mentor ${name} framed by an arch and an orbit line`}>
+    <svg ref={svgRef} viewBox="0 0 600 820" preserveAspectRatio="xMidYMax meet" role="img" aria-label={`Duotone portrait of mentor ${name} framed by an arch and an orbit line`}>
       <defs>
         <linearGradient id={`skin-${uid}`} x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor={c.skinA} /><stop offset=".62" stopColor={c.skinB} /><stop offset="1" stopColor={c.skinC} stopOpacity={c.skinCo} /></linearGradient>
         <linearGradient id={`body-${uid}`} x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor={c.body[0]} /><stop offset=".75" stopColor={c.body[1]} /><stop offset="1" stopColor={c.body[2]} /></linearGradient>
@@ -62,7 +68,7 @@ function Portrait({ uid, tone, name, photo, photoDrop = 0 }) {
       {photo ? (
         // A real photo fills the arch (cropped to it, aligned to the bottom). A cut-out PNG/WEBP with a
         // transparent background looks best, because the arch colour shows around the person.
-        <image href={photo} x="40" y="60" width="520" height={760 + photoDrop} preserveAspectRatio="xMidYMax slice" clipPath={`url(#clip-${uid})`} />
+        <image href={near ? photo : undefined} x="40" y="60" width="520" height={760 + photoDrop} preserveAspectRatio="xMidYMax slice" clipPath={`url(#clip-${uid})`} />
       ) : (
       <g className="person" clipPath={`url(#clip-${uid})`}>
         {!dark &&<path d="M190 392 C180 262 236 228 300 228 C368 228 416 262 410 392 C408 480 428 550 450 640 L150 640 C172 550 192 480 190 392Z" fill={c.hair} />}

@@ -3,12 +3,13 @@ import { prefersReducedMotion } from './motion.js';
 
 // Everything that depends on scroll position: solid nav, active nav link,
 // parallax on [data-speed] elements, and the mobile sticky CTA.
-export function useScrollState(linkHrefs, menuOpen) {
+export function useScrollState(linkHrefs, menuOpen, ready = true) {
   const [state, setState] = useState({ solid: false, activeHref: null, showCta: false });
   const menuOpenRef = useRef(menuOpen);
   const update = useRef(() => {});
 
   useEffect(() => {
+    if (!ready) return undefined; // the sections this measures are not in the DOM yet
     const reduce = prefersReducedMotion();
     const hero = document.querySelector('.hero');
     const offer = document.getElementById('offer');
@@ -24,8 +25,10 @@ export function useScrollState(linkHrefs, menuOpen) {
       });
 
       if (!reduce && window.innerWidth > 1024) {
-        para.forEach(el => {
-          const r = el.getBoundingClientRect();
+        // read every position first, then write: alternating forces a reflow per element
+        const rects = para.map(el => el.getBoundingClientRect());
+        para.forEach((el, i) => {
+          const r = rects[i];
           const v = Math.max(-36, Math.min(36, (r.top + r.height / 2 - vh / 2) * parseFloat(el.dataset.speed)));
           el.style.transform = `translate3d(0,${v}px,0)`;
         });
@@ -56,7 +59,7 @@ export function useScrollState(linkHrefs, menuOpen) {
       window.removeEventListener('scroll', onScrollThrottled);
       window.removeEventListener('resize', onScroll);
     };
-  }, [linkHrefs]);
+  }, [linkHrefs, ready]);
 
   // The sticky CTA hides while the mobile menu is open.
   useEffect(() => {
